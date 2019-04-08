@@ -2,6 +2,7 @@ from pyrates.utility import plot_timeseries, grid_search, plot_psd, plot_connect
 import numpy as np
 import matplotlib.pyplot as plt
 from seaborn import cubehelix_palette
+from scipy.signal import find_peaks
 
 __author__ = "Richard Gast"
 __status__ = "Development"
@@ -9,72 +10,71 @@ __status__ = "Development"
 
 # parameters
 dt = 1e-4
-T = 5.
-inp = 3. + np.random.randn(int(T/dt), 1) * 1.0
-Cs = [1., 2., 4.]
-ei_ratio = np.arange(0.1, 3., 0.1)[::-1]
-io_ratio = np.arange(0.1, 2., 0.1)
-J_e = np.zeros((int(len(ei_ratio) * len(io_ratio))))
-J_i = np.zeros_like(J_e)
-k_ei = np.zeros_like(J_e)
+dts = 1e-3
+T = 50.
+cut_off = int(10.0/dts)
+Js = [10., 15., 20.]
+ei_ratio = np.arange(1.0, 10.1, 1.0)[::-1]
+io_ratio = np.arange(1.0, 10.1, 1.0)
+J_ei = np.zeros((int(len(ei_ratio) * len(io_ratio))))
+J_ie = np.zeros_like(J_ei)
+J_ee = np.zeros_like(J_ei)
+J_ii = np.zeros_like(J_ei)
 
-fig, ax = plt.subplots(ncols=len(Cs), nrows=2, figsize=(20, 15), gridspec_kw={})
-for idx, C in enumerate(Cs):
+fig, ax = plt.subplots(ncols=len(Js), nrows=2, figsize=(20, 15), gridspec_kw={})
+for idx, J in enumerate(Js):
 
-    k_ie = np.zeros_like(J_e) + C
+    J_ee[:] = J
     n = 0
-    for r1 in ei_ratio:
-        for r2 in io_ratio:
-            J_e[n] = C * r1 * r2
-            J_i[n] = C * r2
-            k_ei[n] = C * r1
+    for r_ei in ei_ratio:
+        for r_io in io_ratio:
+            J_ii[n] = J / r_ei
+            J_ie[n] = J/ r_io
+            J_ei[n] = J / (r_ei * r_io)
             n += 1
 
-    params = {'J_e': J_e, 'J_i': J_i, 'k_ei': k_ei, 'k_ie': k_ie}
-    param_map = {'J_e': {'var': [('Op_e.0', 'J')],
-                         'nodes': ['PC.0']},
-                 'J_i': {'var': [('Op_i.0', 'J')],
-                         'nodes': ['IIN.0']},
-                 'k_ei': {'var': [(None, 'weight')],
-                          'edges': [('PC.0', 'IIN.0', 0)]},
-                 'k_ie': {'var': [(None, 'weight')],
-                          'edges': [('IIN.0', 'PC.0', 0)]}
+    params = {'J_ee': J_ee, 'J_ii': J_ii, 'J_ie': J_ie, 'J_ei': J_ei}
+    param_map = {'J_ee': {'var': [('Op_e_adapt.0', 'J')],
+                          'nodes': ['E.0']},
+                 'J_ii': {'var': [('Op_i_adapt.0', 'J')],
+                          'nodes': ['I.0']},
+                 'J_ei': {'var': [(None, 'weight')],
+                          'edges': [('I.0', 'E.0', 0)]},
+                 'J_ie': {'var': [(None, 'weight')],
+                          'edges': [('E.0', 'I.0', 0)]}
                  }
 
     # perform simulation
-    results = grid_search(circuit_template="EI_circuit.Net",
+    results = grid_search(circuit_template="../config/cmc_templates.EI_adapt",
                           param_grid=params, param_map=param_map,
-                          inputs={("PC", "Op_e.0", "i_in"): inp}, outputs={"r": ("PC", "Op_e.0", "r")},
-                          dt=dt, simulation_time=T, permute_grid=False, sampling_step_size=1e-3)
+                          inputs={}, outputs={"r_e": ("E.0", "Op_e_adapt.0", "r")},
+                          dt=dt, simulation_time=T, permute_grid=False, sampling_step_size=dts)
 
     # plotting
-    cut_off = 1.
     max_freq = np.zeros((len(ei_ratio), len(io_ratio)))
     freq_pow = np.zeros_like(max_freq)
-    for j_e, j_i, k1, k2 in zip(params['J_e'], params['J_i'], params['k_ei'], params['k_ie']):
-        if not results[j_e][j_i][k1][k2].isnull().any().any():
-            _ = plot_psd(results[j_e][j_i][k1][k2], tmin=cut_off, show=False)
-            pow = plt.gca().get_lines()[-1].get_ydata()
-            freqs = plt.gca().get_lines()[-1].get_xdata()
-            r, c = np.argmin(np.abs(ei_ratio - k1/k2)), np.argmin(np.abs(io_ratio - j_i/k2))
-            max_freq[r, c] = freqs[np.argmax(pow)]
-            freq_pow[r, c] = np.max(pow)
-            plt.close(plt.gcf())
+    for j_ee, j_ii, j_ie, j_ei in zip(params['J_ee'], params['J_ii'], params['J_ie'], params['J_ei']):
+        data = results[j_ee][j_ii][j_ie][j_ei].values[cut_off:, 0]
+        peaks, _ = find_peaks(data, distance=int(1./dts))
+        r, c = np.argmin(np.abs(ei_ratio - j_ee/j_ii)), np.argmin(np.abs(io_ratio - j_ee/j_ie))
+        if len(peaks) > 0:
+            max_freq[r, c] = T/len(peaks)
+            freq_pow[r, c] = np.mean(data[peaks])
 
     cm1 = cubehelix_palette(n_colors=int(len(ei_ratio)*len(io_ratio)), as_cmap=True, start=2.5, rot=-0.1)
     cm2 = cubehelix_palette(n_colors=int(len(ei_ratio)*len(io_ratio)), as_cmap=True, start=-2.0, rot=-0.1)
     cax1 = plot_connectivity(max_freq, ax=ax[0, idx], yticklabels=list(np.round(ei_ratio, decimals=2)),
                              xticklabels=list(np.round(io_ratio, decimals=2)), cmap=cm1)
-    cax1.set_xlabel('intra/inter pcs')
-    cax1.set_ylabel('exc/inh pcs')
-    cax1.set_title(f'max freq (C = {C})')
+    cax1.set_xlabel('intra/inter')
+    cax1.set_ylabel('exc/inh')
+    cax1.set_title(f'freq (J = {J})')
     cax2 = plot_connectivity(freq_pow, ax=ax[1, idx], yticklabels=list(np.round(ei_ratio, decimals=2)),
                              xticklabels=list(np.round(io_ratio, decimals=2)), cmap=cm2)
-    cax2.set_xlabel('intra/inter pcs')
-    cax2.set_ylabel('exc/inh pcs')
-    cax2.set_title(f'freq power (C = {C})')
+    cax2.set_xlabel('intra/inter')
+    cax2.set_ylabel('exc/inh')
+    cax2.set_title(f'amp (J = {J})')
 
 plt.suptitle('EI-circuit sensitivity to population Coupling strengths (pcs)')
 plt.tight_layout(pad=2.5, rect=(0.01, 0.01, 0.99, 0.96))
-fig.savefig("/home/rgast/Documents/Studium/PhD_Leipzig/Figures/BGTCS/eic_coupling", format="svg")
+#fig.savefig("/home/rgast/Documents/Studium/PhD_Leipzig/Figures/BGTCS/eic_coupling", format="svg")
 plt.show()

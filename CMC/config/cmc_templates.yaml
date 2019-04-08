@@ -9,7 +9,7 @@ Op_e_base:
   base: OperatorTemplate
   equations:
     - 'd/dt * r = delta/(PI * tau**2) + 2.*r*v/tau'
-    - 'd/dt * v = (v**2 + eta + i_in) / tau + J*r + r_in_e - r_in_i - tau*(PI*r)**2'
+    - 'd/dt * v = (v**2 + eta + i_in) / tau + J*r + r__e - r_i - tau*(PI*r)**2'
   variables:
     r:
       default: output
@@ -23,9 +23,9 @@ Op_e_base:
       default: 1.0
     eta:
       default: -5.0
-    r_in_e:
+    r_e:
       default: input
-    r_in_i:
+    r_i:
       default: input
     i_in:
       default: input
@@ -35,7 +35,7 @@ Op_i_base:
   base: OperatorTemplate
   equations:
     - 'd/dt * r = delta/(PI * tau**2) + 2.*r*v/tau'
-    - 'd/dt * v = (v**2 + eta + i_in) / tau - J*r + r_in_e - r_in_i - tau*(PI*r)**2'
+    - 'd/dt * v = (v**2 + eta + i_in) / tau - J*r + r_e - r_i - tau*(PI*r)**2'
   variables:
     r:
       default: output
@@ -44,227 +44,192 @@ Op_i_base:
     tau:
       default: 0.02
     J:
-      default: 15.
+      default: 20.
     delta:
       default: 1.0
     eta:
       default: -5.0
-    r_in_e:
+    r_e:
       default: input
-    r_in_i:
+    r_i:
       default: input
     i_in:
       default: input
 
-# excitatory montbrio population operator with additional firing threshold adaptation
+# excitatory montbrio population operator with adaptation current
 Op_e_adapt:
   base: OperatorTemplate
   equations:
     - 'd/dt * r = delta/(PI * tau**2) + 2.*r*v/tau'
-    - 'd/dt * v = (v**2 + eta + i_in) / tau + J*r + r_in_e - r_in_i - tau*(PI*r)**2'
-    - 'd/dt * eta = (eta_0 - eta - alpha*r)/tau_eta'
+    - 'd/dt * v = (v**2 + eta + i_in) / tau + J*(1.0-tanh(e))*r + r_e - r_i - tau*(PI*r)**2'
+    - 'd/dt * e = a'
+    - 'd/dt * a = alpha*r/tau_a - 2.*a/tau_a - e/tau_a**2'
   variables:
     r:
       default: output
     v:
       default: variable
     tau:
-      default: 0.02
-    J:
-      default: 15.
-    delta:
       default: 1.0
+    J:
+      default: 21.2132
+    delta:
+      default: 2.0
     eta:
-      default: variable
-    r_in_e:
-      default: input
-    r_in_i:
-      default: input
+      default: -4.9
     i_in:
       default: input
-    eta_0:
-      default: -5.0
+    e:
+      default: variable
+    a:
+      default: variable
     alpha:
-      default: 0.01
-    tau_eta:
-      default: 0.1
+      default: 0.05
+    tau_a:
+      default: 10.0
+    r_e:
+      default: input
+    r_i:
+      default: input
 
 # basic inhibitory montbrio population operator with firing threshold adaptation
 Op_i_adapt:
   base: OperatorTemplate
   equations:
     - 'd/dt * r = delta/(PI * tau**2) + 2.*r*v/tau'
-    - 'd/dt * v = (v**2 + eta + i_in) / tau - J*r + r_in_e - r_in_i - tau*(PI*r)**2'
-    - 'd/dt * eta = (eta_0 - eta - alpha*r)/tau_eta'
+    - 'd/dt * v = (v**2 + eta + i_in) / tau - J*(1.0-tanh(e))*r + r_e - r_i- tau*(PI*r)**2'
+    - 'd/dt * e = a'
+    - 'd/dt * a = alpha*r/tau_a - 2.*a/tau_a - e/tau_a**2'
   variables:
     r:
       default: output
     v:
       default: variable
     tau:
-      default: 0.02
+      default: 1.0
     J:
       default: 15.
     delta:
-      default: 1.0
+      default: 2.0
     eta:
-      default: variable
-    r_in_e:
-      default: input
-    r_in_i:
-      default: input
+      default: -4.9
     i_in:
       default: input
-    eta_0:
-      default: -5.0
+    e:
+      default: variable
+    a:
+      default: variable
     alpha:
-      default: 1.0
-    tau_eta:
-      default: 0.1
+      default: 0.05
+    tau_a:
+      default: 10.0
+    r_e:
+      default: input
+    r_i:
+      default: input
 
-# excitatory montbrio population operator extended with firing threshold adaptation and exponential synapses
+# excitatory montbrio population operator extended with a conductance-based synapses
 Op_e_syn:
   base: OperatorTemplate
   equations:
     - 'd/dt * r = delta/(PI * tau**2) + 2.*r*v/tau'
-    - 'd/dt * i_e = v_e'
-    - 'd/dt * v_e =  H_e/tau_e * (r_in_e + J*r) - i_e/tau_e^2. - 2.*v_e/tau_e'
-    - 'd/dt * i_i = v_i'
-    - 'd/dt * v_i =  H_i/tau_i * r_in_i - i_i/tau_i^2. - 2.*v_i/tau_i'
-    - 'd/dt * v = (v**2 + eta + i_in + i_e - i_i) / tau - tau*(PI*r)**2'
+    - 'd/dt * v = (v**2 + eta + i_in) / tau + J * z - tau*(PI*r)**2'
+    - 'd/dt * z = (beta*r - z) / tau_z'
   variables:
     r:
       default: output
     v:
       default: variable
-    v_e:
-      default: variable
-    v_i:
-      default: variable
-    i_e:
-      default: variable
-    i_i:
-      default: variable
     tau:
-      default: 0.07
-    tau_e:
-      default: 0.01
-    tau_i:
       default: 0.02
-    H_e:
-      default: 10.
-    H_i:
-      default: 1.
     J:
       default: 15.
     delta:
       default: 1.0
     eta:
       default: -5.0
-    r_in_e:
-      default: input
-    r_in_i:
-      default: input
     i_in:
       default: input
+    z:
+      default: variable
+    tau_z:
+      default: 0.001
+    beta:
+      default: 1.0
 
 # inhibitory montbrio population operator extended with firing threshold adaptation and exponential synapses
 Op_i_syn:
   base: OperatorTemplate
   equations:
     - 'd/dt * r = delta/(PI * tau**2) + 2.*r*v/tau'
-    - 'd/dt * i_e = v_e'
-    - 'd/dt * v_e =  H_e/tau_e * r_in_e - i_e/tau_e^2. - 2.*v_e/tau_e'
-    - 'd/dt * i_i = v_i'
-    - 'd/dt * v_i =  H_i/tau_i * (r_in_i + J*r) - i_i/tau_i^2. - 2.*v_i/tau_i'
-    - 'd/dt * v = (v**2 + eta + i_in + i_e - i_i) / tau - tau*(PI*r)**2'
+    - 'd/dt * v = (v**2 + eta + i_in) / tau - J*z - tau*(PI*r)**2'
+    - 'd/dt * z = (r*beta - z) / tau_z'
   variables:
     r:
       default: output
     v:
       default: variable
-    v_e:
-      default: variable
-    v_i:
-      default: variable
-    i_e:
-      default: variable
-    i_i:
-      default: variable
     tau:
-      default: 0.07
-    tau_e:
-      default: 0.01
-    tau_i:
       default: 0.02
-    H_e:
-      default: 10.
-    H_i:
-      default: 20.
     J:
       default: 15.
     delta:
       default: 1.0
     eta:
       default: -5.0
-    r_in_e:
-      default: input
-    r_in_i:
-      default: input
     i_in:
       default: input
+    z:
+      default: variable
+    tau_z:
+      default: 0.002
+    beta:
+      default: 2.0
 
-# inhibitory montbrio population operator extended with firing threshold adaptation and exponential synapses
+# excitatory montbrio population operator extended with firing threshold adaptation and exponential synapses
 Op_e:
   base: OperatorTemplate
   equations:
     - 'd/dt * r = delta/(PI * tau**2) + 2.*r*v/tau'
-    - 'd/dt * i_e = v_e'
-    - 'd/dt * v_e =  H_e/tau_e * (r_in_e + J*r) - i_e/tau_e^2. - 2.*v_e/tau_e'
-    - 'd/dt * i_i = v_i'
-    - 'd/dt * v_i =  H_i/tau_i * r_in_i - i_i/tau_i^2. - 2.*v_i/tau_i'
-    - 'd/dt * eta = (eta_0 - eta - alpha*r)/tau_eta'
-    - 'd/dt * v = (v**2 + eta + i_in + i_e - i_i) / tau - tau*(PI*r)**2'
+    - 'd/dt * v = (v**2 + eta + i_in) / tau + (J_0 - J)*s - tau*(PI*r)**2'
+    - 'd/dt * J = a'
+    - 'd/dt * a = alpha/tau_a * s - 2.*a/tau_a - J/tau_a**2'
+    - 'd/dt * s = u'
+    - 'd/dt * u = beta/tau_s * (r + r_e - r_i) - 2.*u/tau_s - s/tau_s**2'
   variables:
     r:
       default: output
     v:
       default: variable
-    v_e:
-      default: variable
-    v_i:
-      default: variable
-    i_e:
-      default: variable
-    i_i:
-      default: variable
     tau:
-      default: 0.07
-    tau_e:
-      default: 0.01
-    tau_i:
-      default: 0.01
-    H_e:
-      default: 10.
-    H_i:
-      default: 10.
-    J:
+      default: 0.02
+    J_0:
       default: 15.
     delta:
       default: 1.0
     eta:
-      default: variable
-    eta_0:
-      default: -5.
-    tau_eta:
-      default: 0.1
-    alpha:
-      default: 0.005
-    r_in_e:
-      default: input
-    r_in_i:
-      default: input
+      default: -2.0
     i_in:
+      default: input
+    J:
+      default: variable
+    a:
+      default: variable
+    alpha:
+      default: 3.
+    tau_a:
+      default: 0.1
+    s:
+      default: variable
+    u:
+      default: variable
+    beta:
+      default: 10000.0
+    tau_s:
+      default: 0.0001
+    r_e:
+      default: input
+    r_i:
       default: input
 
 # inhibitory montbrio population operator extended with firing threshold adaptation and exponential synapses
@@ -272,53 +237,47 @@ Op_i:
   base: OperatorTemplate
   equations:
     - 'd/dt * r = delta/(PI * tau**2) + 2.*r*v/tau'
-    - 'd/dt * i_e = v_e'
-    - 'd/dt * v_e =  H_e/tau_e * r_in_e - i_e/tau_e^2. - 2.*v_e/tau_e'
-    - 'd/dt * i_i = v_i'
-    - 'd/dt * v_i =  H_i/tau_i * (r_in_i + J*r) - i_i/tau_i^2. - 2.*v_i/tau_i'
-    - 'd/dt * eta = (eta_0 - eta - alpha*r)/tau_eta'
-    - 'd/dt * v = (v**2 + eta + i_in + i_e - i_i) / tau - tau*(PI*r)**2'
+    - 'd/dt * v = (v**2 + eta + i_in) / tau - (J_0 - J)*s - tau*(PI*r)**2'
+    - 'd/dt * J = a'
+    - 'd/dt * a = alpha/tau_a * s - 2.*a/tau_a - J/tau_a**2'
+    - 'd/dt * s = u'
+    - 'd/dt * u = beta/tau_s * (r + r_e - r_i) - 2.*u/tau_s - s/tau_s**2'
   variables:
     r:
       default: output
     v:
       default: variable
-    v_e:
-      default: variable
-    v_i:
-      default: variable
-    i_e:
-      default: variable
-    i_i:
-      default: variable
     tau:
-      default: 0.07
-    tau_e:
-      default: 0.01
-    tau_i:
-      default: 0.01
-    H_e:
-      default: 10.
-    H_i:
-      default: 10.
-    J:
+      default: 0.02
+    J_0:
       default: 15.
     delta:
       default: 1.0
     eta:
-      default: variable
-    eta_0:
-      default: -5.
-    tau_eta:
-      default: 0.1
-    alpha:
-      default: 0.005
-    r_in_e:
-      default: input
-    r_in_i:
-      default: input
+      default: -5.0
     i_in:
       default: input
+    J:
+      default: variable
+    a:
+      default: variable
+    alpha:
+      default: 3.
+    tau_a:
+      default: 0.1
+    s:
+      default: variable
+    u:
+      default: variable
+    beta:
+      default: 1000.0
+    tau_s:
+      default: 0.001
+    r_e:
+      default: input
+    r_i:
+      default: input
+
 
 
 # populations
@@ -395,6 +354,14 @@ EI_adapt:
   nodes:
     E: Pop_e_adapt
     I: Pop_i_adapt
+  edges:
+    - [E/Op_e_adapt/r, I/Op_i_adapt/r_e, DummyEdge, {weight: 5.0}]
+    - [I/Op_i_adapt/r, E/Op_e_adapt/r_i, DummyEdge, {weight: 5.0}]
+
+E_adapt:
+  base: CircuitTemplate
+  nodes:
+    E: Pop_e_adapt
 
 EI_syn:
   base: CircuitTemplate
@@ -414,8 +381,8 @@ EIC:
     E: Pop_e
     I: Pop_i
   edges:
-    - [E/Op_e/r, I/Op_i/r_in_e, DummyEdge, {weight: 0.5}]
-    - [I/Op_i/r, E/Op_e/r_in_i, DummyEdge, {weight: 1.0}]
+    - [E/Op_e/r, I/Op_i/r_in_e, DummyEdge, {weight: 5.0}]
+    - [I/Op_i/r, E/Op_e/r_in_i, DummyEdge, {weight: 5.0}]
 
 CMC:
   base: CircuitTemplate

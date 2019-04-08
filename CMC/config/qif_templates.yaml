@@ -1,0 +1,130 @@
+%YAML 1.2
+---
+
+# operators
+###########
+
+# basic potential evolution of excitatory cell
+Op_e_v_base:
+  base: OperatorTemplate
+  equations:
+    - 'r = s / (100.0 * dt)'
+    - 'v = v_old + dt * ((v_old**2 + eta + i_in) / tau + J*r)'
+  variables:
+    s:
+      default: input
+    v:
+      default: output
+    tau:
+      default: 0.02
+    J:
+      default: 15.
+    eta:
+      default: -5.0
+    i_in:
+      default: input
+    v_old:
+      default: input
+
+# potential evolution of excitatory cell with adaptation current
+Op_e_v_adapt:
+  base: OperatorTemplate
+  equations:
+    - 'r = mean(s) / dt'
+    - 'd/dt * v = (v_old**2 + eta + i_in - i_a) / tau + J*r'
+    - 'd/dt * i_a =  (alpha*s/dt - i_a) / tau_a'
+  variables:
+    s:
+      default: input
+    v:
+      default: output
+    tau:
+      default: 0.02
+    J:
+      default: 15.
+    delta:
+      default: 1.0
+    eta:
+      default: -5.0
+    i_in:
+      default: input
+    i_a:
+      default: variable
+    alpha:
+      default: 0.1
+    tau_a:
+      default: 0.1
+
+# basic spike operator
+Op_spike:
+  base: OperatorTemplate
+  equations:
+    - 's = float(v > v_th)'
+  variables:
+    s:
+      default: variable
+    v:
+      default: input
+    v_th:
+      default: 1e3
+
+# basic potential reset operator
+Op_reset:
+  base: OperatorTemplate
+  equations:
+    - 'v_sign = float(v <= v_th) - float(v > v_th)'
+    - 'v_new = v * v_sign'
+  variables:
+    v_new:
+      default: variable
+    v:
+      default: input
+    v_th:
+      default: 1e3
+
+# populations
+#############
+
+# base excitatory montbrio population
+Pop_e_base:
+  base: NodeTemplate
+  operators:
+    - Op_e_v_base
+    - Op_spike
+    - Op_reset
+
+# excitatory montbrio population with short-term firing rate adaptation
+Pop_e_adapt:
+  base: NodeTemplate
+  operators:
+    - Op_e_adapt
+    - Op_spike
+    - OP_reset
+
+
+# edges
+#######
+
+DummyEdge:
+  base: EdgeTemplate
+  operators: []
+
+
+# circuits
+##########
+
+E_base:
+  base: CircuitTemplate
+  nodes:
+    E: Pop_e_base
+  edges:
+    - [E/Op_spike/s, E/Op_e_v_base/s, DummyEdge, {weight: 1.}]
+    - [E/Op_reset/v_new, E/Op_e_v_base/v_old, DummyEdge, {weight: 1.}]
+
+E_adapt:
+  base: CircuitTemplate
+  nodes:
+    E: Pop_e_adapt
+  edges:
+    - [E/Op_spike/s, E/Op_e_v_adapt/s, DummyEdge, {weight: 1.}]
+    - [E/Op_reset/v_new, E/Op_e_v_adapt/v_old, DummyEdge, {weight: 1.}]
