@@ -278,6 +278,66 @@ Op_i:
     r_i:
       default: input
 
+Op_eic:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * R_e = delta_e/(PI * tau_e**2) + 2.*R_e*V_e/tau_e"
+    - "d/dt * V_e = (V_e^2 + eta_e)/tau_e + I_ee - I_ei - tau_e*(PI*R_e)^2"
+    - "d/dt * R_i = delta_i/(PI * tau_i**2) + 2.*R_i*V_i/tau_i"
+    - "d/dt * V_i = (V_i^2 + eta_i)/tau_i + I_ie - I_ii - tau_i*(PI*R_i)^2"
+    - "d/dt * I_ee = (k_ee*R_e + Inp_ee - I_ee)/tau_ampa"
+    - "d/dt * I_ei = (k_ei*R_i + Inp_ei - I_ei)/tau_gaba"
+    - "d/dt * I_ie = (k_ie*R_e + Inp_ie - I_ie)/tau_ampa"
+    - "d/dt * I_ii = (k_ii*R_i + Inp_ii - I_ii)/tau_gaba"
+  variables:
+    R_e:
+      default: output
+    R_i:
+      default: variable
+    V_e:
+      default: variable
+    V_i:
+      default: variable
+    I_ee:
+      default: variable
+    I_ei:
+      default: variable
+    I_ie:
+      default: variable
+    I_ii:
+      default: variable
+    eta_e:
+      default: -3.0
+    eta_i:
+      default: -1.0
+    k_ee:
+      default: 20.0
+    k_ie:
+      default: 20.0
+    k_ii:
+      default: 10.0
+    k_ei:
+      default: 10.0
+    tau_e:
+      default: 0.02
+    tau_i:
+      default: 0.02
+    tau_ampa:
+      default: 0.002
+    tau_gaba:
+      default: 0.004
+    delta_e:
+      default: 2.0
+    delta_i:
+      default: 2.0
+    Inp_ee:
+      default: input
+    Inp_ei:
+      default: input
+    Inp_ie:
+      default: input
+    Inp_ii:
+      default: input
 
 
 # populations
@@ -331,6 +391,10 @@ Pop_i:
   operators:
     - Op_i
 
+Pop_eic:
+  base: NodeTemplate
+  operators:
+    - Op_eic
 
 # edges
 #######
@@ -386,10 +450,10 @@ EIC:
 
 CMC:
   base: CircuitTemplate
-  circuits:
-    L3: EIC
-    L5: EIC
+  nodes:
+    L3: Pop_eic
+    L5: Pop_eic
   edges:
-    - [L3/PC/Op_e/r, L5/IIN/Op_i/r_in_e, DummyEdge, {weight: 0.1}]
-    - [L3/PC/Op_e/r, L5/PC/Op_e/r_in_e, DummyEdge, {weight: 0.1}]
-    - [L5/PC/Op_e/r, L3/IIN/Op_i/r_in_e, DummyEdge, {weight: 0.1}]
+    - [L3/Op_eic/R_e, L5/Op_eic/Inp_ie, DummyEdge, {weight: 2.0, delay: 0.002}]
+    - [L3/Op_eic/R_e, L5/Op_eic/Inp_ee, DummyEdge, {weight: 5.0, delay: 0.002}]
+    - [L5/Op_eic/R_e, L3/Op_eic/Inp_ee, DummyEdge, {weight: 3.0, delay: 0.002}]
