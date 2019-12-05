@@ -163,11 +163,11 @@ qif_stn:
     X_i:
       default: variable
     eta_e:
-      default: 0.0
+      default: -3.9
     k_ee:
-      default: 5.0
+      default: 3.7
     k_ei:
-      default: 40.0
+      default: 20.8
     beta:
       default: 100.0
     tau_e:
@@ -216,13 +216,13 @@ qif_gpe:
     X_a:
       default: variable
     eta_i:
-      default: 10.0
+      default: 6.5
     k_ie:
-      default: 50.0
+      default: 143.7
     k_ii:
-      default: 10.0
+      default: 0.0
     alpha:
-      default: 0.1
+      default: 6.9
     beta:
       default: 100.0
     tau_i:
@@ -531,10 +531,10 @@ net_qif_syn_adapt:
     stn: STN
     gpe: GPe
   edges:
-    - [stn/qif_stn/R_e, gpe/qif_gpe/STN, Null, {weight: 1.0, delay: 0.006}]
-    - [gpe/qif_gpe/R_i, stn/qif_stn/GPe, Null, {weight: 1.0, delay: 0.006}]
-    - [stn/qif_stn/R_e, stn/qif_stn/STN, Null, {weight: 1.0, delay: 0.002}]
-    - [gpe/qif_gpe/R_i, gpe/qif_gpe/GPe, Null, {weight: 1.0, delay: 0.002}]
+    - [stn/qif_stn/R_e, gpe/qif_gpe/STN, Null, {weight: 1.0, delay: 0.004}]
+    - [gpe/qif_gpe/R_i, stn/qif_stn/GPe, Null, {weight: 1.0, delay: 0.004}]
+    - [stn/qif_stn/R_e, stn/qif_stn/STN, Null, {weight: 1.0, delay: 0.0}]
+    - [gpe/qif_gpe/R_i, gpe/qif_gpe/GPe, Null, {weight: 1.0, delay: 0.0}]
 
 net_rate:
   base: CircuitTemplate
