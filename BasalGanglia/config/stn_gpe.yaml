@@ -173,13 +173,13 @@ qif_stn:
     tau_e:
       default: 0.006
     tau_re:
-      default: 0.001
+      default: 0.0008
     tau_de:
-      default: 0.005
+      default: 0.0037
     tau_ri:
-      default: 0.002
+      default: 0.0008
     tau_di:
-      default: 0.02
+      default: 0.01
     delta:
       default: 2.0
     GPe:
@@ -191,7 +191,7 @@ qif_gpe:
   base: OperatorTemplate
   equations:
     - "d/dt * R_i = delta/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
-    - "d/dt * V_i = (V_i^2 + eta_i)/tau_i + I_e - I_i - I_a - tau_i*(PI*R_i)^2"
+    - "d/dt * V_i = (V_i^2 + eta_i + eta_str + eta_tha)/tau_i + I_e - I_i - I_a - tau_i*(PI*R_i)^2"
     - "d/dt * I_e = ((tau_de*tau_re)**(tau_re/(tau_de-tau_re))*X_e - I_e)/tau_re"
     - "d/dt * X_e = k_ie*beta*STN - X_e/tau_de"
     - "d/dt * I_i = ((tau_di*tau_ri)**(tau_ri/(tau_di-tau_ri))*X_i - I_i)/tau_ri"
@@ -217,6 +217,10 @@ qif_gpe:
       default: variable
     eta_i:
       default: 6.5
+    eta_str:
+      default: 0.0
+    eta_tha:
+      default: 0.0
     k_ie:
       default: 143.7
     k_ii:
@@ -228,13 +232,13 @@ qif_gpe:
     tau_i:
       default: 0.014
     tau_re:
-      default: 0.001
+      default: 0.0008
     tau_de:
-      default: 0.005
+      default: 0.0037
     tau_ri:
-      default: 0.002
+      default: 0.0005
     tau_di:
-      default: 0.02
+      default: 0.005
     tau_a:
       default: 0.2
     delta:
@@ -515,16 +519,6 @@ GPe:
 # circuit templates
 ###################
 
-net_qif:
-  base: CircuitTemplate
-  nodes:
-    eic: pop_qif
-
-net_qif_syn:
-  base: CircuitTemplate
-  nodes:
-    pop_qif_syn: pop_qif_syn
-
 net_qif_syn_adapt:
   base: CircuitTemplate
   nodes:
@@ -536,17 +530,3 @@ net_qif_syn_adapt:
     - [stn/qif_stn/R_e, stn/qif_stn/STN, Null, {weight: 1.0, delay: 0.0}]
     - [gpe/qif_gpe/R_i, gpe/qif_gpe/GPe, Null, {weight: 1.0, delay: 0.0}]
 
-net_rate:
-  base: CircuitTemplate
-  nodes:
-    pop_rate: pop_rate
-
-net_rate_adapt:
-  base: CircuitTemplate
-  nodes:
-    pop_rate_adapt: pop_rate_adapt
-
-net_rate_adapt_syn:
-  base: CircuitTemplate
-  nodes:
-    pop_rate_adapt_syn: pop_rate_adapt_syn
