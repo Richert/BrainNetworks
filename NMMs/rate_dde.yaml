@@ -1,0 +1,69 @@
+%YAML 1.2
+---
+
+# Operator templates
+####################
+
+rate_dde:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * r = u-k*r_in"
+  variables:
+    r:
+      default: output
+    r_in:
+      default: input
+    u:
+      default: 1.0
+    k:
+      default: 1.0
+
+
+rate_ode:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * r = u-k*r_5"
+    - "d/dt * r_1 = 5*(r-r_1)"
+    - "d/dt * r_2 = 5*(r_1-r_2)"
+    - "d/dt * r_3 = 5*(r_2-r_3)"
+    - "d/dt * r_4 = 5*(r_3-r_4)"
+    - "d/dt * r_5 = 5*(r_4-r_5)"
+  variables:
+    r:
+      default: output
+    r_1:
+      default: variable
+    r_2:
+      default: variable
+    r_3:
+      default: variable
+    r_4:
+      default: variable
+    r_5:
+      default: variable
+    u:
+      default: 1.0
+    k:
+      default: 1.0
+
+Pop_dde:
+  base: NodeTemplate
+  operators:
+    - rate_dde
+
+Pop_ode:
+  base: NodeTemplate
+  operators:
+    - rate_ode
+
+net_dde:
+  base: CircuitTemplate
+  nodes:
+    n1: Pop_dde
+  edges:
+    - [n1/rate_dde/r, n1/rate_dde/r_in, null, {weight: 1.0, delay: 0.8}]
+
+net_ode:
+  base: CircuitTemplate
+  nodes:
+    n1: Pop_ode
