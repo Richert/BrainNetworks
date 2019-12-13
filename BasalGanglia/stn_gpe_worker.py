@@ -7,7 +7,8 @@ from pyrates.utility.grid_search import ClusterWorkerTemplate
 class MyWorker(ClusterWorkerTemplate):
     def worker_postprocessing(self, **worker_kwargs):
 
-        self.processed_results = pd.DataFrame(index=['fitness', 'current', 'penal'], columns=self.results.columns.levels[0])
+        self.processed_results = pd.DataFrame(index=['fitness', 'current', 'penal'],
+                                              columns=self.results.columns.levels[0])
 
         target = np.array([20, 60])
         tmin = 2.
