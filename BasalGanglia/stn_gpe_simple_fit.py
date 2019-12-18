@@ -13,7 +13,8 @@ class CustomGOA(GSGeneticAlgorithm):
         # define simulation conditions
         param_grid = self.pop.drop(['fitness', 'sigma', 'results'], axis=1)
         results = []
-        models_vars = ['k_ie', 'k_ii', 'k_ei', 'k_ee', 'eta_e', 'eta_i', 'eta_str', 'eta_tha', 'alpha']
+        models_vars = ['k_ie', 'k_ii', 'k_ei', 'k_ee', 'eta_e', 'eta_i', 'eta_str', 'eta_tha', 'alpha',
+                       'delta_e', 'delta_i']
         freq_targets = [0.0, 0.0, 0.0, 70.0, 0.0, 13.0]
         param_grid, invalid_params = eval_params(param_grid)
         zero_vec = [0.0 for _ in range(param_grid.shape[0])]
@@ -31,6 +32,8 @@ class CustomGOA(GSGeneticAlgorithm):
                        'eta_i': param_grid['eta_i'] + param_grid['eta_i_pd'],
                        'eta_str': param_grid['eta_str'] + param_grid['eta_str_pd'],
                        'eta_tha': param_grid['eta_tha'] + param_grid['eta_tha_pd'],
+                       'delta_e': param_grid['delta_e'] + param_grid['delta_e_pd'],
+                       'delta_i': param_grid['delta_i'] + param_grid['delta_i_pd'],
                        }  # parkinsonian condition
                       ]
 
@@ -60,7 +63,7 @@ class CustomGOA(GSGeneticAlgorithm):
                 outputs.append([np.mean(r['r_e'][f'circuit_{gene_id}'].loc[0.5:]),
                                 np.mean(r['r_i'][f'circuit_{gene_id}'].loc[0.5:])])
 
-                psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=0.1, fmin=1.0, fmax=100.0)
+                psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=1.0, fmin=1.0, fmax=100.0)
                 freq.append(freqs)
                 pow.append(psds[0, :])
 
@@ -116,6 +119,10 @@ def eval_params(params):
             valid = False
         if params.loc[gene_id, 'eta_str_pd'] > 0.0:
             valid = False
+        if params.loc[gene_id, 'delta_e'] + params.loc[gene_id, 'delta_e_pd'] < 0:
+            valid = False
+        if params.loc[gene_id, 'delta_i'] + params.loc[gene_id, 'delta_i_pd'] < 0:
+            valid = False
 
         # add parametrization to valid or invalid parameter sets
         if valid:
@@ -137,22 +144,26 @@ if __name__ == "__main__":
 
     pop_genes = {
         'k_ee': {'min': 0, 'max': 20, 'N': 2, 'sigma': 0.4},
-        'k_ei': {'min': 10, 'max': 100, 'N': 2, 'sigma': 0.8},
-        'k_ie': {'min': 10, 'max': 100, 'N': 2, 'sigma': 0.8},
+        'k_ei': {'min': 0, 'max': 100, 'N': 2, 'sigma': 0.8},
+        'k_ie': {'min': 0, 'max': 100, 'N': 2, 'sigma': 0.8},
         'k_ii': {'min': 0, 'max': 50, 'N': 2, 'sigma': 0.8},
         'eta_e': {'min': -10, 'max': 10, 'N': 2, 'sigma': 0.4},
-        'eta_i': {'min': -10, 'max': 10, 'N': 2, 'sigma': 0.4},
+        'eta_i': {'min': -20, 'max': 20, 'N': 2, 'sigma': 0.4},
         'eta_str': {'min': -10, 'max': 0, 'N': 2, 'sigma': 0.4},
-        'eta_tha': {'min': 0, 'max': 10, 'N': 2, 'sigma': 0.4},
+        'eta_tha': {'min': 0, 'max': 20, 'N': 2, 'sigma': 0.4},
         'alpha': {'min': 0, 'max': 10.0, 'N': 1, 'sigma': 0.2},
-        'k_ee_pd': {'min': 0, 'max': 10, 'N': 1, 'sigma': 0.4},
+        'delta_e': {'min': 0.1, 'max': 3.0, 'N': 1, 'sigma': 0.2},
+        'delta_i': {'min': 0.1, 'max': 3.0, 'N': 1, 'sigma': 0.2},
+        'k_ee_pd': {'min': 0, 'max': 20, 'N': 1, 'sigma': 0.4},
         'k_ei_pd': {'min': 0, 'max': 100, 'N': 1, 'sigma': 0.8},
         'k_ie_pd': {'min': 0, 'max': 100, 'N': 1, 'sigma': 0.8},
         'k_ii_pd': {'min': 0, 'max': 50, 'N': 1, 'sigma': 0.8},
         'eta_e_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
         'eta_i_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
-        'eta_str_pd': {'min': -10, 'max': 0, 'N': 1, 'sigma': 0.4},
+        'eta_str_pd': {'min': -20, 'max': 0, 'N': 1, 'sigma': 0.4},
         'eta_tha_pd': {'min': -10.0, 'max': 10, 'N': 1, 'sigma': 0.4},
+        'delta_e_pd': {'min': -2.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
+        'delta_i_pd': {'min': -2.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
     }
 
     param_map = {
@@ -173,10 +184,12 @@ if __name__ == "__main__":
         'eta_i_pd': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
         'eta_str_pd': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
         'eta_tha_pd': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'alpha_pd': {'vars': ['qif_gpe/alpha'], 'nodes': ['gpe']}
+        'alpha_pd': {'vars': ['qif_gpe/alpha'], 'nodes': ['gpe']},
+        'delta_e': {'vars': ['qif_stn/delta'], 'nodes': ['stn']},
+        'delta_i': {'vars': ['qif_gpe/delta'], 'nodes': ['gpe']}
     }
 
-    T = 2.
+    T = 6.
     dt = 5e-4
     dts = 1e-3
 
@@ -209,8 +222,8 @@ if __name__ == "__main__":
                 [35, 80],  # GABAA antagonist in STN
                 [30, 40]   # parkinsonian condition
                 ],
-        max_iter=1000,
-        min_fit=0.95,
+        max_iter=100,
+        min_fit=0.5,
         n_winners=6,
         n_parent_pairs=200,
         n_new=50,

@@ -93,9 +93,9 @@ qif_full:
     tau_de:
       default: 0.0037
     tau_ri:
-      default: 0.0008
+      default: 0.0005
     tau_di:
-      default: 0.01
+      default: 0.005
     tau_a:
       default: 0.2
     alpha:
@@ -148,9 +148,9 @@ qif_stn:
     - "d/dt * R_e = delta/(PI*tau_e^2) + 2.*R_e*V_e/tau_e"
     - "d/dt * V_e = (V_e^2 + eta_e)/tau_e + I_e - I_i - tau_e*(PI*R_e)^2"
     - "d/dt * I_e = ((tau_de*tau_re)**(tau_re/(tau_de-tau_re))*X_e - I_e)/tau_re"
-    - "d/dt * X_e =  k_ee*beta*STN - X_e/tau_de"
+    - "d/dt * X_e =  k_ee*STN - X_e/tau_de"
     - "d/dt * I_i = ((tau_di*tau_ri)**(tau_ri/(tau_di-tau_ri))*X_i - I_i)/tau_ri"
-    - "d/dt * X_i = k_ei*beta*GPe - X_i/tau_di"
+    - "d/dt * X_i = k_ei*GPe - X_i/tau_di"
   variables:
     R_e:
       default: output
@@ -170,8 +170,6 @@ qif_stn:
       default: 3.7
     k_ei:
       default: 20.8
-    beta:
-      default: 100.0
     tau_e:
       default: 0.006
     tau_re:
@@ -179,9 +177,9 @@ qif_stn:
     tau_de:
       default: 0.0037
     tau_ri:
-      default: 0.0005 #0.0008
+      default: 0.0008
     tau_di:
-      default: 0.005 #0.01
+      default: 0.01
     delta:
       default: 2.0
     GPe:
@@ -196,9 +194,9 @@ qif_gpe:
     - "d/dt * R_i = delta/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
     - "d/dt * V_i = (V_i^2 + eta_i + eta_str + eta_tha)/tau_i + I_e - I_i - I_a - tau_i*(PI*R_i)^2"
     - "d/dt * I_e = ((tau_de*tau_re)**(tau_re/(tau_de-tau_re))*X_e - I_e)/tau_re"
-    - "d/dt * X_e = k_ie*beta*STN - X_e/tau_de"
+    - "d/dt * X_e = k_ie*STN - X_e/tau_de"
     - "d/dt * I_i = ((tau_di*tau_ri)**(tau_ri/(tau_di-tau_ri))*X_i - I_i)/tau_ri"
-    - "d/dt * X_i = k_ii*beta*GPe - X_i/tau_di"
+    - "d/dt * X_i = k_ii*GPe - X_i/tau_di"
     - "d/dt * I_a = X_a"
     - "d/dt * X_a = alpha*R_i/tau_a - 2.0*X_a/tau_a - I_a/tau_a^2"
   variables:
@@ -230,8 +228,6 @@ qif_gpe:
       default: 0.0
     alpha:
       default: 6.9
-    beta:
-      default: 100.0
     tau_i:
       default: 0.014
     tau_re:
@@ -422,37 +418,6 @@ op_rate_adapt_syn:
     alpha:
       default: 0.0
 
-edge_gamma8:
-  base: OperatorTemplate
-  equations:
-    - "d/dt * m1 = (weight*m - m1)*8.0/delay"
-    - "d/dt * m2 = (m1 - m2)*8.0/delay"
-    - "d/dt * m3 = (m2 - m3)*8.0/delay"
-    - "d/dt * m4 = (m3 - m4)*8.0/delay"
-    - "d/dt * m5 = (m4 - m5)*8.0/delay"
-    - "d/dt * m6 = (m5 - m6)*8.0/delay"
-    - "d/dt * m7 = (m6 - m7)*8.0/delay"
-    - "d/dt * m8 = (m7 - m8)*8.0/delay"
-  variables:
-    m1:
-      default: variable
-    m2:
-      default: variable
-    m3:
-      default: variable
-    m4:
-      default: variable
-    m5:
-      default: variable
-    m6:
-      default: variable
-    m7:
-      default: variable
-    m8:
-      default: output
-    m:
-      default: input
-
 # population templates
 ######################
 
@@ -518,10 +483,10 @@ net_qif_syn_adapt:
     stn: STN
     gpe: GPe
   edges:
-    - [stn/qif_stn/R_e, gpe/qif_gpe/STN, Null, {weight: 1.0, delay: 0.004}]
-    - [gpe/qif_gpe/R_i, stn/qif_stn/GPe, Null, {weight: 1.0, delay: 0.004}]
-    - [stn/qif_stn/R_e, stn/qif_stn/STN, Null, {weight: 1.0, delay: 0.0}]
-    - [gpe/qif_gpe/R_i, gpe/qif_gpe/GPe, Null, {weight: 1.0, delay: 0.0}]
+    - [stn/qif_stn/R_e, gpe/qif_gpe/STN, null, {weight: 1000.0, delay: 0.004, spread: 0.001}]
+    - [gpe/qif_gpe/R_i, stn/qif_stn/GPe, null, {weight: 1000.0, delay: 0.004, spread: 0.001}]
+    - [stn/qif_stn/R_e, stn/qif_stn/STN, null, {weight: 1000.0, delay: 0.0}]
+    - [gpe/qif_gpe/R_i, gpe/qif_gpe/GPe, null, {weight: 1000.0, delay: 0.0}]
 
 net_stn_gpe:
   base: CircuitTemplate
