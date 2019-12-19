@@ -13,14 +13,16 @@ class CustomGOA(CGSGeneticAlgorithm):
         # define simulation conditions
         param_grid = self.pop.drop(['fitness', 'sigma', 'results'], axis=1)
         results = []
-        models_vars = ['k_ie', 'k_ii', 'k_ei', 'k_ee', 'eta_e', 'eta_i', 'eta_str', 'eta_tha', 'alpha']
-        freq_targets = [0.0, 0.0, 0.0, 70.0, 0.0, 13.0]
+        models_vars = ['k_ie', 'k_ii', 'k_ei', 'k_ee', 'eta_e', 'eta_i', 'eta_str', 'eta_tha', 'alpha',
+                       'delta_e', 'delta_i']
+        freq_targets = [0.0, 0.0, 0.0, 0.0, 70.0, 0.0, 13.0]
         param_grid, invalid_params = eval_params(param_grid)
         zero_vec = [0.0 for _ in range(param_grid.shape[0])]
         conditions = [{},  # healthy control
                       {'k_ie': zero_vec},  # STN blockade
                       {'k_ii': zero_vec, 'eta_str': zero_vec},  # GABAA blockade in GPe
-                      {'k_ie': zero_vec, 'k_ii': zero_vec, 'eta_str': zero_vec},  # STN blockade and GABAA blockade in GPe
+                      {'k_ie': zero_vec, 'k_ii': zero_vec, 'eta_str': zero_vec},
+                      # STN blockade and GABAA blockade in GPe
                       {'k_ie': zero_vec, 'eta_tha': zero_vec},  # AMPA + NMDA blocker in GPe
                       {'k_ei': zero_vec},  # GABAA antagonist in STN
                       {'k_ei': param_grid['k_ei'] + param_grid['k_ei_pd'],
@@ -31,6 +33,8 @@ class CustomGOA(CGSGeneticAlgorithm):
                        'eta_i': param_grid['eta_i'] + param_grid['eta_i_pd'],
                        'eta_str': param_grid['eta_str'] + param_grid['eta_str_pd'],
                        'eta_tha': param_grid['eta_tha'] + param_grid['eta_tha_pd'],
+                       'delta_e': param_grid['delta_e'] + param_grid['delta_e_pd'],
+                       'delta_i': param_grid['delta_i'] + param_grid['delta_i_pd'],
                        }  # parkinsonian condition
                       ]
         chunk_size = [
@@ -47,41 +51,36 @@ class CustomGOA(CGSGeneticAlgorithm):
         # perform simulations
         if len(param_grid) > 0:
             for c_dict in conditions:
-
                 param_grid_tmp = {key: param_grid[key] for key in models_vars}.copy()
                 param_grid_tmp.update(DataFrame(c_dict, index=param_grid.index))
-                results_file = self.cgs.run(circuit_template=self.gs_config['circuit_template'],
-                                            param_grid=param_grid_tmp,
-                                            param_map=self.gs_config['param_map'],
-                                            simulation_time=self.gs_config['simulation_time'],
-                                            dt=self.gs_config['step_size'],
-                                            sampling_step_size=self.gs_config['sampling_step_size'],
-                                            permute_grid=False,
-                                            inputs=self.gs_config['inputs'],
-                                            outputs=self.gs_config['outputs'].copy(),
-                                            chunk_size=chunk_size,
-                                            worker_file='stn_gpe_worker.py',
-                                            add_template_info=False,
-                                            gs_kwargs={'init_kwargs': self.gs_config['init_kwargs'],
-                                                       'method': 'LSODA'},
-                                            **kwargs
-                                            )
-                results.append(read_hdf(results_file, key='Results/results'))
+                results.append(grid_search(circuit_template=self.gs_config['circuit_template'],
+                                           param_grid=param_grid_tmp,
+                                           param_map=self.gs_config['param_map'],
+                                           simulation_time=self.gs_config['simulation_time'],
+                                           dt=self.gs_config['step_size'],
+                                           sampling_step_size=self.gs_config['sampling_step_size'],
+                                           permute_grid=False,
+                                           inputs=self.gs_config['inputs'],
+                                           outputs=self.gs_config['outputs'].copy(),
+                                           init_kwargs=self.gs_config['init_kwargs'],
+                                           **kwargs
+                                           )[0])
 
         # calculate fitness
         for gene_id in param_grid.index:
             outputs, freq, pow = [], [], []
-            for r in results:
+            for i, r in enumerate(results):
                 outputs.append([np.mean(r['r_e'][f'circuit_{gene_id}'].loc[0.5:]),
                                 np.mean(r['r_i'][f'circuit_{gene_id}'].loc[0.5:])])
 
-                psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=0.1, fmin=1.0, fmax=100.0)
+                tmin = 0.0 if i == 4 else 2.0
+                psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=tmin, fmin=5.0, fmax=100.0)
                 freq.append(freqs)
                 pow.append(psds[0, :])
 
             dist1 = self.fitness_measure(outputs, target, **self.fitness_kwargs)
             dist2 = analyze_oscillations(freq_targets, freq, pow)
-            self.pop.at[gene_id, 'fitness'] = 1.0/(dist1 + dist2)
+            self.pop.at[gene_id, 'fitness'] = 1.0 / (dist1 + dist2)
             self.pop.at[gene_id, 'results'] = outputs
 
         # set fitness of invalid parametrizations
@@ -92,8 +91,8 @@ class CustomGOA(CGSGeneticAlgorithm):
 def fitness(y, t):
     y = np.asarray(y).flatten()
     t = np.asarray(t).flatten()
-    diff = np.asarray([0.0 if t_tmp is None else y_tmp - t_tmp for y_tmp, t_tmp in zip(y, t)])
-    return np.sqrt(np.mean(diff**2))
+    diff = np.asarray([0.0 if np.isnan(t_tmp) else y_tmp - t_tmp for y_tmp, t_tmp in zip(y, t)])
+    return np.sqrt(np.mean(diff ** 2))
 
 
 def analyze_oscillations(freq_targets, freqs, pows):
@@ -115,11 +114,9 @@ def eval_params(params):
 
         # check validity conditions
         valid = True
-        if params.loc[gene_id, 'k_ee'] > 0.25*params.loc[gene_id, 'k_ie']:
+        if params.loc[gene_id, 'k_ee'] > 0.3 * params.loc[gene_id, 'k_ie']:
             valid = False
-        if params.loc[gene_id, 'k_ii'] > params.loc[gene_id, 'k_ei']:
-            valid = False
-        if params.loc[gene_id, 'k_ie'] > 0.75*params.loc[gene_id, 'k_ei']:
+        if params.loc[gene_id, 'k_ii'] > 0.6 * params.loc[gene_id, 'k_ei']:
             valid = False
         if params.loc[gene_id, 'k_ee_pd'] < 0.0:
             valid = False
@@ -130,6 +127,10 @@ def eval_params(params):
         if params.loc[gene_id, 'k_ii_pd'] < 0.0:
             valid = False
         if params.loc[gene_id, 'eta_str_pd'] > 0.0:
+            valid = False
+        if params.loc[gene_id, 'delta_e'] + params.loc[gene_id, 'delta_e_pd'] < 0:
+            valid = False
+        if params.loc[gene_id, 'delta_i'] + params.loc[gene_id, 'delta_i_pd'] < 0:
             valid = False
 
         # add parametrization to valid or invalid parameter sets
@@ -151,23 +152,27 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
     pop_genes = {
-        'k_ee': {'min': 0, 'max': 20, 'N': 2, 'sigma': 0.4},
-        'k_ei': {'min': 10, 'max': 100, 'N': 2, 'sigma': 0.8},
-        'k_ie': {'min': 10, 'max': 100, 'N': 2, 'sigma': 0.8},
-        'k_ii': {'min': 0, 'max': 50, 'N': 2, 'sigma': 0.8},
-        'eta_e': {'min': -10, 'max': 10, 'N': 2, 'sigma': 0.4},
-        'eta_i': {'min': -10, 'max': 10, 'N': 2, 'sigma': 0.4},
-        'eta_str': {'min': -10, 'max': 0, 'N': 2, 'sigma': 0.4},
-        'eta_tha': {'min': 0, 'max': 10, 'N': 2, 'sigma': 0.4},
+        'k_ee': {'min': 0, 'max': 30, 'N': 1, 'sigma': 0.4},
+        'k_ei': {'min': 0, 'max': 120, 'N': 3, 'sigma': 0.8},
+        'k_ie': {'min': 0, 'max': 120, 'N': 3, 'sigma': 0.8},
+        'k_ii': {'min': 0, 'max': 60, 'N': 1, 'sigma': 0.8},
+        'eta_e': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
+        'eta_i': {'min': -20, 'max': 20, 'N': 1, 'sigma': 0.4},
+        'eta_str': {'min': -10, 'max': 0, 'N': 1, 'sigma': 0.4},
+        'eta_tha': {'min': 0, 'max': 20, 'N': 1, 'sigma': 0.4},
         'alpha': {'min': 0, 'max': 10.0, 'N': 1, 'sigma': 0.2},
-        'k_ee_pd': {'min': 0, 'max': 10, 'N': 1, 'sigma': 0.4},
-        'k_ei_pd': {'min': 0, 'max': 100, 'N': 1, 'sigma': 0.8},
-        'k_ie_pd': {'min': 0, 'max': 100, 'N': 1, 'sigma': 0.8},
-        'k_ii_pd': {'min': 0, 'max': 50, 'N': 1, 'sigma': 0.8},
+        'delta_e': {'min': 0.1, 'max': 3.0, 'N': 1, 'sigma': 0.2},
+        'delta_i': {'min': 0.1, 'max': 3.0, 'N': 1, 'sigma': 0.2},
+        'k_ee_pd': {'min': 0, 'max': 15, 'N': 1, 'sigma': 0.4},
+        'k_ei_pd': {'min': 0, 'max': 60, 'N': 1, 'sigma': 0.8},
+        'k_ie_pd': {'min': 0, 'max': 60, 'N': 1, 'sigma': 0.8},
+        'k_ii_pd': {'min': 0, 'max': 30, 'N': 1, 'sigma': 0.8},
         'eta_e_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
         'eta_i_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
-        'eta_str_pd': {'min': -10, 'max': 0, 'N': 1, 'sigma': 0.4},
+        'eta_str_pd': {'min': -20, 'max': 0, 'N': 1, 'sigma': 0.4},
         'eta_tha_pd': {'min': -10.0, 'max': 10, 'N': 1, 'sigma': 0.4},
+        'delta_e_pd': {'min': -2.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
+        'delta_i_pd': {'min': -2.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
     }
 
     param_map = {
@@ -180,18 +185,11 @@ if __name__ == "__main__":
         'eta_str': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
         'eta_tha': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
         'alpha': {'vars': ['qif_gpe/alpha'], 'nodes': ['gpe']},
-        'k_ee_pd': {'vars': ['qif_stn/k_ee'], 'nodes': ['stn']},
-        'k_ei_pd': {'vars': ['qif_stn/k_ei'], 'nodes': ['stn']},
-        'k_ie_pd': {'vars': ['qif_gpe/k_ie'], 'nodes': ['gpe']},
-        'k_ii_pd': {'vars': ['qif_gpe/k_ii'], 'nodes': ['gpe']},
-        'eta_e_pd': {'vars': ['qif_stn/eta_e'], 'nodes': ['stn']},
-        'eta_i_pd': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'eta_str_pd': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'eta_tha_pd': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'alpha_pd': {'vars': ['qif_gpe/alpha'], 'nodes': ['gpe']}
+        'delta_e': {'vars': ['qif_stn/delta'], 'nodes': ['stn']},
+        'delta_i': {'vars': ['qif_gpe/delta'], 'nodes': ['gpe']}
     }
 
-    T = 2.
+    T = 12.
     dt = 5e-4
     dts = 1e-3
 
@@ -228,7 +226,7 @@ if __name__ == "__main__":
                 [30, 40]   # parkinsonian condition
                 ],
         max_iter=1000,
-        min_fit=0.95,
+        min_fit=0.5,
         n_winners=6,
         n_parent_pairs=200,
         n_new=50,

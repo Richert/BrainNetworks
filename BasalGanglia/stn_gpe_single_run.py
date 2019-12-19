@@ -22,15 +22,15 @@ results, t = eic.run(simulation_time=T, sampling_step_size=dts, profile=True,
 #print(results.iloc[-1, :])
 results.plot()
 
-eic2 = CircuitIR.from_yaml("config/stn_gpe/net_stn_gpe").compile(backend='numpy', step_size=dt, solver='scipy')
-results2, t = eic2.run(simulation_time=T, sampling_step_size=dts, profile=True,
-                       outputs={'r_e': 'stn_gpe/qif_full/R_e',
-                                'r_i': 'stn_gpe/qif_full/R_i',
-                                #'v_e': 'stn_gpe/qif_full/V_e',
-                                #'v_i': 'stn_gpe/qif_full/V_i',
-                                }
-                       )
+# eic2 = CircuitIR.from_yaml("config/stn_gpe/net_stn_gpe").compile(backend='numpy', step_size=dt, solver='scipy')
+# results2, t = eic2.run(simulation_time=T, sampling_step_size=dts, profile=True,
+#                        outputs={'r_e': 'stn_gpe/qif_full/R_e',
+#                                 'r_i': 'stn_gpe/qif_full/R_i',
+#                                 #'v_e': 'stn_gpe/qif_full/V_e',
+#                                 #'v_i': 'stn_gpe/qif_full/V_i',
+#                                 }
+#                        )
 
 #print(results.iloc[-1, :])
-results2.plot()
+# results2.plot()
 plt.show()
