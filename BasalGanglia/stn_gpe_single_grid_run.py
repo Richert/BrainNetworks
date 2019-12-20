@@ -28,15 +28,15 @@ param_map = {
     }
 
 param_grid = {
-        'k_ee': [3.01],
-        'k_ei': [55.34],
-        'k_ie': [32.06],
-        'k_ii': [28.69],
-        'eta_e': [-6.07],
-        'eta_i': [4.87],
-        'eta_str': [-3.64],
-        'eta_tha': [8.45],
-        'alpha': [5.0],
+        'k_ee': [1.29],
+        'k_ei': [50.64],
+        'k_ie': [135.67],
+        'k_ii': [5.24],
+        'eta_e': [-3.01],
+        'eta_i': [6.72],
+        'eta_str': [-14.96],
+        'eta_tha': [10.35],
+        'alpha': [5.09],
         'k_ee_pd': [10.0],
         'k_ei_pd': [50.0],
         'k_ie_pd': [50.0],
@@ -45,33 +45,34 @@ param_grid = {
         'eta_i_pd': [0.0],
         'eta_str_pd': [-10.0],
         'eta_tha_pd': [0.0],
-        'delta_e': [1.55],
-        'delta_i': [1.55],
+        'delta_e': [2.92],
+        'delta_i': [2.59],
         'delta_e_pd': [-1.0],
         'delta_i_pd': [-1.0],
     }
 
 # define simulation conditions
-conditions = [{'k_ie': 0.0},  # STN blockade
-              {'k_ii': 0.0, 'eta_str': 0.0},  # GABAA blockade in GPe
-              {'k_ie': 0.0, 'k_ii': 0.0, 'eta_str': 0.0},  # STN blockade and GABAA blockade in GPe
-              {'k_ie': 0.0, 'eta_tha': 0.0},  # AMPA + NMDA blocker in GPe
-              {'k_ei': 0.0},  # GABAA antagonist in STN
-              {'k_ei': param_grid['k_ei'][0] + param_grid['k_ei_pd'][0],
-               'k_ie': param_grid['k_ie'][0] + param_grid['k_ie_pd'][0],
-               'k_ee': param_grid['k_ee'][0] + param_grid['k_ee_pd'][0],
-               'k_ii': param_grid['k_ii'][0] + param_grid['k_ii_pd'][0],
-               'eta_e': param_grid['eta_e'][0] + param_grid['eta_e_pd'][0],
-               'eta_i': param_grid['eta_i'][0] + param_grid['eta_i_pd'][0],
-               'eta_str': param_grid['eta_str'][0] + param_grid['eta_str_pd'][0],
-               'eta_tha': param_grid['eta_tha'][0] + param_grid['eta_tha_pd'][0],
-               'delta_e': param_grid['delta_e'][0] + param_grid['delta_e_pd'][0],
-               'delta_i': param_grid['delta_i'][0] + param_grid['delta_i_pd'][0],
-               }  # parkinsonian condition
+conditions = [
+    {'k_ie': 0.0},  # STN blockade
+    {'k_ii': 0.0, 'eta_str': 0.0},  # GABAA blockade in GPe
+    {'k_ie': 0.0, 'k_ii': 0.0, 'eta_str': 0.0},  # STN blockade and GABAA blockade in GPe
+    {'k_ie': 0.0, 'eta_tha': 0.0},  # AMPA + NMDA blocker in GPe
+    {'k_ei': 0.0},  # GABAA antagonist in STN
+    # {'k_ei': param_grid['k_ei'][0] + param_grid['k_ei_pd'][0],
+    #  'k_ie': param_grid['k_ie'][0] + param_grid['k_ie_pd'][0],
+    #  'k_ee': param_grid['k_ee'][0] + param_grid['k_ee_pd'][0],
+    #  'k_ii': param_grid['k_ii'][0] + param_grid['k_ii_pd'][0],
+    #  'eta_e': param_grid['eta_e'][0] + param_grid['eta_e_pd'][0],
+    #  'eta_i': param_grid['eta_i'][0] + param_grid['eta_i_pd'][0],
+    #  'eta_str': param_grid['eta_str'][0] + param_grid['eta_str_pd'][0],
+    #  'eta_tha': param_grid['eta_tha'][0] + param_grid['eta_tha_pd'][0],
+    #  'delta_e': param_grid['delta_e'][0] + param_grid['delta_e_pd'][0],
+    #  'delta_i': param_grid['delta_i'][0] + param_grid['delta_i_pd'][0],
+    #  }  # parkinsonian condition
               ]
 
 models_vars = ['k_ie', 'k_ii', 'k_ei', 'k_ee', 'eta_e', 'eta_i', 'eta_str', 'eta_tha', 'alpha',
-                       'delta_e', 'delta_i']
+               'delta_e', 'delta_i']
 for c_dict in conditions:
 
     for key in models_vars:
@@ -82,8 +83,8 @@ for key in param_grid.copy():
         param_grid.pop(key)
 
 # define simulation parameters
-dt = 5e-5
-T = 2.0
+dt = 1e-5
+T = 5.0
 dts = 1e-3
 
 # perform simulation
@@ -95,8 +96,10 @@ results, _ = grid_search(circuit_template="config/stn_gpe/net_qif_syn_adapt",
                          sampling_step_size=dts,
                          permute_grid=False,
                          inputs={},
-                         outputs={'r_e': 'stn/qif_stn/R_e', 'r_i': 'gpe/qif_gpe/R_i'},
+                         outputs={'r_e': "stn/qif_stn/R_e", 'r_i': 'gpe/qif_gpe/R_i'},
                          init_kwargs={'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
-                         )
+                         rtol=1e-5)
 results.plot()
+for col in results.columns.values:
+    print(col, results.loc[:, col].iloc[-1])
 plt.show()

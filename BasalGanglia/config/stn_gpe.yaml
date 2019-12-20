@@ -147,10 +147,10 @@ qif_stn:
   equations:
     - "d/dt * R_e = delta/(PI*tau_e^2) + 2.*R_e*V_e/tau_e"
     - "d/dt * V_e = (V_e^2 + eta_e)/tau_e + I_e - I_i - tau_e*(PI*R_e)^2"
-    - "d/dt * I_e = ((tau_de*tau_re)**(tau_re/(tau_de-tau_re))*X_e - I_e)/tau_re"
-    - "d/dt * X_e =  k_ee*STN - X_e/tau_de"
-    - "d/dt * I_i = ((tau_di*tau_ri)**(tau_ri/(tau_di-tau_ri))*X_i - I_i)/tau_ri"
-    - "d/dt * X_i = k_ei*GPe - X_i/tau_di"
+    - "d/dt * I_e = X_e"
+    - "d/dt * X_e = (k_ee*R_e - X_e*(tau_re+tau_de) - I_e)/(tau_re*tau_de)"
+    - "d/dt * I_i = X_i"
+    - "d/dt * X_i = (k_ei*GPe - X_i*(tau_ri+tau_di) - I_i)/(tau_ri*tau_di)"
   variables:
     R_e:
       default: output
@@ -165,11 +165,11 @@ qif_stn:
     X_i:
       default: variable
     eta_e:
-      default: -3.9
+      default: -5.0
     k_ee:
-      default: 3.7
+      default: 1.0
     k_ei:
-      default: 20.8
+      default: 10.0
     tau_e:
       default: 0.006
     tau_re:
@@ -184,8 +184,6 @@ qif_stn:
       default: 2.0
     GPe:
       default: input
-    STN:
-      default: input
 
 
 qif_gpe:
@@ -193,10 +191,10 @@ qif_gpe:
   equations:
     - "d/dt * R_i = delta/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
     - "d/dt * V_i = (V_i^2 + eta_i + eta_str + eta_tha)/tau_i + I_e - I_i - I_a - tau_i*(PI*R_i)^2"
-    - "d/dt * I_e = ((tau_de*tau_re)**(tau_re/(tau_de-tau_re))*X_e - I_e)/tau_re"
-    - "d/dt * X_e = k_ie*STN - X_e/tau_de"
-    - "d/dt * I_i = ((tau_di*tau_ri)**(tau_ri/(tau_di-tau_ri))*X_i - I_i)/tau_ri"
-    - "d/dt * X_i = k_ii*GPe - X_i/tau_di"
+    - "d/dt * I_e = X_e"
+    - "d/dt * X_e = (k_ie*STN - X_e*(tau_re+tau_de) - I_e)/(tau_re*tau_de)"
+    - "d/dt * I_i = X_i"
+    - "d/dt * X_i = (k_ii*R_i - X_i*(tau_ri+tau_di) - I_i)/(tau_ri*tau_di)"
     - "d/dt * I_a = X_a"
     - "d/dt * X_a = alpha*R_i/tau_a - 2.0*X_a/tau_a - I_a/tau_a^2"
   variables:
@@ -217,17 +215,17 @@ qif_gpe:
     X_a:
       default: variable
     eta_i:
-      default: 6.5
+      default: 5.0
     eta_str:
-      default: 0.0
+      default: -2.0
     eta_tha:
-      default: 0.0
+      default: 2.0
     k_ie:
-      default: 143.7
+      default: 50.0
     k_ii:
-      default: 0.0
+      default: 1.0
     alpha:
-      default: 6.9
+      default: 5.0
     tau_i:
       default: 0.014
     tau_re:
@@ -243,8 +241,6 @@ qif_gpe:
     delta:
       default: 2.0
     STN:
-      default: input
-    GPe:
       default: input
 
 # 2 coupled rate populations (1 x excitatory, 1 x inhibitory)
@@ -483,10 +479,8 @@ net_qif_syn_adapt:
     stn: STN
     gpe: GPe
   edges:
-    - [stn/qif_stn/R_e, gpe/qif_gpe/STN, null, {weight: 1000.0, delay: 0.004, spread: 0.001}]
-    - [gpe/qif_gpe/R_i, stn/qif_stn/GPe, null, {weight: 1000.0, delay: 0.004, spread: 0.001}]
-    - [stn/qif_stn/R_e, stn/qif_stn/STN, null, {weight: 1000.0, delay: 0.0}]
-    - [gpe/qif_gpe/R_i, gpe/qif_gpe/GPe, null, {weight: 1000.0, delay: 0.0}]
+    - [stn/qif_stn/R_e, gpe/qif_gpe/STN, null, {weight: 1.0, delay: 0.004, spread: 0.001}]
+    - [gpe/qif_gpe/R_i, stn/qif_stn/GPe, null, {weight: 1.0, delay: 0.004, spread: 0.001}]
 
 net_stn_gpe:
   base: CircuitTemplate

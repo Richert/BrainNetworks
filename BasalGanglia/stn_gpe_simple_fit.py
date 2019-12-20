@@ -15,7 +15,7 @@ class CustomGOA(GSGeneticAlgorithm):
         results = []
         models_vars = ['k_ie', 'k_ii', 'k_ei', 'k_ee', 'eta_e', 'eta_i', 'eta_str', 'eta_tha', 'alpha',
                        'delta_e', 'delta_i']
-        freq_targets = [0.0, 0.0, 0.0, 0.0, 50.0, 0.0, 13.0]
+        freq_targets = [0.0, 0.0, 0.0, 0.0, np.nan, 0.0, 13.0]
         param_grid, invalid_params = eval_params(param_grid)
         zero_vec = [0.0 for _ in range(param_grid.shape[0])]
         conditions = [{},  # healthy control
@@ -63,8 +63,7 @@ class CustomGOA(GSGeneticAlgorithm):
                 outputs.append([np.mean(r['r_e'][f'circuit_{gene_id}'].loc[0.5:]),
                                 np.mean(r['r_i'][f'circuit_{gene_id}'].loc[0.5:])])
 
-                tmin = 0.0 if i == 4 else 1.0
-                psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=tmin, fmin=5.0, fmax=100.0)
+                psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=2.0, fmin=5.0, fmax=100.0)
                 freq.append(freqs)
                 pow.append(psds[0, :])
 
