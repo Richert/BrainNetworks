@@ -5,6 +5,7 @@ from pyrates.utility.grid_search import ClusterWorkerTemplate
 
 
 class MyWorker(ClusterWorkerTemplate):
+
     def worker_postprocessing(self, **worker_kwargs):
 
         self.processed_results = pd.DataFrame(index=['fitness', 'current', 'penal'],

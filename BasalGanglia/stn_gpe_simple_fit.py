@@ -63,7 +63,8 @@ class CustomGOA(GSGeneticAlgorithm):
                 outputs.append([np.mean(r['r_e'][f'circuit_{gene_id}'].loc[0.5:]),
                                 np.mean(r['r_i'][f'circuit_{gene_id}'].loc[0.5:])])
 
-                psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=2.0, fmin=5.0, fmax=100.0)
+                tmin = 2.0
+                psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=tmin, fmin=5.0, fmax=100.0)
                 freq.append(freqs)
                 pow.append(psds[0, :])
 
@@ -87,7 +88,9 @@ def fitness(y, t):
 def analyze_oscillations(freq_targets, freqs, pows):
     dist = []
     for t, f, p in zip(freq_targets, freqs, pows):
-        if t:
+        if np.isnan(t):
+            dist.append(0.0)
+        elif t:
             f_tmp = f[np.argmax(p)]
             dist.append(t - f_tmp)
         else:
@@ -106,6 +109,10 @@ def eval_params(params):
         if params.loc[gene_id, 'k_ee'] > 0.3*params.loc[gene_id, 'k_ie']:
             valid = False
         if params.loc[gene_id, 'k_ii'] > 0.6*params.loc[gene_id, 'k_ei']:
+            valid = False
+        if params.loc[gene_id, 'k_ie'] > 4.0*params.loc[gene_id, 'k_ei']:
+            valid = False
+        if params.loc[gene_id, 'k_ie'] < 0.25*params.loc[gene_id, 'k_ei']:
             valid = False
         if params.loc[gene_id, 'k_ee_pd'] < 0.0:
             valid = False
@@ -178,7 +185,7 @@ if __name__ == "__main__":
         'delta_i': {'vars': ['qif_gpe/delta'], 'nodes': ['gpe']}
     }
 
-    T = 6.
+    T = 12.
     dt = 5e-4
     dts = 1e-3
 
@@ -214,8 +221,8 @@ if __name__ == "__main__":
         max_iter=100,
         min_fit=0.5,
         n_winners=16,
-        n_parent_pairs=500,
-        n_new=60,
+        n_parent_pairs=400,
+        n_new=160,
         sigma_adapt=0.015,
         candidate_save=f'{compute_dir}/GeneticCGSCandidate.h5',
         drop_save=drop_save_dir,

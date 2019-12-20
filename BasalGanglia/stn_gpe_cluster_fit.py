@@ -15,7 +15,7 @@ class CustomGOA(CGSGeneticAlgorithm):
         results = []
         models_vars = ['k_ie', 'k_ii', 'k_ei', 'k_ee', 'eta_e', 'eta_i', 'eta_str', 'eta_tha', 'alpha',
                        'delta_e', 'delta_i']
-        freq_targets = [0.0, 0.0, 0.0, 0.0, 70.0, 0.0, 13.0]
+        freq_targets = [0.0, 0.0, 0.0, 0.0, 50.0, 0.0, 13.0]
         param_grid, invalid_params = eval_params(param_grid)
         zero_vec = [0.0 for _ in range(param_grid.shape[0])]
         conditions = [{},  # healthy control
@@ -38,13 +38,11 @@ class CustomGOA(CGSGeneticAlgorithm):
                        }  # parkinsonian condition
                       ]
         chunk_size = [
-            550,   # spanien
             655,   # animals
             265,   # kongo
             340,   # tschad
             375,   # ostimor
             605,   # carpenters
-            355,   # lech
             320,   # uganda
         ]
 
@@ -53,18 +51,25 @@ class CustomGOA(CGSGeneticAlgorithm):
             for c_dict in conditions:
                 param_grid_tmp = {key: param_grid[key] for key in models_vars}.copy()
                 param_grid_tmp.update(DataFrame(c_dict, index=param_grid.index))
-                results.append(grid_search(circuit_template=self.gs_config['circuit_template'],
-                                           param_grid=param_grid_tmp,
-                                           param_map=self.gs_config['param_map'],
-                                           simulation_time=self.gs_config['simulation_time'],
-                                           dt=self.gs_config['step_size'],
-                                           sampling_step_size=self.gs_config['sampling_step_size'],
-                                           permute_grid=False,
-                                           inputs=self.gs_config['inputs'],
-                                           outputs=self.gs_config['outputs'].copy(),
-                                           init_kwargs=self.gs_config['init_kwargs'],
-                                           **kwargs
-                                           )[0])
+
+                res_file = self.cgs.run(
+                    circuit_template=self.gs_config['circuit_template'],
+                    param_grid=param_grid_tmp,
+                    param_map=self.gs_config['param_map'],
+                    simulation_time=self.gs_config['simulation_time'],
+                    dt=self.gs_config['step_size'],
+                    inputs=self.gs_config['inputs'],
+                    outputs=self.gs_config['outputs'],
+                    sampling_step_size=self.gs_config['sampling_step_size'],
+                    permute=False,
+                    chunk_size=chunk_size,
+                    worker_file=self.cgs_config['worker_file'],
+                    config_kwargs={
+                        'target': target
+                    },
+                    gs_kwargs={'init_kwargs': self.gs_config['init_kwargs']}.update(kwargs))
+
+                results.append(read_hdf(res_file, key=f'/Results/fitness'))
 
         # calculate fitness
         for gene_id in param_grid.index:
@@ -155,11 +160,11 @@ if __name__ == "__main__":
         'k_ee': {'min': 0, 'max': 30, 'N': 1, 'sigma': 0.4},
         'k_ei': {'min': 0, 'max': 120, 'N': 3, 'sigma': 0.8},
         'k_ie': {'min': 0, 'max': 120, 'N': 3, 'sigma': 0.8},
-        'k_ii': {'min': 0, 'max': 60, 'N': 1, 'sigma': 0.8},
-        'eta_e': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
-        'eta_i': {'min': -20, 'max': 20, 'N': 1, 'sigma': 0.4},
-        'eta_str': {'min': -10, 'max': 0, 'N': 1, 'sigma': 0.4},
-        'eta_tha': {'min': 0, 'max': 20, 'N': 1, 'sigma': 0.4},
+        'k_ii': {'min': 0, 'max': 60, 'N': 2, 'sigma': 0.8},
+        'eta_e': {'min': -20, 'max': 10, 'N': 2, 'sigma': 0.4},
+        'eta_i': {'min': -20, 'max': 20, 'N': 2, 'sigma': 0.4},
+        'eta_str': {'min': -10, 'max': 0, 'N': 2, 'sigma': 0.4},
+        'eta_tha': {'min': 0, 'max': 20, 'N': 2, 'sigma': 0.4},
         'alpha': {'min': 0, 'max': 10.0, 'N': 1, 'sigma': 0.2},
         'delta_e': {'min': 0.1, 'max': 3.0, 'N': 1, 'sigma': 0.2},
         'delta_i': {'min': 0.1, 'max': 3.0, 'N': 1, 'sigma': 0.2},
@@ -169,7 +174,7 @@ if __name__ == "__main__":
         'k_ii_pd': {'min': 0, 'max': 30, 'N': 1, 'sigma': 0.8},
         'eta_e_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
         'eta_i_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
-        'eta_str_pd': {'min': -20, 'max': 0, 'N': 1, 'sigma': 0.4},
+        'eta_str_pd': {'min': -30, 'max': 0, 'N': 1, 'sigma': 0.4},
         'eta_tha_pd': {'min': -10.0, 'max': 10, 'N': 1, 'sigma': 0.4},
         'delta_e_pd': {'min': -2.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
         'delta_i_pd': {'min': -2.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
@@ -207,8 +212,7 @@ if __name__ == "__main__":
                        'outputs': {'r_e': "stn/qif_stn/R_e", 'r_i': 'gpe/qif_gpe/R_i'},
                        'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
                    },
-                   cgs_config={'nodes': ['spanien', 'animals', 'kongo', 'tschad', 'osttimor', 'carpenters', 'lech',
-                                         'uganda'],
+                   cgs_config={'nodes': ['animals', 'kongo', 'tschad', 'osttimor', 'carpenters', 'uganda'],
                                'compute_dir': compute_dir})
 
     drop_save_dir = f'{compute_dir}/PopulationDrops/'
@@ -218,10 +222,10 @@ if __name__ == "__main__":
         initial_gene_pool=pop_genes,
         gene_sampling_func=np.random.uniform,
         target=[[20, 60],   # healthy control
-                [None, 40],  # stn blockade
-                [None, 90],  # gabaa blockade in GPe
-                [None, 60],  # STN blockade and GABAA blockade in GPe
-                [None, 17],  # blockade of all excitatory inputs to GPe
+                [np.nan, 40],  # stn blockade
+                [np.nan, 90],  # gabaa blockade in GPe
+                [np.nan, 60],  # STN blockade and GABAA blockade in GPe
+                [np.nan, 17],  # blockade of all excitatory inputs to GPe
                 [35, 80],  # GABAA antagonist in STN
                 [30, 40]   # parkinsonian condition
                 ],
