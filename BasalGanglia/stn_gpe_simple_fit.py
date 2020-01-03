@@ -91,7 +91,9 @@ def fitness(y, t):
 def analyze_oscillations(freq_targets, freqs, pows):
     dist = []
     for t, f, p in zip(freq_targets, freqs, pows):
-        if t:
+        if np.isnan(t):
+            dist.append(0.0)
+        elif t:
             f_tmp = f[np.argmax(p)]
             dist.append(t - f_tmp)
         else:
@@ -110,6 +112,10 @@ def eval_params(params):
         if params.loc[gene_id, 'k_ee'] > 0.3*params.loc[gene_id, 'k_ie']:
             valid = False
         if params.loc[gene_id, 'k_ii'] > 0.6*params.loc[gene_id, 'k_ei']:
+            valid = False
+        if params.loc[gene_id, 'k_ie'] > 4.0*params.loc[gene_id, 'k_ei']:
+            valid = False
+        if params.loc[gene_id, 'k_ie'] < 0.25*params.loc[gene_id, 'k_ei']:
             valid = False
         if params.loc[gene_id, 'k_ee_pd'] < 0.0:
             valid = False
