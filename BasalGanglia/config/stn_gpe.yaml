@@ -4,39 +4,69 @@
 # Operator templates
 ####################
 
+delay_test:
+  base: OperatorTemplate
+  equations:
+    - "r_out = r_in + sin(2.0*PI*5.0*t)"
+  variables:
+    r_out:
+      default: output
+    r_in:
+      default: input
+    u:
+      default: input
+    t:
+      default: variable
+
 qif_full:
   base: OperatorTemplate
   equations:
-    - "d/dt * R_e = delta/(PI*tau_e^2) + 2.*R_e*V_e/tau_e"
+    - "d/dt * R_e = delta_e/(PI*tau_e^2) + 2.*R_e*V_e/tau_e"
     - "d/dt * V_e = (V_e^2 + eta_e)/tau_e + I_ee - I_ei - tau_e*(PI*R_e)^2"
-    - "d/dt * I_ee = ((tau_de*tau_re)**(tau_re/(tau_de-tau_re))*X_ee - I_ee)/tau_re"
-    - "d/dt * X_ee =  k_ee*beta*R_e - X_ee/tau_de"
-    - "d/dt * I_ei = ((tau_di*tau_ri)**(tau_ri/(tau_di-tau_ri))*X_ei - I_ei)/tau_ri"
-    - "d/dt * X_ei = k_ei*beta*R_i8 - X_ei/tau_di"
-    - "d/dt * R_i = delta/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
+    - "d/dt * R_i = delta_i/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
     - "d/dt * V_i = (V_i^2 + eta_i + eta_str + eta_tha)/tau_i + I_ie - I_ii - I_a - tau_i*(PI*R_i)^2"
-    - "d/dt * I_ie = ((tau_de*tau_re)**(tau_re/(tau_de-tau_re))*X_ie - I_ie)/tau_re"
-    - "d/dt * X_ie = k_ie*beta*R_e8 - X_ie/tau_de"
-    - "d/dt * I_ii = ((tau_di*tau_ri)**(tau_ri/(tau_di-tau_ri))*X_ii - I_ii)/tau_ri"
-    - "d/dt * X_ii = k_ii*beta*R_i - X_ii/tau_di"
+    - "d/dt * I_ee = X_ee"
+    - "d/dt * X_ee = (k_ee*R_e - X_ee*(tau_ee_r+tau_ee_d) - I_ee)/(tau_ee_r*tau_ee_d)"
+    - "d/dt * I_ei = X_ei"
+    - "d/dt * X_ei = (k_ei*R_i16 - X_ei*(tau_ei_r+tau_ei_d) - I_ei)/(tau_ei_r*tau_ei_d)"
+    - "d/dt * I_ie = X_ie"
+    - "d/dt * X_ie = (k_ie*R_e16 - X_ie*(tau_ie_r+tau_ie_d) - I_ie)/(tau_ie_r*tau_ie_d)"
+    - "d/dt * I_ii = X_ii"
+    - "d/dt * X_ii = (k_ii*R_i - X_ii*(tau_ii_r+tau_ii_d) - I_ii)/(tau_ii_r*tau_ii_d)"
     - "d/dt * I_a = X_a"
-    - "d/dt * X_a = alpha*R_i/tau_a - 2.0*X_a/tau_a - I_a/tau_a^2"
-    - "d/dt * R_e1 = (R_e - R_e1)*8.0/d_e"
-    - "d/dt * R_e2 = (R_e1 - R_e2)*8.0/d_e"
-    - "d/dt * R_e3 = (R_e2 - R_e3)*8.0/d_e"
-    - "d/dt * R_e4 = (R_e3 - R_e4)*8.0/d_e"
-    - "d/dt * R_e5 = (R_e4 - R_e5)*8.0/d_e"
-    - "d/dt * R_e6 = (R_e5 - R_e6)*8.0/d_e"
-    - "d/dt * R_e7 = (R_e6 - R_e7)*8.0/d_e"
-    - "d/dt * R_e8 = (R_e7 - R_e8)*8.0/d_e"
-    - "d/dt * R_i1 = (R_i - R_i1)*8.0/d_i"
-    - "d/dt * R_i2 = (R_i1 - R_i2)*8.0/d_i"
-    - "d/dt * R_i3 = (R_i2 - R_i3)*8.0/d_i"
-    - "d/dt * R_i4 = (R_i3 - R_i4)*8.0/d_i"
-    - "d/dt * R_i5 = (R_i4 - R_i5)*8.0/d_i"
-    - "d/dt * R_i6 = (R_i5 - R_i6)*8.0/d_i"
-    - "d/dt * R_i7 = (R_i6 - R_i7)*8.0/d_i"
-    - "d/dt * R_i8 = (R_i7 - R_i8)*8.0/d_i"
+    - "d/dt * X_a = (alpha*R_i - 2.0*X_a - I_a/tau_a)/tau_a"
+    - "d/dt * R_e1 = (R_e - R_e1)*16.0/d_e"
+    - "d/dt * R_e2 = (R_e1 - R_e2)*16.0/d_e"
+    - "d/dt * R_e3 = (R_e2 - R_e3)*16.0/d_e"
+    - "d/dt * R_e4 = (R_e3 - R_e4)*16.0/d_e"
+    - "d/dt * R_e5 = (R_e4 - R_e5)*16.0/d_e"
+    - "d/dt * R_e6 = (R_e5 - R_e6)*16.0/d_e"
+    - "d/dt * R_e7 = (R_e6 - R_e7)*16.0/d_e"
+    - "d/dt * R_e8 = (R_e7 - R_e8)*16.0/d_e"
+    - "d/dt * R_e9 = (R_e8 - R_e9)*16.0/d_e"
+    - "d/dt * R_e10 = (R_e9 - R_e10)*16.0/d_e"
+    - "d/dt * R_e11 = (R_e10 - R_e11)*16.0/d_e"
+    - "d/dt * R_e12 = (R_e11 - R_e12)*16.0/d_e"
+    - "d/dt * R_e13 = (R_e12 - R_e13)*16.0/d_e"
+    - "d/dt * R_e14 = (R_e13 - R_e14)*16.0/d_e"
+    - "d/dt * R_e15 = (R_e14 - R_e15)*16.0/d_e"
+    - "d/dt * R_e16 = (R_e15 - R_e16)*16.0/d_e"
+    - "d/dt * R_i1 = (R_i - R_i1)*16.0/d_i"
+    - "d/dt * R_i2 = (R_i1 - R_i2)*16.0/d_i"
+    - "d/dt * R_i3 = (R_i2 - R_i3)*16.0/d_i"
+    - "d/dt * R_i4 = (R_i3 - R_i4)*16.0/d_i"
+    - "d/dt * R_i5 = (R_i4 - R_i5)*16.0/d_i"
+    - "d/dt * R_i6 = (R_i5 - R_i6)*16.0/d_i"
+    - "d/dt * R_i7 = (R_i6 - R_i7)*16.0/d_i"
+    - "d/dt * R_i8 = (R_i7 - R_i8)*16.0/d_i"
+    - "d/dt * R_i9 = (R_i8 - R_i9)*16.0/d_i"
+    - "d/dt * R_i10 = (R_i9 - R_i10)*16.0/d_i"
+    - "d/dt * R_i11 = (R_i10 - R_i11)*16.0/d_i"
+    - "d/dt * R_i12 = (R_i11 - R_i12)*16.0/d_i"
+    - "d/dt * R_i13 = (R_i12 - R_i13)*16.0/d_i"
+    - "d/dt * R_i14 = (R_i13 - R_i14)*16.0/d_i"
+    - "d/dt * R_i15 = (R_i14 - R_i15)*16.0/d_i"
+    - "d/dt * R_i16 = (R_i15 - R_i16)*16.0/d_i"
   variables:
     R_e:
       default: output
@@ -67,47 +97,53 @@ qif_full:
     X_a:
       default: variable
     eta_e:
-      default: -3.9
+      default: -0.9
     eta_i:
-      default: 6.5
+      default: 0.9
     eta_str:
-      default: 0.0
+      default: -1.1
     eta_tha:
-      default: 0.0
+      default: 7.9
     k_ee:
-      default: 3.7
+      default: 4.6
     k_ei:
-      default: 20.8
+      default: 62.6
     k_ie:
-      default: 143.7
+      default: 86.6
     k_ii:
-      default: 0.0
-    beta:
-      default: 100.0
+      default: 8.4
     tau_e:
-      default: 0.006
+      default: 6.0
     tau_i:
-      default: 0.014
-    tau_re:
-      default: 0.0008
-    tau_de:
-      default: 0.0037
-    tau_ri:
-      default: 0.0005
-    tau_di:
-      default: 0.005
+      default: 14.0
+    tau_ee_r:
+      default: 0.8
+    tau_ee_d:
+      default: 3.7
+    tau_ei_r:
+      default: 0.8
+    tau_ei_d:
+      default: 10.0
+    tau_ie_r:
+      default: 0.8
+    tau_ie_d:
+      default: 3.7
+    tau_ii_r:
+      default: 0.5
+    tau_ii_d:
+      default: 5.0
     tau_a:
-      default: 0.2
+      default: 200.0
     alpha:
-      default: 6.9
-    delta:
-      default: 2.0
+      default: 1.2
+    delta_e:
+      default: 1.0
+    delta_i:
+      default: 1.2
     d_e:
-      default: 0.004
+      default: 4.0
     d_i:
-      default: 0.004
-    STN:
-      default: 0.004
+      default: 4.0
     R_e1:
       default: variable
     R_e2:
@@ -123,6 +159,22 @@ qif_full:
     R_e7:
       default: variable
     R_e8:
+      default: variable
+    R_e9:
+      default: variable
+    R_e10:
+      default: variable
+    R_e11:
+      default: variable
+    R_e12:
+      default: variable
+    R_e13:
+      default: variable
+    R_e14:
+      default: variable
+    R_e15:
+      default: variable
+    R_e16:
       default: variable
     R_i1:
       default: variable
@@ -140,6 +192,22 @@ qif_full:
       default: variable
     R_i8:
       default: variable
+    R_i9:
+      default: variable
+    R_i10:
+      default: variable
+    R_i11:
+      default: variable
+    R_i12:
+      default: variable
+    R_i13:
+      default: variable
+    R_i14:
+      default: variable
+    R_i15:
+      default: variable
+    R_i16:
+      default: variable
 
 
 qif_stn:
@@ -147,10 +215,10 @@ qif_stn:
   equations:
     - "d/dt * R_e = delta/(PI*tau_e^2) + 2.*R_e*V_e/tau_e"
     - "d/dt * V_e = (V_e^2 + eta_e)/tau_e + I_e - I_i - tau_e*(PI*R_e)^2"
-    - "d/dt * I_e = X_e"
-    - "d/dt * X_e = (k_ee*R_e - X_e*(tau_re+tau_de) - I_e)/(tau_re*tau_de)"
-    - "d/dt * I_i = X_i"
-    - "d/dt * X_i = (k_ei*GPe - X_i*(tau_ri+tau_di) - I_i)/(tau_ri*tau_di)"
+    - "d/dt * I_ee = X_ee"
+    - "d/dt * X_ee = (k_ee*R_ee - X_ee*(tau_re+tau_de) - I_ee)/(tau_re*tau_de)"
+    - "d/dt * I_ie = X_ie"
+    - "d/dt * X_ie = (k_ei*GPe - X_ie*(tau_ri+tau_di) - I_ie)/(tau_ri*tau_di)"
   variables:
     R_e:
       default: output
@@ -191,26 +259,26 @@ qif_gpe:
   equations:
     - "d/dt * R_i = delta/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
     - "d/dt * V_i = (V_i^2 + eta_i + eta_str + eta_tha)/tau_i + I_e - I_i - I_a - tau_i*(PI*R_i)^2"
-    - "d/dt * I_e = X_e"
-    - "d/dt * X_e = (k_ie*STN - X_e*(tau_re+tau_de) - I_e)/(tau_re*tau_de)"
-    - "d/dt * I_i = X_i"
-    - "d/dt * X_i = (k_ii*R_i - X_i*(tau_ri+tau_di) - I_i)/(tau_ri*tau_di)"
+    - "d/dt * I_ie = X_ie"
+    - "d/dt * X_ie = (k_ie*STN - X_ie*(tau_re+tau_de) - I_ie)/(tau_re*tau_de)"
+    - "d/dt * I_ii = X_ii"
+    - "d/dt * X_ii = (k_ii*R_i - X_ii*(tau_ri+tau_di) - I_ii)/(tau_ri*tau_di)"
     - "d/dt * I_a = X_a"
-    - "d/dt * X_a = alpha*R_i/tau_a - 2.0*X_a/tau_a - I_a/tau_a^2"
+    - "d/dt * X_a = (alpha*R_i - 2.0*X_a - I_a/tau_a)/tau_a"
   variables:
     R_i:
       default: output
     V_i:
       default: variable
-    I_e:
+    I_ie:
       default: variable
-    I_i:
+    I_ii:
       default: variable
     I_a:
       default: variable
-    X_e:
+    X_ie:
       default: variable
-    X_i:
+    X_ii:
       default: variable
     X_a:
       default: variable
@@ -221,11 +289,11 @@ qif_gpe:
     eta_tha:
       default: 2.0
     k_ie:
-      default: 50.0
+      default: 10.0
     k_ii:
       default: 1.0
     alpha:
-      default: 5.0
+      default: 0.0
     tau_i:
       default: 0.014
     tau_re:
@@ -470,6 +538,11 @@ pop_stn_gpe:
   operators:
     - qif_full
 
+delay_pop:
+  base: NodeTemplate
+  operators:
+    - delay_test
+
 # circuit templates
 ###################
 
@@ -486,3 +559,10 @@ net_stn_gpe:
   base: CircuitTemplate
   nodes:
     stn_gpe: pop_stn_gpe
+
+delay_net:
+  base: CircuitTemplate
+  nodes:
+    d: delay_pop
+  edges:
+    - [d/delay_test/r_out, d/delay_test/r_in, null, {weight: 1.0, delay: 0.004, spread: 0.001}]

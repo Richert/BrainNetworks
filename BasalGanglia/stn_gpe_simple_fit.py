@@ -15,7 +15,7 @@ class CustomGOA(GSGeneticAlgorithm):
         results = []
         models_vars = ['k_ie', 'k_ii', 'k_ei', 'k_ee', 'eta_e', 'eta_i', 'eta_str', 'eta_tha', 'alpha',
                        'delta_e', 'delta_i']
-        freq_targets = [0.0, 0.0, 0.0, 0.0, np.nan, 0.0, 13.0]
+        freq_targets = [0.0, 0.0, 0.0, 0.0, 60.0, 0.0, 13.0]
         param_grid, invalid_params = eval_params(param_grid)
         zero_vec = [0.0 for _ in range(param_grid.shape[0])]
         conditions = [{},  # healthy control
@@ -43,7 +43,7 @@ class CustomGOA(GSGeneticAlgorithm):
 
                 param_grid_tmp = {key: param_grid[key] for key in models_vars}.copy()
                 param_grid_tmp.update(DataFrame(c_dict, index=param_grid.index))
-                results.append(grid_search(circuit_template=self.gs_config['circuit_template'],
+                r = grid_search(circuit_template=self.gs_config['circuit_template'],
                                            param_grid=param_grid_tmp,
                                            param_map=self.gs_config['param_map'],
                                            simulation_time=self.gs_config['simulation_time'],
@@ -54,7 +54,10 @@ class CustomGOA(GSGeneticAlgorithm):
                                            outputs=self.gs_config['outputs'].copy(),
                                            init_kwargs=self.gs_config['init_kwargs'],
                                            **kwargs
-                                           )[0])
+                                           )[0]
+                r.index = r.index * 1e-3
+                r = r * 1e3
+                results.append(r)
 
         # calculate fitness
         for gene_id in param_grid.index:
@@ -63,7 +66,8 @@ class CustomGOA(GSGeneticAlgorithm):
                 outputs.append([np.mean(r['r_e'][f'circuit_{gene_id}'].loc[0.5:]),
                                 np.mean(r['r_i'][f'circuit_{gene_id}'].loc[0.5:])])
 
-                psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=2.0, fmin=5.0, fmax=100.0)
+                tmin = 0.0 if i == 4 else 2.0
+                psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=tmin, fmin=5.0, fmax=100.0)
                 freq.append(freqs)
                 pow.append(psds[0, :])
 
@@ -141,21 +145,21 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
     pop_genes = {
-        'k_ee': {'min': 0, 'max': 30, 'N': 2, 'sigma': 0.4},
-        'k_ei': {'min': 0, 'max': 120, 'N': 3, 'sigma': 0.8},
-        'k_ie': {'min': 0, 'max': 120, 'N': 3, 'sigma': 0.8},
-        'k_ii': {'min': 0, 'max': 60, 'N': 2, 'sigma': 0.8},
-        'eta_e': {'min': -10, 'max': 10, 'N': 2, 'sigma': 0.4},
+        'k_ee': {'min': 0, 'max': 50, 'N': 2, 'sigma': 0.4},
+        'k_ei': {'min': 0, 'max': 200, 'N': 2, 'sigma': 0.8},
+        'k_ie': {'min': 0, 'max': 200, 'N': 2, 'sigma': 0.8},
+        'k_ii': {'min': 0, 'max': 100, 'N': 2, 'sigma': 0.8},
+        'eta_e': {'min': -20, 'max': 20, 'N': 2, 'sigma': 0.4},
         'eta_i': {'min': -20, 'max': 20, 'N': 2, 'sigma': 0.4},
-        'eta_str': {'min': -10, 'max': 0, 'N': 2, 'sigma': 0.4},
+        'eta_str': {'min': -20, 'max': 0, 'N': 2, 'sigma': 0.4},
         'eta_tha': {'min': 0, 'max': 20, 'N': 2, 'sigma': 0.4},
-        'alpha': {'min': 0, 'max': 10.0, 'N': 1, 'sigma': 0.2},
+        'alpha': {'min': 0, 'max': 100.0, 'N': 1, 'sigma': 0.2},
         'delta_e': {'min': 0.1, 'max': 3.0, 'N': 1, 'sigma': 0.2},
         'delta_i': {'min': 0.1, 'max': 3.0, 'N': 1, 'sigma': 0.2},
-        'k_ee_pd': {'min': 0, 'max': 15, 'N': 1, 'sigma': 0.4},
-        'k_ei_pd': {'min': 0, 'max': 60, 'N': 1, 'sigma': 0.8},
-        'k_ie_pd': {'min': 0, 'max': 60, 'N': 1, 'sigma': 0.8},
-        'k_ii_pd': {'min': 0, 'max': 30, 'N': 1, 'sigma': 0.8},
+        'k_ee_pd': {'min': 0, 'max': 25, 'N': 1, 'sigma': 0.4},
+        'k_ei_pd': {'min': 0, 'max': 100, 'N': 1, 'sigma': 0.8},
+        'k_ie_pd': {'min': 0, 'max': 100, 'N': 1, 'sigma': 0.8},
+        'k_ii_pd': {'min': 0, 'max': 50, 'N': 1, 'sigma': 0.8},
         'eta_e_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
         'eta_i_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
         'eta_str_pd': {'min': -20, 'max': 0, 'N': 1, 'sigma': 0.4},
@@ -165,35 +169,34 @@ if __name__ == "__main__":
     }
 
     param_map = {
-        'k_ee': {'vars': ['qif_stn/k_ee'], 'nodes': ['stn']},
-        'k_ei': {'vars': ['qif_stn/k_ei'], 'nodes': ['stn']},
-        'k_ie': {'vars': ['qif_gpe/k_ie'], 'nodes': ['gpe']},
-        'k_ii': {'vars': ['qif_gpe/k_ii'], 'nodes': ['gpe']},
-        'eta_e': {'vars': ['qif_stn/eta_e'], 'nodes': ['stn']},
-        'eta_i': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'eta_str': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'eta_tha': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'alpha': {'vars': ['qif_gpe/alpha'], 'nodes': ['gpe']},
-        'delta_e': {'vars': ['qif_stn/delta'], 'nodes': ['stn']},
-        'delta_i': {'vars': ['qif_gpe/delta'], 'nodes': ['gpe']}
+        'k_ee': {'vars': ['qif_full/k_ee'], 'nodes': ['stn_gpe']},
+        'k_ei': {'vars': ['qif_full/k_ei'], 'nodes': ['stn_gpe']},
+        'k_ie': {'vars': ['qif_full/k_ie'], 'nodes': ['stn_gpe']},
+        'k_ii': {'vars': ['qif_full/k_ii'], 'nodes': ['stn_gpe']},
+        'eta_e': {'vars': ['qif_full/eta_e'], 'nodes': ['stn_gpe']},
+        'eta_i': {'vars': ['qif_full/eta_i'], 'nodes': ['stn_gpe']},
+        'eta_str': {'vars': ['qif_full/eta_str'], 'nodes': ['stn_gpe']},
+        'eta_tha': {'vars': ['qif_full/eta_tha'], 'nodes': ['stn_gpe']},
+        'alpha': {'vars': ['qif_full/alpha'], 'nodes': ['stn_gpe']},
+        'delta_e': {'vars': ['qif_full/delta_e'], 'nodes': ['stn_gpe']},
+        'delta_i': {'vars': ['qif_full/delta_i'], 'nodes': ['stn_gpe']}
     }
 
-    T = 6.
-    dt = 5e-4
-    dts = 1e-3
-
+    T = 10000.
+    dt = 1e-2
+    dts = 1e-1
     compute_dir = "results"
 
     ga = CustomGOA(fitness_measure=fitness,
                    gs_config={
-                       'circuit_template': "config/stn_gpe/net_qif_syn_adapt",
+                       'circuit_template': "config/stn_gpe/net_stn_gpe",
                        'permute_grid': True,
                        'param_map': param_map,
                        'simulation_time': T,
                        'step_size': dt,
                        'sampling_step_size': dts,
                        'inputs': {},
-                       'outputs': {'r_e': "stn/qif_stn/R_e", 'r_i': 'gpe/qif_gpe/R_i'},
+                       'outputs': {'r_e': "stn_gpe/qif_full/R_e", 'r_i': 'stn_gpe/qif_full/R_i'},
                        'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
                    })
 
@@ -214,8 +217,8 @@ if __name__ == "__main__":
         max_iter=100,
         min_fit=0.5,
         n_winners=16,
-        n_parent_pairs=500,
-        n_new=60,
+        n_parent_pairs=200,
+        n_new=40,
         sigma_adapt=0.015,
         candidate_save=f'{compute_dir}/GeneticCGSCandidate.h5',
         drop_save=drop_save_dir,

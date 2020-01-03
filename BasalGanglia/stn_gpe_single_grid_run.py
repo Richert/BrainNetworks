@@ -28,36 +28,36 @@ param_map = {
     }
 
 param_grid = {
-        'k_ee': [1.29],
-        'k_ei': [50.64],
-        'k_ie': [135.67],
-        'k_ii': [5.24],
-        'eta_e': [-3.01],
-        'eta_i': [6.72],
-        'eta_str': [-14.96],
-        'eta_tha': [10.35],
-        'alpha': [5.09],
-        'k_ee_pd': [10.0],
-        'k_ei_pd': [50.0],
-        'k_ie_pd': [50.0],
-        'k_ii_pd': [25.0],
-        'eta_e_pd': [0.0],
-        'eta_i_pd': [0.0],
-        'eta_str_pd': [-10.0],
-        'eta_tha_pd': [0.0],
-        'delta_e': [2.92],
-        'delta_i': [2.59],
-        'delta_e_pd': [-1.0],
-        'delta_i_pd': [-1.0],
+        'k_ee': [2.55],
+        'k_ei': [79.77],
+        'k_ie': [50.09],
+        'k_ii': [1.13],
+        'eta_e': [-4.93],
+        'eta_i': [12.92],
+        'eta_str': [-2.24],
+        'eta_tha': [2.88],
+        'alpha': [2.35],
+        'k_ee_pd': [10.98],
+        'k_ei_pd': [8.17],
+        'k_ie_pd': [21.28],
+        'k_ii_pd': [19.73],
+        'eta_e_pd': [-5.99],
+        'eta_i_pd': [-0.39],
+        'eta_str_pd': [-2.94],
+        'eta_tha_pd': [5.36],
+        'delta_e': [2.13],
+        'delta_i': [2.88],
+        'delta_e_pd': [-1.54],
+        'delta_i_pd': [-1.72],
     }
 
 # define simulation conditions
 conditions = [
-    {'k_ie': 0.0},  # STN blockade
-    {'k_ii': 0.0, 'eta_str': 0.0},  # GABAA blockade in GPe
-    {'k_ie': 0.0, 'k_ii': 0.0, 'eta_str': 0.0},  # STN blockade and GABAA blockade in GPe
-    {'k_ie': 0.0, 'eta_tha': 0.0},  # AMPA + NMDA blocker in GPe
-    {'k_ei': 0.0},  # GABAA antagonist in STN
+    # {'k_ie': 0.0},  # STN blockade
+    # {'k_ii': 0.0, 'eta_str': 0.0},  # GABAA blockade in GPe
+    # {'k_ie': 0.0, 'k_ii': 0.0, 'eta_str': 0.0},  # STN blockade and GABAA blockade in GPe
+    # {'k_ie': 0.0, 'eta_tha': 0.0},  # AMPA + NMDA blocker in GPe
+    # {'k_ei': 0.0},  # GABAA antagonist in STN
     # {'k_ei': param_grid['k_ei'][0] + param_grid['k_ei_pd'][0],
     #  'k_ie': param_grid['k_ie'][0] + param_grid['k_ie_pd'][0],
     #  'k_ee': param_grid['k_ee'][0] + param_grid['k_ee_pd'][0],
@@ -83,8 +83,8 @@ for key in param_grid.copy():
         param_grid.pop(key)
 
 # define simulation parameters
-dt = 1e-5
-T = 5.0
+dt = 5e-6
+T = 10.0
 dts = 1e-3
 
 # perform simulation
@@ -93,12 +93,12 @@ results, _ = grid_search(circuit_template="config/stn_gpe/net_qif_syn_adapt",
                          param_map=param_map,
                          simulation_time=T,
                          dt=dt,
-                         sampling_step_size=dts,
+                         #sampling_step_size=dts,
                          permute_grid=False,
                          inputs={},
-                         outputs={'r_e': "stn/qif_stn/R_e", 'r_i': 'gpe/qif_gpe/R_i'},
+                         outputs={},
                          init_kwargs={'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
-                         rtol=1e-5)
+                         )
 results.plot()
 for col in results.columns.values:
     print(col, results.loc[:, col].iloc[-1])
