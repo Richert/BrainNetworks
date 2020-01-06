@@ -7,7 +7,7 @@ from numba import jit
 
 # parameters
 dt = 1e-5
-T = 3000.0
+T = 1000.0
 dts = 1e-1
 
 # eic = CircuitIR.from_yaml("config/stn_gpe/net_qif_syn_adapt").compile(backend='numpy', step_size=dt, solver='euler')

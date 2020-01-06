@@ -97,21 +97,21 @@ qif_full:
     X_a:
       default: variable
     eta_e:
-      default: -0.9
+      default: -3.0
     eta_i:
-      default: 0.9
+      default: 16.6
     eta_str:
-      default: -1.1
+      default: -9.1
     eta_tha:
-      default: 7.9
+      default: 18.8
     k_ee:
-      default: 4.6
+      default: 2.9
     k_ei:
-      default: 62.6
+      default: 30.4
     k_ie:
-      default: 86.6
+      default: 116.2
     k_ii:
-      default: 8.4
+      default: 4.1
     tau_e:
       default: 6.0
     tau_i:
@@ -135,11 +135,11 @@ qif_full:
     tau_a:
       default: 200.0
     alpha:
-      default: 1.2
+      default: 0.3
     delta_e:
-      default: 1.0
+      default: 2.8
     delta_i:
-      default: 1.2
+      default: 1.5
     d_e:
       default: 4.0
     d_i:

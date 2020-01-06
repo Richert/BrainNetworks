@@ -1,34 +1,14 @@
 # my_cgs_worker.py
 import pandas as pd
 import numpy as np
-from pyrates.utility.grid_search import ClusterWorkerTemplate
+from pyrates.utility.grid_search import ClusterWorkerTemplate, grid_search
+from pyrates.utility.data_analysis import welch
 
 
 class MyWorker(ClusterWorkerTemplate):
-
-    def worker_postprocessing(self, **worker_kwargs):
-
-        self.processed_results = pd.DataFrame(index=['fitness', 'current', 'penal'],
-                                              columns=self.results.columns.levels[0])
-
-        target = np.array([20, 60])
-        tmin = 2.
-
-        for idx, circuit in enumerate(self.result_map.index):
-            current = []
-            penal = []
-            for i, r in enumerate(["r_e", "r_i"]):
-                data = self.results.loc[tmin:, (circuit, 'pop', r)]
-                if not any(np.isnan(data.values)) and not any(np.isinf(data.values)):
-                    current.append(int(np.mean(data)))
-                    penal.append(np.abs(np.max(data) - np.min(data)))
-                else:
-                    current.append(0)
-                    penal.append(np.inf)
-            fitness = 1 / (1 + np.sum(np.abs(current-target)) + np.sum(penal))
-            self.processed_results.loc['fitness', circuit] = fitness
-            self.processed_results.loc['current', circuit] = current
-            self.processed_results.loc['penal', circuit] = penal
+    def worker_postprocessing(self, **kwargs):
+        self.results.index = self.results.index * 1e-3
+        self.results = self.results * 1e3
 
 
 if __name__ == "__main__":

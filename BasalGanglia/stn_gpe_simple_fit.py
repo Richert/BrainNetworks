@@ -44,17 +44,17 @@ class CustomGOA(GSGeneticAlgorithm):
                 param_grid_tmp = {key: param_grid[key] for key in models_vars}.copy()
                 param_grid_tmp.update(DataFrame(c_dict, index=param_grid.index))
                 r = grid_search(circuit_template=self.gs_config['circuit_template'],
-                                           param_grid=param_grid_tmp,
-                                           param_map=self.gs_config['param_map'],
-                                           simulation_time=self.gs_config['simulation_time'],
-                                           dt=self.gs_config['step_size'],
-                                           sampling_step_size=self.gs_config['sampling_step_size'],
-                                           permute_grid=False,
-                                           inputs=self.gs_config['inputs'],
-                                           outputs=self.gs_config['outputs'].copy(),
-                                           init_kwargs=self.gs_config['init_kwargs'],
-                                           **kwargs
-                                           )[0]
+                                param_grid=param_grid_tmp,
+                                param_map=self.gs_config['param_map'],
+                                simulation_time=self.gs_config['simulation_time'],
+                                dt=self.gs_config['step_size'],
+                                sampling_step_size=self.gs_config['sampling_step_size'],
+                                permute_grid=False,
+                                inputs=self.gs_config['inputs'],
+                                outputs=self.gs_config['outputs'].copy(),
+                                init_kwargs=self.gs_config['init_kwargs'],
+                                **kwargs
+                                )[0]
                 r.index = r.index * 1e-3
                 r = r * 1e3
                 results.append(r)
@@ -63,8 +63,8 @@ class CustomGOA(GSGeneticAlgorithm):
         for gene_id in param_grid.index:
             outputs, freq, pow = [], [], []
             for i, r in enumerate(results):
-                outputs.append([np.mean(r['r_e'][f'circuit_{gene_id}'].loc[0.5:]),
-                                np.mean(r['r_i'][f'circuit_{gene_id}'].loc[0.5:])])
+                outputs.append([np.mean(r['r_e'][f'circuit_{gene_id}'].loc[1.0:]),
+                                np.mean(r['r_i'][f'circuit_{gene_id}'].loc[1.0:])])
 
                 tmin = 0.0 if i == 4 else 2.0
                 psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=tmin, fmin=5.0, fmax=100.0)

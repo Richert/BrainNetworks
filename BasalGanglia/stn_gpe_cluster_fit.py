@@ -64,29 +64,26 @@ class CustomGOA(CGSGeneticAlgorithm):
                     permute=False,
                     chunk_size=chunk_size,
                     worker_file=self.cgs_config['worker_file'],
-                    config_kwargs={
-                        'target': target
-                    },
                     gs_kwargs={'init_kwargs': self.gs_config['init_kwargs']}.update(kwargs))
 
                 results.append(read_hdf(res_file, key=f'/Results/fitness'))
 
-        # calculate fitness
-        for gene_id in param_grid.index:
-            outputs, freq, pow = [], [], []
-            for i, r in enumerate(results):
-                outputs.append([np.mean(r['r_e'][f'circuit_{gene_id}'].loc[0.5:]),
-                                np.mean(r['r_i'][f'circuit_{gene_id}'].loc[0.5:])])
+            # calculate fitness
+            for gene_id in param_grid.index:
+                outputs, freq, pow = [], [], []
+                for i, r in enumerate(results):
+                    outputs.append([np.mean(r['r_e'][f'circuit_{gene_id}'].loc[1.0:]),
+                                    np.mean(r['r_i'][f'circuit_{gene_id}'].loc[1.0:])])
 
-                tmin = 0.0 if i == 4 else 2.0
-                psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=tmin, fmin=5.0, fmax=100.0)
-                freq.append(freqs)
-                pow.append(psds[0, :])
+                    tmin = 0.0 if i == 4 else 2.0
+                    psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=tmin, fmin=5.0, fmax=100.0)
+                    freq.append(freqs)
+                    pow.append(psds[0, :])
 
-            dist1 = self.fitness_measure(outputs, target, **self.fitness_kwargs)
-            dist2 = analyze_oscillations(freq_targets, freq, pow)
-            self.pop.at[gene_id, 'fitness'] = 1.0 / (dist1 + dist2)
-            self.pop.at[gene_id, 'results'] = outputs
+                dist1 = self.fitness_measure(outputs, target, **self.fitness_kwargs)
+                dist2 = analyze_oscillations(freq_targets, freq, pow)
+                self.pop.at[gene_id, 'fitness'] = 1.0 / (dist1 + dist2)
+                self.pop.at[gene_id, 'results'] = outputs
 
         # set fitness of invalid parametrizations
         for gene_id in invalid_params.index:
@@ -97,13 +94,15 @@ def fitness(y, t):
     y = np.asarray(y).flatten()
     t = np.asarray(t).flatten()
     diff = np.asarray([0.0 if np.isnan(t_tmp) else y_tmp - t_tmp for y_tmp, t_tmp in zip(y, t)])
-    return np.sqrt(np.mean(diff ** 2))
+    return np.sqrt(np.mean(diff**2))
 
 
 def analyze_oscillations(freq_targets, freqs, pows):
     dist = []
     for t, f, p in zip(freq_targets, freqs, pows):
-        if t:
+        if np.isnan(t):
+            dist.append(0.0)
+        elif t:
             f_tmp = f[np.argmax(p)]
             dist.append(t - f_tmp)
         else:
@@ -119,9 +118,13 @@ def eval_params(params):
 
         # check validity conditions
         valid = True
-        if params.loc[gene_id, 'k_ee'] > 0.3 * params.loc[gene_id, 'k_ie']:
+        if params.loc[gene_id, 'k_ee'] > 0.3*params.loc[gene_id, 'k_ie']:
             valid = False
-        if params.loc[gene_id, 'k_ii'] > 0.6 * params.loc[gene_id, 'k_ei']:
+        if params.loc[gene_id, 'k_ii'] > 0.6*params.loc[gene_id, 'k_ei']:
+            valid = False
+        if params.loc[gene_id, 'k_ie'] > 4.0*params.loc[gene_id, 'k_ei']:
+            valid = False
+        if params.loc[gene_id, 'k_ie'] < 0.25*params.loc[gene_id, 'k_ei']:
             valid = False
         if params.loc[gene_id, 'k_ee_pd'] < 0.0:
             valid = False

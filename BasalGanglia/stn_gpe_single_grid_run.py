@@ -3,28 +3,17 @@ import matplotlib.pyplot as plt
 
 # define system parameters
 param_map = {
-        'k_ee': {'vars': ['qif_stn/k_ee'], 'nodes': ['stn']},
-        'k_ei': {'vars': ['qif_stn/k_ei'], 'nodes': ['stn']},
-        'k_ie': {'vars': ['qif_gpe/k_ie'], 'nodes': ['gpe']},
-        'k_ii': {'vars': ['qif_gpe/k_ii'], 'nodes': ['gpe']},
-        'eta_e': {'vars': ['qif_stn/eta_e'], 'nodes': ['stn']},
-        'eta_i': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'eta_str': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'eta_tha': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'alpha': {'vars': ['qif_gpe/alpha'], 'nodes': ['gpe']},
-        'k_ee_pd': {'vars': ['qif_stn/k_ee'], 'nodes': ['stn']},
-        'k_ei_pd': {'vars': ['qif_stn/k_ei'], 'nodes': ['stn']},
-        'k_ie_pd': {'vars': ['qif_gpe/k_ie'], 'nodes': ['gpe']},
-        'k_ii_pd': {'vars': ['qif_gpe/k_ii'], 'nodes': ['gpe']},
-        'eta_e_pd': {'vars': ['qif_stn/eta_e'], 'nodes': ['stn']},
-        'eta_i_pd': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'eta_str_pd': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'eta_tha_pd': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'alpha_pd': {'vars': ['qif_gpe/alpha'], 'nodes': ['gpe']},
-        'delta_e': {'vars': ['qif_stn/delta'], 'nodes': ['stn']},
-        'delta_i': {'vars': ['qif_gpe/delta'], 'nodes': ['gpe']},
-        'delta_e_pd': {'vars': ['qif_stn/delta'], 'nodes': ['stn']},
-        'delta_i_pd': {'vars': ['qif_gpe/delta'], 'nodes': ['gpe']}
+        'k_ee': {'vars': ['qif_full/k_ee'], 'nodes': ['stn_gpe']},
+        'k_ei': {'vars': ['qif_full/k_ei'], 'nodes': ['stn_gpe']},
+        'k_ie': {'vars': ['qif_full/k_ie'], 'nodes': ['stn_gpe']},
+        'k_ii': {'vars': ['qif_full/k_ii'], 'nodes': ['stn_gpe']},
+        'eta_e': {'vars': ['qif_full/eta_e'], 'nodes': ['stn_gpe']},
+        'eta_i': {'vars': ['qif_full/eta_i'], 'nodes': ['stn_gpe']},
+        'eta_str': {'vars': ['qif_full/eta_str'], 'nodes': ['stn_gpe']},
+        'eta_tha': {'vars': ['qif_full/eta_tha'], 'nodes': ['stn_gpe']},
+        'alpha': {'vars': ['qif_full/alpha'], 'nodes': ['stn_gpe']},
+        'delta_e': {'vars': ['qif_full/delta_e'], 'nodes': ['stn_gpe']},
+        'delta_i': {'vars': ['qif_full/delta_i'], 'nodes': ['stn_gpe']}
     }
 
 param_grid = {
@@ -84,16 +73,16 @@ for key in param_grid.copy():
 
 # define simulation parameters
 dt = 5e-6
-T = 10.0
-dts = 1e-3
+T = 2000.0
+dts = 1e-1
 
 # perform simulation
-results, _ = grid_search(circuit_template="config/stn_gpe/net_qif_syn_adapt",
+results, _ = grid_search(circuit_template="config/stn_gpe/net_stn_gpe",
                          param_grid=param_grid,
                          param_map=param_map,
                          simulation_time=T,
                          dt=dt,
-                         #sampling_step_size=dts,
+                         sampling_step_size=dts,
                          permute_grid=False,
                          inputs={},
                          outputs={},
