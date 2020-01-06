@@ -160,47 +160,46 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
     pop_genes = {
-        'k_ee': {'min': 0, 'max': 30, 'N': 1, 'sigma': 0.4},
-        'k_ei': {'min': 0, 'max': 120, 'N': 3, 'sigma': 0.8},
-        'k_ie': {'min': 0, 'max': 120, 'N': 3, 'sigma': 0.8},
-        'k_ii': {'min': 0, 'max': 60, 'N': 2, 'sigma': 0.8},
-        'eta_e': {'min': -20, 'max': 10, 'N': 2, 'sigma': 0.4},
+        'k_ee': {'min': 0, 'max': 50, 'N': 2, 'sigma': 0.4},
+        'k_ei': {'min': 0, 'max': 200, 'N': 2, 'sigma': 0.8},
+        'k_ie': {'min': 0, 'max': 200, 'N': 2, 'sigma': 0.8},
+        'k_ii': {'min': 0, 'max': 100, 'N': 2, 'sigma': 0.8},
+        'eta_e': {'min': -20, 'max': 20, 'N': 2, 'sigma': 0.4},
         'eta_i': {'min': -20, 'max': 20, 'N': 2, 'sigma': 0.4},
-        'eta_str': {'min': -10, 'max': 0, 'N': 2, 'sigma': 0.4},
+        'eta_str': {'min': -20, 'max': 0, 'N': 2, 'sigma': 0.4},
         'eta_tha': {'min': 0, 'max': 20, 'N': 2, 'sigma': 0.4},
-        'alpha': {'min': 0, 'max': 10.0, 'N': 1, 'sigma': 0.2},
+        'alpha': {'min': 0, 'max': 100.0, 'N': 1, 'sigma': 0.2},
         'delta_e': {'min': 0.1, 'max': 3.0, 'N': 1, 'sigma': 0.2},
         'delta_i': {'min': 0.1, 'max': 3.0, 'N': 1, 'sigma': 0.2},
-        'k_ee_pd': {'min': 0, 'max': 15, 'N': 1, 'sigma': 0.4},
-        'k_ei_pd': {'min': 0, 'max': 60, 'N': 1, 'sigma': 0.8},
-        'k_ie_pd': {'min': 0, 'max': 60, 'N': 1, 'sigma': 0.8},
-        'k_ii_pd': {'min': 0, 'max': 30, 'N': 1, 'sigma': 0.8},
+        'k_ee_pd': {'min': 0, 'max': 25, 'N': 1, 'sigma': 0.4},
+        'k_ei_pd': {'min': 0, 'max': 100, 'N': 1, 'sigma': 0.8},
+        'k_ie_pd': {'min': 0, 'max': 100, 'N': 1, 'sigma': 0.8},
+        'k_ii_pd': {'min': 0, 'max': 50, 'N': 1, 'sigma': 0.8},
         'eta_e_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
         'eta_i_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
-        'eta_str_pd': {'min': -30, 'max': 0, 'N': 1, 'sigma': 0.4},
+        'eta_str_pd': {'min': -20, 'max': 0, 'N': 1, 'sigma': 0.4},
         'eta_tha_pd': {'min': -10.0, 'max': 10, 'N': 1, 'sigma': 0.4},
         'delta_e_pd': {'min': -2.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
         'delta_i_pd': {'min': -2.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
     }
 
     param_map = {
-        'k_ee': {'vars': ['qif_stn/k_ee'], 'nodes': ['stn']},
-        'k_ei': {'vars': ['qif_stn/k_ei'], 'nodes': ['stn']},
-        'k_ie': {'vars': ['qif_gpe/k_ie'], 'nodes': ['gpe']},
-        'k_ii': {'vars': ['qif_gpe/k_ii'], 'nodes': ['gpe']},
-        'eta_e': {'vars': ['qif_stn/eta_e'], 'nodes': ['stn']},
-        'eta_i': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'eta_str': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'eta_tha': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'alpha': {'vars': ['qif_gpe/alpha'], 'nodes': ['gpe']},
-        'delta_e': {'vars': ['qif_stn/delta'], 'nodes': ['stn']},
-        'delta_i': {'vars': ['qif_gpe/delta'], 'nodes': ['gpe']}
+        'k_ee': {'vars': ['qif_full/k_ee'], 'nodes': ['stn_gpe']},
+        'k_ei': {'vars': ['qif_full/k_ei'], 'nodes': ['stn_gpe']},
+        'k_ie': {'vars': ['qif_full/k_ie'], 'nodes': ['stn_gpe']},
+        'k_ii': {'vars': ['qif_full/k_ii'], 'nodes': ['stn_gpe']},
+        'eta_e': {'vars': ['qif_full/eta_e'], 'nodes': ['stn_gpe']},
+        'eta_i': {'vars': ['qif_full/eta_i'], 'nodes': ['stn_gpe']},
+        'eta_str': {'vars': ['qif_full/eta_str'], 'nodes': ['stn_gpe']},
+        'eta_tha': {'vars': ['qif_full/eta_tha'], 'nodes': ['stn_gpe']},
+        'alpha': {'vars': ['qif_full/alpha'], 'nodes': ['stn_gpe']},
+        'delta_e': {'vars': ['qif_full/delta_e'], 'nodes': ['stn_gpe']},
+        'delta_i': {'vars': ['qif_full/delta_i'], 'nodes': ['stn_gpe']}
     }
 
-    T = 12.
-    dt = 5e-4
-    dts = 1e-3
-
+    T = 10000.
+    dt = 1e-2
+    dts = 1e-1
     compute_dir = "results"
 
     ga = CustomGOA(fitness_measure=fitness,
@@ -232,8 +231,8 @@ if __name__ == "__main__":
                 [35, 80],  # GABAA antagonist in STN
                 [30, 40]   # parkinsonian condition
                 ],
-        max_iter=1000,
-        min_fit=0.5,
+        max_iter=100,
+        min_fit=0.1,
         n_winners=6,
         n_parent_pairs=200,
         n_new=50,
