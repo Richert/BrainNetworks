@@ -2,7 +2,7 @@ import os
 import warnings
 import numpy as np
 from pyrates.utility.genetic_algorithm import CGSGeneticAlgorithm
-from pyrates.utility import grid_search, welch
+from pyrates.utility import welch
 from pandas import DataFrame, read_hdf
 
 
@@ -11,6 +11,7 @@ class CustomGOA(CGSGeneticAlgorithm):
     def eval_fitness(self, target: list, **kwargs):
 
         # define simulation conditions
+        worker_file = self.cgs_config['worker_file'] if 'worker_file' in self.cgs_config else None
         param_grid = self.pop.drop(['fitness', 'sigma', 'results'], axis=1)
         results = []
         models_vars = ['k_ie', 'k_ii', 'k_ei', 'k_ee', 'eta_e', 'eta_i', 'eta_str', 'eta_tha', 'alpha',
@@ -38,12 +39,13 @@ class CustomGOA(CGSGeneticAlgorithm):
                        }  # parkinsonian condition
                       ]
         chunk_size = [
-            655,   # animals
-            265,   # kongo
-            340,   # tschad
-            375,   # ostimor
-            605,   # carpenters
-            320,   # uganda
+            260,   # animals
+            220,  # spanien
+            60,   # kongo
+            60,   # tschad
+            120,   # ostimor
+            260,   # carpenters
+            60,   # uganda
         ]
 
         # perform simulations
@@ -51,7 +53,7 @@ class CustomGOA(CGSGeneticAlgorithm):
             for c_dict in conditions:
                 param_grid_tmp = {key: param_grid[key] for key in models_vars}.copy()
                 param_grid_tmp.update(DataFrame(c_dict, index=param_grid.index))
-
+                self.gs_config['init_kwargs'].update(kwargs)
                 res_file = self.cgs.run(
                     circuit_template=self.gs_config['circuit_template'],
                     param_grid=param_grid_tmp,
@@ -63,22 +65,30 @@ class CustomGOA(CGSGeneticAlgorithm):
                     sampling_step_size=self.gs_config['sampling_step_size'],
                     permute=False,
                     chunk_size=chunk_size,
-                    worker_file=self.cgs_config['worker_file'],
-                    gs_kwargs={'init_kwargs': self.gs_config['init_kwargs']}.update(kwargs))
-
-                results.append(read_hdf(res_file, key=f'/Results/fitness'))
+                    worker_file=worker_file,
+                    worker_env=self.cgs_config['worker_env'],
+                    gs_kwargs={'init_kwargs': self.gs_config['init_kwargs']})
+                try:
+                    results.append(read_hdf(res_file, key=f'Results/results'))
+                except FileNotFoundError:
+                    results.append(None)
 
             # calculate fitness
             for gene_id in param_grid.index:
                 outputs, freq, pow = [], [], []
                 for i, r in enumerate(results):
-                    outputs.append([np.mean(r['r_e'][f'circuit_{gene_id}'].loc[1.0:]),
-                                    np.mean(r['r_i'][f'circuit_{gene_id}'].loc[1.0:])])
+                    if r is None:
+                        outputs.append([np.inf, np.inf])
+                        freq.append([0.0])
+                        pow.append([0.0])
+                    else:
+                        outputs.append([np.mean(r['r_e'][f'circuit_{gene_id}'].loc[2.0:]),
+                                        np.mean(r['r_i'][f'circuit_{gene_id}'].loc[2.0:])])
 
-                    tmin = 0.0 if i == 4 else 2.0
-                    psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=tmin, fmin=5.0, fmax=100.0)
-                    freq.append(freqs)
-                    pow.append(psds[0, :])
+                        tmin = 0.0 if i == 4 else 2.0
+                        psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=tmin, fmin=5.0, fmax=100.0)
+                        freq.append(freqs)
+                        pow.append(psds)
 
                 dist1 = self.fitness_measure(outputs, target, **self.fitness_kwargs)
                 dist2 = analyze_oscillations(freq_targets, freq, pow)
@@ -160,27 +170,27 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
     pop_genes = {
-        'k_ee': {'min': 0, 'max': 50, 'N': 2, 'sigma': 0.4},
-        'k_ei': {'min': 0, 'max': 200, 'N': 2, 'sigma': 0.8},
-        'k_ie': {'min': 0, 'max': 200, 'N': 2, 'sigma': 0.8},
-        'k_ii': {'min': 0, 'max': 100, 'N': 2, 'sigma': 0.8},
-        'eta_e': {'min': -20, 'max': 20, 'N': 2, 'sigma': 0.4},
-        'eta_i': {'min': -20, 'max': 20, 'N': 2, 'sigma': 0.4},
-        'eta_str': {'min': -20, 'max': 0, 'N': 2, 'sigma': 0.4},
-        'eta_tha': {'min': 0, 'max': 20, 'N': 2, 'sigma': 0.4},
-        'alpha': {'min': 0, 'max': 100.0, 'N': 1, 'sigma': 0.2},
-        'delta_e': {'min': 0.1, 'max': 3.0, 'N': 1, 'sigma': 0.2},
-        'delta_i': {'min': 0.1, 'max': 3.0, 'N': 1, 'sigma': 0.2},
-        'k_ee_pd': {'min': 0, 'max': 25, 'N': 1, 'sigma': 0.4},
-        'k_ei_pd': {'min': 0, 'max': 100, 'N': 1, 'sigma': 0.8},
-        'k_ie_pd': {'min': 0, 'max': 100, 'N': 1, 'sigma': 0.8},
-        'k_ii_pd': {'min': 0, 'max': 50, 'N': 1, 'sigma': 0.8},
+        'k_ee': {'min': 0, 'max': 100, 'N': 2, 'sigma': 0.4},
+        'k_ei': {'min': 0, 'max': 300, 'N': 2, 'sigma': 0.8},
+        'k_ie': {'min': 0, 'max': 300, 'N': 2, 'sigma': 0.8},
+        'k_ii': {'min': 0, 'max': 200, 'N': 2, 'sigma': 0.8},
+        'eta_e': {'min': -30, 'max': 30, 'N': 2, 'sigma': 0.4},
+        'eta_i': {'min': -30, 'max': 30, 'N': 2, 'sigma': 0.4},
+        'eta_str': {'min': -30, 'max': 0, 'N': 2, 'sigma': 0.4},
+        'eta_tha': {'min': 0, 'max': 30, 'N': 2, 'sigma': 0.4},
+        'alpha': {'min': 0, 'max': 20.0, 'N': 2, 'sigma': 0.2},
+        'delta_e': {'min': 0.1, 'max': 5.0, 'N': 2, 'sigma': 0.2},
+        'delta_i': {'min': 0.1, 'max': 5.0, 'N': 2, 'sigma': 0.2},
+        'k_ee_pd': {'min': 0, 'max': 50, 'N': 1, 'sigma': 0.4},
+        'k_ei_pd': {'min': 0, 'max': 200, 'N': 1, 'sigma': 0.8},
+        'k_ie_pd': {'min': 0, 'max': 200, 'N': 1, 'sigma': 0.8},
+        'k_ii_pd': {'min': 0, 'max': 100, 'N': 1, 'sigma': 0.8},
         'eta_e_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
         'eta_i_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
         'eta_str_pd': {'min': -20, 'max': 0, 'N': 1, 'sigma': 0.4},
         'eta_tha_pd': {'min': -10.0, 'max': 10, 'N': 1, 'sigma': 0.4},
-        'delta_e_pd': {'min': -2.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
-        'delta_i_pd': {'min': -2.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
+        'delta_e_pd': {'min': -4.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
+        'delta_i_pd': {'min': -4.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
     }
 
     param_map = {
@@ -200,22 +210,27 @@ if __name__ == "__main__":
     T = 10000.
     dt = 1e-2
     dts = 1e-1
-    compute_dir = "results"
+    compute_dir = f"{os.getcwd()}/results"
 
     ga = CustomGOA(fitness_measure=fitness,
                    gs_config={
-                       'circuit_template': "config/stn_gpe/net_qif_syn_adapt",
+                       'circuit_template': f"{os.getcwd()}/config/stn_gpe/net_stn_gpe",
                        'permute_grid': True,
                        'param_map': param_map,
                        'simulation_time': T,
                        'step_size': dt,
                        'sampling_step_size': dts,
                        'inputs': {},
-                       'outputs': {'r_e': "stn/qif_stn/R_e", 'r_i': 'gpe/qif_gpe/R_i'},
+                       'outputs': {'r_e': "stn_gpe/qif_full/R_e", 'r_i': 'stn_gpe/qif_full/R_i'},
                        'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
                    },
-                   cgs_config={'nodes': ['animals', 'kongo', 'tschad', 'osttimor', 'carpenters', 'uganda'],
-                               'compute_dir': compute_dir})
+                   cgs_config={'nodes': ['animals', 'spanien', 'kongo', 'tschad',
+                                         'osttimor', 'carpenters', 'uganda'
+                                         ],
+                               'compute_dir': compute_dir,
+                               'worker_file': f'{os.getcwd()}/stn_gpe_worker.py',
+                               'worker_env': "/nobackup/spanien1/rgast/anaconda3/envs/pyrates_test/bin/python3",
+                               })
 
     drop_save_dir = f'{compute_dir}/PopulationDrops/'
     os.makedirs(drop_save_dir, exist_ok=True)
@@ -231,11 +246,11 @@ if __name__ == "__main__":
                 [35, 80],  # GABAA antagonist in STN
                 [30, 40]   # parkinsonian condition
                 ],
-        max_iter=100,
+        max_iter=200,
         min_fit=0.1,
-        n_winners=6,
-        n_parent_pairs=200,
-        n_new=50,
+        n_winners=20,
+        n_parent_pairs=1800,
+        n_new=228,
         sigma_adapt=0.015,
         candidate_save=f'{compute_dir}/GeneticCGSCandidate.h5',
         drop_save=drop_save_dir,
