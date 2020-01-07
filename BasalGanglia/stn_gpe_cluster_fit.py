@@ -13,7 +13,6 @@ class CustomGOA(CGSGeneticAlgorithm):
         # define simulation conditions
         worker_file = self.cgs_config['worker_file'] if 'worker_file' in self.cgs_config else None
         param_grid = self.pop.drop(['fitness', 'sigma', 'results'], axis=1)
-        results = []
         models_vars = ['k_ie', 'k_ii', 'k_ei', 'k_ee', 'eta_e', 'eta_i', 'eta_str', 'eta_tha', 'alpha',
                        'delta_e', 'delta_i']
         freq_targets = [0.0, 0.0, 0.0, 0.0, 50.0, 0.0, 13.0]
@@ -50,50 +49,31 @@ class CustomGOA(CGSGeneticAlgorithm):
 
         # perform simulations
         if len(param_grid) > 0:
-            for c_dict in conditions:
-                param_grid_tmp = {key: param_grid[key] for key in models_vars}.copy()
-                param_grid_tmp.update(DataFrame(c_dict, index=param_grid.index))
-                self.gs_config['init_kwargs'].update(kwargs)
-                res_file = self.cgs.run(
-                    circuit_template=self.gs_config['circuit_template'],
-                    param_grid=param_grid_tmp,
-                    param_map=self.gs_config['param_map'],
-                    simulation_time=self.gs_config['simulation_time'],
-                    dt=self.gs_config['step_size'],
-                    inputs=self.gs_config['inputs'],
-                    outputs=self.gs_config['outputs'],
-                    sampling_step_size=self.gs_config['sampling_step_size'],
-                    permute=False,
-                    chunk_size=chunk_size,
-                    worker_file=worker_file,
-                    worker_env=self.cgs_config['worker_env'],
-                    gs_kwargs={'init_kwargs': self.gs_config['init_kwargs']})
-                try:
-                    results.append(read_hdf(res_file, key=f'Results/results'))
-                except FileNotFoundError:
-                    results.append(None)
+            self.gs_config['init_kwargs'].update(kwargs)
+            res_file = self.cgs.run(
+                circuit_template=self.gs_config['circuit_template'],
+                param_grid=param_grid,
+                param_map=self.gs_config['param_map'],
+                simulation_time=self.gs_config['simulation_time'],
+                dt=self.gs_config['step_size'],
+                inputs=self.gs_config['inputs'],
+                outputs=self.gs_config['outputs'],
+                sampling_step_size=self.gs_config['sampling_step_size'],
+                permute=False,
+                chunk_size=chunk_size,
+                worker_file=worker_file,
+                worker_env=self.cgs_config['worker_env'],
+                gs_kwargs={'init_kwargs': self.gs_config['init_kwargs'], 'conditions': conditions,
+                           'model_vars': models_vars},
+                worker_kwargs={'param_grid': param_grid, 'freq_targets': freq_targets, 'targets': target})
+            try:
+                fitness_tmp = read_hdf(res_file, key=f'Results/fitness')
+            except FileNotFoundError:
+                fitness_tmp = np.inf
 
             # calculate fitness
             for gene_id in param_grid.index:
-                outputs, freq, pow = [], [], []
-                for i, r in enumerate(results):
-                    if r is None:
-                        outputs.append([np.inf, np.inf])
-                        freq.append([0.0])
-                        pow.append([0.0])
-                    else:
-                        outputs.append([np.mean(r['r_e'][f'circuit_{gene_id}'].loc[2.0:]),
-                                        np.mean(r['r_i'][f'circuit_{gene_id}'].loc[2.0:])])
-
-                        tmin = 0.0 if i == 4 else 2.0
-                        psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=tmin, fmin=5.0, fmax=100.0)
-                        freq.append(freqs)
-                        pow.append(psds)
-
-                dist1 = self.fitness_measure(outputs, target, **self.fitness_kwargs)
-                dist2 = analyze_oscillations(freq_targets, freq, pow)
-                self.pop.at[gene_id, 'fitness'] = 1.0 / (dist1 + dist2)
-                self.pop.at[gene_id, 'results'] = outputs
+                self.pop.at[gene_id, 'fitness'] = 1.0 / fitness_tmp
 
         # set fitness of invalid parametrizations
         for gene_id in invalid_params.index:
@@ -105,20 +85,6 @@ def fitness(y, t):
     t = np.asarray(t).flatten()
     diff = np.asarray([0.0 if np.isnan(t_tmp) else y_tmp - t_tmp for y_tmp, t_tmp in zip(y, t)])
     return np.sqrt(np.mean(diff**2))
-
-
-def analyze_oscillations(freq_targets, freqs, pows):
-    dist = []
-    for t, f, p in zip(freq_targets, freqs, pows):
-        if np.isnan(t):
-            dist.append(0.0)
-        elif t:
-            f_tmp = f[np.argmax(p)]
-            dist.append(t - f_tmp)
-        else:
-            p_tmp = np.max(p)
-            dist.append(-p_tmp)
-    return fitness(dist, freq_targets)
 
 
 def eval_params(params):
