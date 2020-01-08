@@ -20,7 +20,7 @@ class ExtendedWorker(MinimalWorker):
         kwargs_tmp = kwargs.copy()
         conditions = kwargs_tmp.pop('conditions')
         model_vars = kwargs_tmp.pop('model_vars')
-        param_grid = deepcopy(kwargs_tmp.pop('param_grid'))
+        param_grid = kwargs_tmp.pop('param_grid')
         results = []
         t = 0
         for c_dict in conditions:
@@ -103,9 +103,9 @@ def analyze_oscillations(freq_targets, freqs, pows):
 if __name__ == "__main__":
     cgs_worker = ExtendedWorker()
     cgs_worker.worker_init()
-    # cgs_worker.worker_init(
-    #     config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Config/DefaultConfig_0.yaml",
-    #     subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Grids/Subgrids/DefaultGrid_66/animals/animals_Subgrid_0.h5",
-    #     result_file="~/my_result.h5",
-    #     build_dir=os.getcwd()
-    # )
+    #cgs_worker.worker_init(
+    #    config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Config/DefaultConfig_0.yaml",
+    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Grids/Subgrids/DefaultGrid_77/animals/animals_Subgrid_0.h5",
+    #    result_file="~/my_result.h5",
+    #    build_dir=os.getcwd()
+    #)

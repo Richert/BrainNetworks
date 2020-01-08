@@ -65,7 +65,7 @@ class CustomGOA(CGSGeneticAlgorithm):
                 worker_env=self.cgs_config['worker_env'],
                 gs_kwargs={'init_kwargs': self.gs_config['init_kwargs'], 'conditions': conditions,
                            'model_vars': models_vars},
-                worker_kwargs={'param_grid': param_grid, 'freq_targets': freq_targets, 'targets': target})
+                worker_kwargs={'freq_targets': freq_targets, 'targets': target})
             results_tmp = read_hdf(res_file, key=f'Results/results')
 
             # calculate fitness
