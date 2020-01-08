@@ -18,14 +18,13 @@ class CustomGOA(CGSGeneticAlgorithm):
         result_vars = ['frequency', 'power', 'r_e', 'r_i']
         freq_targets = [0.0, 0.0, 0.0, 0.0, [40.0, 80.0], 0.0, [12.0, 100.0]]
         param_grid, invalid_params = eval_params(param_grid)
-        zero_vec = [0.0 for _ in range(param_grid.shape[0])]
         conditions = [{},  # healthy control
-                      {'k_ie': zero_vec},  # STN blockade
-                      {'k_ii': zero_vec, 'eta_str': zero_vec},  # GABAA blockade in GPe
-                      {'k_ie': zero_vec, 'k_ii': zero_vec, 'eta_str': zero_vec},
+                      {'k_ie': 0.0},  # STN blockade
+                      {'k_ii': 0.0, 'eta_str': 0.0},  # GABAA blockade in GPe
+                      {'k_ie': 0.0, 'k_ii': 0.0, 'eta_str': 0.0},
                       # STN blockade and GABAA blockade in GPe
-                      {'k_ie': zero_vec, 'eta_tha': zero_vec},  # AMPA + NMDA blocker in GPe
-                      {'k_ei': zero_vec},  # GABAA antagonist in STN
+                      {'k_ie': 0.0, 'eta_tha': 0.0},  # AMPA + NMDA blocker in GPe
+                      {'k_ei': 0.0},  # GABAA antagonist in STN
                       {'k_ei': param_grid['k_ei'] + param_grid['k_ei_pd'],
                        'k_ie': param_grid['k_ie'] + param_grid['k_ie_pd'],
                        'k_ee': param_grid['k_ee'] + param_grid['k_ee_pd'],

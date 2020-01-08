@@ -20,10 +20,13 @@ class ExtendedWorker(MinimalWorker):
         kwargs_tmp = kwargs.copy()
         conditions = kwargs_tmp.pop('conditions')
         model_vars = kwargs_tmp.pop('model_vars')
-        param_grid = kwargs_tmp.pop('param_grid')
+        param_grid = deepcopy(kwargs_tmp.pop('param_grid'))
         results = []
         t = 0
         for c_dict in conditions:
+            for key in c_dict.copy():
+                if type(c_dict[key]) is float:
+                    c_dict[key] = np.zeros((param_grid.shape[0],)) + c_dict[key]
             param_grid_tmp = {key: param_grid[key] for key in model_vars}.copy()
             param_grid_tmp.update(DataFrame(c_dict, index=param_grid.index))
             r, self.result_map, t_tmp = grid_search(*args, param_grid=DataFrame.from_dict(param_grid_tmp),
