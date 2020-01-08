@@ -15,7 +15,8 @@ class CustomGOA(CGSGeneticAlgorithm):
         param_grid = self.pop.drop(['fitness', 'sigma', 'results'], axis=1)
         models_vars = ['k_ie', 'k_ii', 'k_ei', 'k_ee', 'eta_e', 'eta_i', 'eta_str', 'eta_tha', 'alpha',
                        'delta_e', 'delta_i']
-        freq_targets = [0.0, 0.0, 0.0, 0.0, 50.0, 0.0, 13.0]
+        result_vars = ['frequency', 'power', 'r_e', 'r_i']
+        freq_targets = [0.0, 0.0, 0.0, 0.0, [40.0, 80.0], 0.0, [12.0, 100.0]]
         param_grid, invalid_params = eval_params(param_grid)
         zero_vec = [0.0 for _ in range(param_grid.shape[0])]
         conditions = [{},  # healthy control
@@ -66,18 +67,17 @@ class CustomGOA(CGSGeneticAlgorithm):
                 gs_kwargs={'init_kwargs': self.gs_config['init_kwargs'], 'conditions': conditions,
                            'model_vars': models_vars},
                 worker_kwargs={'param_grid': param_grid, 'freq_targets': freq_targets, 'targets': target})
-            try:
-                fitness_tmp = read_hdf(res_file, key=f'Results/fitness')
-            except FileNotFoundError:
-                fitness_tmp = np.inf
+            results_tmp = read_hdf(res_file, key=f'Results/results')
 
             # calculate fitness
             for gene_id in param_grid.index:
-                self.pop.at[gene_id, 'fitness'] = 1.0 / fitness_tmp
+                self.pop.at[gene_id, 'fitness'] = 1.0 / results_tmp.at[gene_id, 'fitness']
+                self.pop.at[gene_id, 'results'] = [results_tmp.at[gene_id, v] for v in result_vars]
 
         # set fitness of invalid parametrizations
         for gene_id in invalid_params.index:
             self.pop.at[gene_id, 'fitness'] = 0.0
+            self.pop.at[gene_id, 'results'] = [0. for _ in result_vars]
 
 
 def fitness(y, t):
@@ -155,8 +155,8 @@ if __name__ == "__main__":
         'eta_i_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
         'eta_str_pd': {'min': -20, 'max': 0, 'N': 1, 'sigma': 0.4},
         'eta_tha_pd': {'min': -10.0, 'max': 10, 'N': 1, 'sigma': 0.4},
-        'delta_e_pd': {'min': -4.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
-        'delta_i_pd': {'min': -4.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
+        'delta_e_pd': {'min': -2.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
+        'delta_i_pd': {'min': -2.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
     }
 
     param_map = {
@@ -213,10 +213,10 @@ if __name__ == "__main__":
                 [30, 40]   # parkinsonian condition
                 ],
         max_iter=200,
-        min_fit=0.1,
+        min_fit=0.2,
         n_winners=20,
-        n_parent_pairs=1800,
-        n_new=228,
+        n_parent_pairs=1600,
+        n_new=428,
         sigma_adapt=0.015,
         candidate_save=f'{compute_dir}/GeneticCGSCandidate.h5',
         drop_save=drop_save_dir,
