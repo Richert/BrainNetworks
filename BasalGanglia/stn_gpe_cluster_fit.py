@@ -42,7 +42,7 @@ class CustomGOA(CGSGeneticAlgorithm):
             150,  # spanien
             50,   # kongo
             50,   # tschad
-            150,   # ostimor
+            150,   # osttimor
             200,   # carpenters
             50,   # uganda
         ]
@@ -143,7 +143,7 @@ if __name__ == "__main__":
         'eta_i': {'min': -30, 'max': 30, 'N': 2, 'sigma': 0.4},
         'eta_str': {'min': -30, 'max': 0, 'N': 2, 'sigma': 0.4},
         'eta_tha': {'min': 0, 'max': 30, 'N': 2, 'sigma': 0.4},
-        'alpha': {'min': 0, 'max': 20.0, 'N': 2, 'sigma': 0.2},
+        'alpha': {'min': 0, 'max': 1.0, 'N': 2, 'sigma': 0.2},
         'delta_e': {'min': 0.1, 'max': 5.0, 'N': 2, 'sigma': 0.2},
         'delta_i': {'min': 0.1, 'max': 5.0, 'N': 2, 'sigma': 0.2},
         'k_ee_pd': {'min': 0, 'max': 50, 'N': 1, 'sigma': 0.4},
@@ -172,7 +172,7 @@ if __name__ == "__main__":
         'delta_i': {'vars': ['qif_full/delta_i'], 'nodes': ['stn_gpe']}
     }
 
-    T = 5000.
+    T = 10000.
     dt = 1e-2
     dts = 1.0
     compute_dir = f"{os.getcwd()}/results"
