@@ -1,7 +1,7 @@
 # my_cgs_worker.py
 from pyrates.utility.grid_search import ClusterWorkerTemplate
 import os
-from pandas import DataFrame
+from pandas import DataFrame, concat
 from pyrates.utility import grid_search, welch
 import numpy as np
 from copy import deepcopy
@@ -21,18 +21,28 @@ class ExtendedWorker(MinimalWorker):
         conditions = kwargs_tmp.pop('conditions')
         model_vars = kwargs_tmp.pop('model_vars')
         param_grid = kwargs_tmp.pop('param_grid')
-        results = []
-        t = 0
-        for c_dict in conditions:
-            for key in c_dict.copy():
-                if type(c_dict[key]) is float:
+        results, gene_ids = [], []
+        param_grid_tmp = DataFrame.from_dict({key: param_grid[key] for key in model_vars})
+        n = param_grid.shape[0]
+        for i, c_dict in enumerate(conditions):
+            for key in model_vars:
+                if key in c_dict and type(c_dict[key]) is float:
                     c_dict[key] = np.zeros((param_grid.shape[0],)) + c_dict[key]
-            param_grid_tmp = {key: param_grid[key] for key in model_vars}.copy()
-            param_grid_tmp.update(DataFrame(c_dict, index=param_grid.index))
-            r, self.result_map, t_tmp = grid_search(*args, param_grid=DataFrame.from_dict(param_grid_tmp),
-                                                    **deepcopy(kwargs_tmp))
-            results.append(r)
-            t += t_tmp
+                else:
+                    c_dict[key] = param_grid[key]
+            param_grid_new = DataFrame.from_dict(c_dict)
+            param_grid_new.index = np.arange(i*n, (i+1)*n)
+            param_grid_tmp = concat((param_grid_tmp, param_grid_new), axis=0)
+            gene_ids.append((i*n, (i+1)*n))
+        r, self.result_map, t = grid_search(*args, param_grid=param_grid_tmp, **kwargs_tmp)
+        new_labels = [f'circuit_{i}' for i in range(0, n)]
+        for start, stop in gene_ids:
+            targets = [f'circuit_{i}' for i in range(start, stop)]
+            labels = list(r.columns.get_level_values(level=1))
+            idx = [labels.index(t) for t in targets]
+            r_tmp = r.iloc[:, idx]
+            r_tmp.columns.set_levels(new_labels, level=1, inplace=True)
+            results.append(r_tmp)
         self.results = results
         return t
 
