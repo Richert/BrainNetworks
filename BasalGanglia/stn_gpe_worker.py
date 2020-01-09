@@ -35,11 +35,14 @@ class ExtendedWorker(MinimalWorker):
             param_grid_tmp = concat((param_grid_tmp, param_grid_new), axis=0)
             gene_ids.append((i*n, (i+1)*n))
         r, self.result_map, t = grid_search(*args, param_grid=param_grid_tmp, **kwargs_tmp)
-        new_labels = [f'circuit_{i}' for i in range(0, n)]
         for start, stop in gene_ids:
             targets = [f'circuit_{i}' for i in range(start, stop)]
             labels = list(r.columns.get_level_values(level=1))
-            idx = [labels.index(t) for t in targets]
+            idx, new_labels = [], []
+            for i, t in enumerate(targets):
+                new_idx = list(np.argwhere(labels == t).squeeze())
+                idx += new_idx
+                new_labels += [f'circuit_{i}' for _ in range(len(new_idx))]
             r_tmp = r.iloc[:, idx]
             r_tmp.columns.set_levels(new_labels, level=1, inplace=True)
             results.append(r_tmp)
@@ -73,9 +76,9 @@ class ExtendedWorker(MinimalWorker):
             idx = np.argmax(pow[-1][0])
             r = self.results[0]
             cutoff = r.index[-1]*0.1
-            self.processed_results.loc[gene_id, 'fitness'] = 0.7*dist1+0.3*dist2
-            self.processed_results.loc[gene_id, 'freq'] = freq[-1][idx]
-            self.processed_results.loc[gene_id, 'pow'] = pow[-1][0][idx]
+            self.processed_results.loc[gene_id, 'fitness'] = dist1+dist2
+            self.processed_results.loc[gene_id, 'frequency'] = freq[-1][idx]
+            self.processed_results.loc[gene_id, 'power'] = pow[-1][0][idx]
             self.processed_results.loc[gene_id, 'r_e'] = np.mean(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])[0]*1e3
             self.processed_results.loc[gene_id, 'r_i'] = np.mean(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:])[0]*1e3
 
@@ -112,10 +115,10 @@ def analyze_oscillations(freq_targets, freqs, pows):
 
 if __name__ == "__main__":
     cgs_worker = ExtendedWorker()
-    cgs_worker.worker_init()
-    #cgs_worker.worker_init(
-    #    config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Config/DefaultConfig_0.yaml",
-    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Grids/Subgrids/DefaultGrid_77/animals/animals_Subgrid_0.h5",
-    #    result_file="~/my_result.h5",
-    #    build_dir=os.getcwd()
-    #)
+    #cgs_worker.worker_init()
+    cgs_worker.worker_init(
+        config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Config/DefaultConfig_0.yaml",
+        subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Grids/Subgrids/DefaultGrid_93/spanien/spanien_Subgrid_0.h5",
+        result_file="~/my_result.h5",
+        build_dir=os.getcwd()
+    )

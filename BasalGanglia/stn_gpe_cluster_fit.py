@@ -38,13 +38,13 @@ class CustomGOA(CGSGeneticAlgorithm):
                        }  # parkinsonian condition
                       ]
         chunk_size = [
-            260,   # animals
-            220,  # spanien
-            60,   # kongo
-            60,   # tschad
-            120,   # ostimor
-            260,   # carpenters
-            60,   # uganda
+            200,   # animals
+            150,  # spanien
+            50,   # kongo
+            50,   # tschad
+            150,   # ostimor
+            200,   # carpenters
+            50,   # uganda
         ]
 
         # perform simulations
@@ -172,7 +172,7 @@ if __name__ == "__main__":
         'delta_i': {'vars': ['qif_full/delta_i'], 'nodes': ['stn_gpe']}
     }
 
-    T = 10000.
+    T = 500.
     dt = 1e-2
     dts = 1.0
     compute_dir = f"{os.getcwd()}/results"
