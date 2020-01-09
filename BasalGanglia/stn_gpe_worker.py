@@ -1,7 +1,7 @@
 # my_cgs_worker.py
 from pyrates.utility.grid_search import ClusterWorkerTemplate
 import os
-from pandas import DataFrame, concat
+from pandas import DataFrame, concat, MultiIndex
 from pyrates.utility import grid_search, welch
 import numpy as np
 from copy import deepcopy
@@ -21,33 +21,43 @@ class ExtendedWorker(MinimalWorker):
         conditions = kwargs_tmp.pop('conditions')
         model_vars = kwargs_tmp.pop('model_vars')
         param_grid = kwargs_tmp.pop('param_grid')
-        results, gene_ids = [], []
         param_grid_tmp = DataFrame.from_dict({key: param_grid[key] for key in model_vars})
+        results, gene_ids = [], [param_grid_tmp.index]
         n = param_grid.shape[0]
-        for i, c_dict in enumerate(conditions):
-            for key in model_vars:
-                if key in c_dict and type(c_dict[key]) is float:
-                    c_dict[key] = np.zeros((param_grid.shape[0],)) + c_dict[key]
-                else:
-                    c_dict[key] = param_grid[key]
-            param_grid_new = DataFrame.from_dict(c_dict)
-            param_grid_new.index = np.arange(i*n, (i+1)*n)
-            param_grid_tmp = concat((param_grid_tmp, param_grid_new), axis=0)
-            gene_ids.append((i*n, (i+1)*n))
-        r, self.result_map, t = grid_search(*args, param_grid=param_grid_tmp, **kwargs_tmp)
-        for start, stop in gene_ids:
-            targets = [f'circuit_{i}' for i in range(start, stop)]
+        for c_dict in conditions:
+            if c_dict:
+                for key in model_vars:
+                    if key in c_dict and type(c_dict[key]) is float:
+                        c_dict[key] = np.zeros((param_grid.shape[0],)) + c_dict[key]
+                    else:
+                        c_dict[key] = param_grid[key]
+                param_grid_new = DataFrame.from_dict(c_dict)
+                old_idx = np.max(param_grid_tmp.index) + 1
+                param_grid_new.index = np.arange(old_idx, old_idx+n)
+                param_grid_tmp = concat((param_grid_tmp, param_grid_new), axis=0)
+                gene_ids.append(param_grid_new.index)
+        r, self.result_map, sim_time = grid_search(*args, param_grid=param_grid_tmp, **kwargs_tmp)
+        for ids in gene_ids:
+            targets = [f'circuit_{i}' for i in ids]
             labels = list(r.columns.get_level_values(level=1))
             idx, new_labels = [], []
             for i, t in enumerate(targets):
-                new_idx = list(np.argwhere(labels == t).squeeze())
-                idx += new_idx
-                new_labels += [f'circuit_{i}' for _ in range(len(new_idx))]
+                start = 0
+                while start < len(labels):
+                    try:
+                        idx.append(labels.index(t, start))
+                        start += idx[-1]+1
+                        new_labels.append(f'circuit_{gene_ids[0][i]}')
+                    except ValueError:
+                        break
             r_tmp = r.iloc[:, idx]
-            r_tmp.columns.set_levels(new_labels, level=1, inplace=True)
+            if new_labels:
+                old_cols = r.columns.values
+                new_columns = [(old_cols[i][0], new_label, old_cols[i][2]) for i, new_label in zip(idx, new_labels)]
+                r_tmp.columns = MultiIndex.from_tuples(new_columns, names=['out_var', 'circuit', 'population'])
             results.append(r_tmp)
         self.results = results
-        return t
+        return sim_time
 
     def worker_postprocessing(self, **kwargs):
         kwargs_tmp = kwargs.copy()
@@ -115,10 +125,10 @@ def analyze_oscillations(freq_targets, freqs, pows):
 
 if __name__ == "__main__":
     cgs_worker = ExtendedWorker()
-    cgs_worker.worker_init()
-    #cgs_worker.worker_init(
-    #    config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Config/DefaultConfig_0.yaml",
-    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Grids/Subgrids/DefaultGrid_93/spanien/spanien_Subgrid_0.h5",
-    #    result_file="~/my_result.h5",
-    #    build_dir=os.getcwd()
-    #)
+    #cgs_worker.worker_init()
+    cgs_worker.worker_init(
+        config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Config/DefaultConfig_0.yaml",
+        subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Grids/Subgrids/DefaultGrid_94/animals/animals_Subgrid_0.h5",
+        result_file="~/my_result.h5",
+        build_dir=os.getcwd()
+    )

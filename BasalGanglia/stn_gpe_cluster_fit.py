@@ -172,7 +172,7 @@ if __name__ == "__main__":
         'delta_i': {'vars': ['qif_full/delta_i'], 'nodes': ['stn_gpe']}
     }
 
-    T = 500.
+    T = 5000.
     dt = 1e-2
     dts = 1.0
     compute_dir = f"{os.getcwd()}/results"
