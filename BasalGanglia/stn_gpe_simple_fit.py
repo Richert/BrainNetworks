@@ -47,7 +47,7 @@ class CustomGOA(GSGeneticAlgorithm):
                                 param_grid=param_grid_tmp,
                                 param_map=self.gs_config['param_map'],
                                 simulation_time=self.gs_config['simulation_time'],
-                                dt=self.gs_config['step_size'],
+                                step_size=self.gs_config['step_size'],
                                 sampling_step_size=self.gs_config['sampling_step_size'],
                                 permute_grid=False,
                                 inputs=self.gs_config['inputs'],
@@ -63,10 +63,10 @@ class CustomGOA(GSGeneticAlgorithm):
         for gene_id in param_grid.index:
             outputs, freq, pow = [], [], []
             for i, r in enumerate(results):
-                outputs.append([np.mean(r['r_e'][f'circuit_{gene_id}'].loc[1.0:]),
-                                np.mean(r['r_i'][f'circuit_{gene_id}'].loc[1.0:])])
+                outputs.append([np.mean(r['r_e'][f'circuit_{gene_id}'].loc[0.1:]),
+                                np.mean(r['r_i'][f'circuit_{gene_id}'].loc[0.1:])])
 
-                tmin = 0.0 if i == 4 else 2.0
+                tmin = 0.0 if i == 4 else 0.1
                 psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=tmin, fmin=5.0, fmax=100.0)
                 freq.append(freqs)
                 pow.append(psds[0, :])
@@ -151,27 +151,27 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
     pop_genes = {
-        'k_ee': {'min': 0, 'max': 50, 'N': 2, 'sigma': 0.4},
-        'k_ei': {'min': 0, 'max': 200, 'N': 2, 'sigma': 0.8},
-        'k_ie': {'min': 0, 'max': 200, 'N': 2, 'sigma': 0.8},
-        'k_ii': {'min': 0, 'max': 100, 'N': 2, 'sigma': 0.8},
-        'eta_e': {'min': -20, 'max': 20, 'N': 2, 'sigma': 0.4},
-        'eta_i': {'min': -20, 'max': 20, 'N': 2, 'sigma': 0.4},
-        'eta_str': {'min': -20, 'max': 0, 'N': 2, 'sigma': 0.4},
-        'eta_tha': {'min': 0, 'max': 20, 'N': 2, 'sigma': 0.4},
-        'alpha': {'min': 0, 'max': 100.0, 'N': 1, 'sigma': 0.2},
-        'delta_e': {'min': 0.1, 'max': 3.0, 'N': 1, 'sigma': 0.2},
-        'delta_i': {'min': 0.1, 'max': 3.0, 'N': 1, 'sigma': 0.2},
-        'k_ee_pd': {'min': 0, 'max': 25, 'N': 1, 'sigma': 0.4},
-        'k_ei_pd': {'min': 0, 'max': 100, 'N': 1, 'sigma': 0.8},
-        'k_ie_pd': {'min': 0, 'max': 100, 'N': 1, 'sigma': 0.8},
-        'k_ii_pd': {'min': 0, 'max': 50, 'N': 1, 'sigma': 0.8},
-        'eta_e_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
-        'eta_i_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
-        'eta_str_pd': {'min': -20, 'max': 0, 'N': 1, 'sigma': 0.4},
-        'eta_tha_pd': {'min': -10.0, 'max': 10, 'N': 1, 'sigma': 0.4},
-        'delta_e_pd': {'min': -2.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
-        'delta_i_pd': {'min': -2.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
+        'k_ee': {'min': 0, 'max': 50, 'size': 2, 'sigma': 0.4, 'loc': 20.0, 'scale': 2.0},
+        'k_ei': {'min': 0, 'max': 200, 'size': 2, 'sigma': 0.8, 'loc': 100.0, 'scale': 10.0},
+        'k_ie': {'min': 0, 'max': 200, 'size': 2, 'sigma': 0.8, 'loc': 100.0, 'scale': 10.0},
+        'k_ii': {'min': 0, 'max': 100, 'size': 2, 'sigma': 0.8, 'loc': 50.0, 'scale': 5.0},
+        'eta_e': {'min': -20, 'max': 20, 'size': 2, 'sigma': 0.4, 'loc': 0.0, 'scale': 2.0},
+        'eta_i': {'min': -20, 'max': 20, 'size': 2, 'sigma': 0.4, 'loc': 0.0, 'scale': 2.0},
+        'eta_str': {'min': -20, 'max': 0, 'size': 2, 'sigma': 0.4, 'loc': -10.0, 'scale': 2.0},
+        'eta_tha': {'min': 0, 'max': 20, 'size': 2, 'sigma': 0.4, 'loc': 10.0, 'scale': 2.0},
+        'alpha': {'min': 0, 'max': 0.1, 'size': 1, 'sigma': 0.2, 'loc': 0.02, 'scale': 0.005},
+        'delta_e': {'min': 0.1, 'max': 3.0, 'size': 1, 'sigma': 0.2, 'loc': 1.5, 'scale': 0.2},
+        'delta_i': {'min': 0.1, 'max': 3.0, 'size': 1, 'sigma': 0.2, 'loc': 1.5, 'scale': 0.2},
+        'k_ee_pd': {'min': 0, 'max': 25, 'size': 1, 'sigma': 0.4, 'loc': 10.0, 'scale': 1.0},
+        'k_ei_pd': {'min': 0, 'max': 100, 'size': 1, 'sigma': 0.8, 'loc': 50.0, 'scale': 5.0},
+        'k_ie_pd': {'min': 0, 'max': 100, 'size': 1, 'sigma': 0.8, 'loc': 50.0, 'scale': 5.0},
+        'k_ii_pd': {'min': 0, 'max': 50, 'size': 1, 'sigma': 0.8, 'loc': 20.0, 'scale': 2.0},
+        'eta_e_pd': {'min': -10, 'max': 10, 'size': 1, 'sigma': 0.4, 'loc': 0.0, 'scale': 2.0},
+        'eta_i_pd': {'min': -10, 'max': 10, 'size': 1, 'sigma': 0.4, 'loc': 0.0, 'scale': 2.0},
+        'eta_str_pd': {'min': -20, 'max': 0, 'size': 1, 'sigma': 0.4, 'loc': -10.0, 'scale': 1.0},
+        'eta_tha_pd': {'min': -10.0, 'max': 10, 'size': 1, 'sigma': 0.4, 'loc': 0.0, 'scale': 2.0},
+        'delta_e_pd': {'min': -2.0, 'max': 0.0, 'size': 1, 'sigma': 0.2, 'loc': -0.5, 'scale': 0.05},
+        'delta_i_pd': {'min': -2.0, 'max': 0.0, 'size': 1, 'sigma': 0.2, 'loc': -0.5, 'scale': 0.05},
     }
 
     param_map = {
@@ -188,7 +188,7 @@ if __name__ == "__main__":
         'delta_i': {'vars': ['qif_full/delta_i'], 'nodes': ['stn_gpe']}
     }
 
-    T = 10000.
+    T = 500.
     dt = 1e-2
     dts = 1e-1
     compute_dir = "results"
@@ -211,7 +211,7 @@ if __name__ == "__main__":
 
     winner = ga.run(
         initial_gene_pool=pop_genes,
-        gene_sampling_func=np.random.uniform,
+        gene_sampling_func=np.random.normal,
         target=[[20, 60],   # healthy control
                 [np.nan, 40],  # stn blockade
                 [np.nan, 90],  # gabaa blockade in GPe

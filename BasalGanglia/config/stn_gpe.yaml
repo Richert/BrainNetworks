@@ -26,13 +26,13 @@ qif_full:
     - "d/dt * R_i = delta_i/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
     - "d/dt * V_i = (V_i^2 + eta_i + eta_str + eta_tha)/tau_i + I_ie - I_ii*(1.0-I_a) - tau_i*(PI*R_i)^2"
     - "d/dt * I_ee = X_ee"
-    - "d/dt * X_ee = (k_ee*R_e - X_ee*(tau_ee_r+tau_ee_d) - I_ee)/(tau_ee_r*tau_ee_d)"
+    - "d/dt * X_ee = (k*k_ee*R_e - X_ee*(tau_ee_r+tau_ee_d) - I_ee)/(tau_ee_r*tau_ee_d)"
     - "d/dt * I_ei = X_ei"
-    - "d/dt * X_ei = (k_ei*R_i16 - X_ei*(tau_ei_r+tau_ei_d) - I_ei)/(tau_ei_r*tau_ei_d)"
+    - "d/dt * X_ei = (k*k_i*k_ei*R_i16 - X_ei*(tau_ei_r+tau_ei_d) - I_ei)/(tau_ei_r*tau_ei_d)"
     - "d/dt * I_ie = X_ie"
-    - "d/dt * X_ie = (k_ie*R_e16 - X_ie*(tau_ie_r+tau_ie_d) - I_ie)/(tau_ie_r*tau_ie_d)"
+    - "d/dt * X_ie = (k*k_ie*R_e16 - X_ie*(tau_ie_r+tau_ie_d) - I_ie)/(tau_ie_r*tau_ie_d)"
     - "d/dt * I_ii = X_ii"
-    - "d/dt * X_ii = (k_ii*R_i - X_ii*(tau_ii_r+tau_ii_d) - I_ii)/(tau_ii_r*tau_ii_d)"
+    - "d/dt * X_ii = (k*k_i*k_ii*R_i - X_ii*(tau_ii_r+tau_ii_d) - I_ii)/(tau_ii_r*tau_ii_d)"
     - "d/dt * I_a = X_a"
     - "d/dt * X_a = (alpha*R_i - 2.0*X_a - I_a/tau_a)/tau_a"
     - "d/dt * R_e1 = (R_e - R_e1)*16.0/d_e"
@@ -101,7 +101,7 @@ qif_full:
     eta_i:
       default: 16.6
     eta_str:
-      default: -9.1
+      default: -78.0
     eta_tha:
       default: 18.8
     k_ee:
@@ -109,9 +109,13 @@ qif_full:
     k_ei:
       default: 30.4
     k_ie:
-      default: 116.2
+      default: 97.9
     k_ii:
-      default: 4.1
+      default: 7.2
+    k:
+      default: 1.0
+    k_i:
+      default: 1.0
     tau_e:
       default: 6.0
     tau_i:
@@ -135,7 +139,7 @@ qif_full:
     tau_a:
       default: 500.0
     alpha:
-      default: 0.3
+      default: 0.04
     delta_e:
       default: 2.8
     delta_i:
