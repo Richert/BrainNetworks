@@ -128,7 +128,7 @@ if __name__ == "__main__":
     cgs_worker.worker_init()
     #cgs_worker.worker_init(
     #    config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Config/DefaultConfig_0.yaml",
-    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Grids/Subgrids/DefaultGrid_94/animals/animals_Subgrid_0.h5",
+    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Grids/Subgrids/DefaultGrid_102/animals/animals_Subgrid_0.h5",
     #    result_file="~/my_result.h5",
     #    build_dir=os.getcwd()
     #)

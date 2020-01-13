@@ -4,7 +4,7 @@ import numpy as np
 from pyrates.utility.genetic_algorithm import CGSGeneticAlgorithm
 from pyrates.utility import welch
 from pandas import DataFrame, read_hdf
-
+from copy import deepcopy
 
 class CustomGOA(CGSGeneticAlgorithm):
 
@@ -38,12 +38,12 @@ class CustomGOA(CGSGeneticAlgorithm):
                        }  # parkinsonian condition
                       ]
         chunk_size = [
-            200,   # animals
-            150,  # spanien
+            300,   # animals
+            200,  # spanien
             50,   # kongo
             50,   # tschad
-            150,   # osttimor
-            200,   # carpenters
+            200,   # osttimor
+            300,   # carpenters
             50,   # uganda
         ]
 
@@ -52,7 +52,7 @@ class CustomGOA(CGSGeneticAlgorithm):
             self.gs_config['init_kwargs'].update(kwargs)
             res_file = self.cgs.run(
                 circuit_template=self.gs_config['circuit_template'],
-                param_grid=param_grid,
+                param_grid=deepcopy(param_grid),
                 param_map=self.gs_config['param_map'],
                 simulation_time=self.gs_config['simulation_time'],
                 dt=self.gs_config['step_size'],
@@ -135,27 +135,27 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
     pop_genes = {
-        'k_ee': {'min': 0, 'max': 100, 'N': 2, 'sigma': 0.4},
-        'k_ei': {'min': 0, 'max': 300, 'N': 2, 'sigma': 0.8},
-        'k_ie': {'min': 0, 'max': 300, 'N': 2, 'sigma': 0.8},
-        'k_ii': {'min': 0, 'max': 200, 'N': 2, 'sigma': 0.8},
-        'eta_e': {'min': -30, 'max': 30, 'N': 2, 'sigma': 0.4},
-        'eta_i': {'min': -30, 'max': 30, 'N': 2, 'sigma': 0.4},
-        'eta_str': {'min': -30, 'max': 0, 'N': 2, 'sigma': 0.4},
-        'eta_tha': {'min': 0, 'max': 30, 'N': 2, 'sigma': 0.4},
-        'alpha': {'min': 0, 'max': 1.0, 'N': 2, 'sigma': 0.2},
-        'delta_e': {'min': 0.1, 'max': 5.0, 'N': 2, 'sigma': 0.2},
-        'delta_i': {'min': 0.1, 'max': 5.0, 'N': 2, 'sigma': 0.2},
-        'k_ee_pd': {'min': 0, 'max': 50, 'N': 1, 'sigma': 0.4},
-        'k_ei_pd': {'min': 0, 'max': 200, 'N': 1, 'sigma': 0.8},
-        'k_ie_pd': {'min': 0, 'max': 200, 'N': 1, 'sigma': 0.8},
-        'k_ii_pd': {'min': 0, 'max': 100, 'N': 1, 'sigma': 0.8},
-        'eta_e_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
-        'eta_i_pd': {'min': -10, 'max': 10, 'N': 1, 'sigma': 0.4},
-        'eta_str_pd': {'min': -20, 'max': 0, 'N': 1, 'sigma': 0.4},
-        'eta_tha_pd': {'min': -10.0, 'max': 10, 'N': 1, 'sigma': 0.4},
-        'delta_e_pd': {'min': -2.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
-        'delta_i_pd': {'min': -2.0, 'max': 0.0, 'N': 1, 'sigma': 0.2},
+        'k_ee': {'min': 0, 'max': 100, 'size': 2, 'sigma': 0.4, 'loc': 20.0, 'scale': 2.0},
+        'k_ei': {'min': 0, 'max': 300, 'size': 2, 'sigma': 0.8, 'loc': 100.0, 'scale': 10.0},
+        'k_ie': {'min': 0, 'max': 300, 'size': 2, 'sigma': 0.8, 'loc': 100.0, 'scale': 10.0},
+        'k_ii': {'min': 0, 'max': 200, 'size': 2, 'sigma': 0.8, 'loc': 50.0, 'scale': 5.0},
+        'eta_e': {'min': -30, 'max': 30, 'size': 2, 'sigma': 0.4, 'loc': 0.0, 'scale': 2.0},
+        'eta_i': {'min': -30, 'max': 30, 'size': 2, 'sigma': 0.4, 'loc': 0.0, 'scale': 2.0},
+        'eta_str': {'min': -30, 'max': 0, 'size': 2, 'sigma': 0.4, 'loc': -10.0, 'scale': 2.0},
+        'eta_tha': {'min': 0, 'max': 30, 'size': 2, 'sigma': 0.4, 'loc': 10.0, 'scale': 2.0},
+        'alpha': {'min': 0, 'max': 0.1, 'size': 2, 'sigma': 0.2, 'loc': 0.01, 'scale': 0.001},
+        'delta_e': {'min': 0.1, 'max': 5.0, 'size': 2, 'sigma': 0.2, 'loc': 1.5, 'scale': 0.2},
+        'delta_i': {'min': 0.1, 'max': 5.0, 'size': 2, 'sigma': 0.2, 'loc': 1.5, 'scale': 0.2},
+        'k_ee_pd': {'min': 0, 'max': 50, 'size': 1, 'sigma': 0.4, 'loc': 10.0, 'scale': 1.0},
+        'k_ei_pd': {'min': 0, 'max': 150, 'size': 1, 'sigma': 0.8, 'loc': 50.0, 'scale': 5.0},
+        'k_ie_pd': {'min': 0, 'max': 150, 'size': 1, 'sigma': 0.8, 'loc': 50.0, 'scale': 5.0},
+        'k_ii_pd': {'min': 0, 'max': 100, 'size': 1, 'sigma': 0.8, 'loc': 20.0, 'scale': 2.0},
+        'eta_e_pd': {'min': -10, 'max': 10, 'size': 1, 'sigma': 0.4, 'loc': 0.0, 'scale': 1.0},
+        'eta_i_pd': {'min': -10, 'max': 10, 'size': 1, 'sigma': 0.4, 'loc': 0.0, 'scale': 1.0},
+        'eta_str_pd': {'min': -30, 'max': 0, 'size': 1, 'sigma': 0.4, 'loc': -10.0, 'scale': 1.0},
+        'eta_tha_pd': {'min': -10.0, 'max': 10, 'size': 1, 'sigma': 0.4, 'loc': 0.0, 'scale': 1.0},
+        'delta_e_pd': {'min': -5.0, 'max': 0.0, 'size': 1, 'sigma': 0.2, 'loc': -0.5, 'scale': 0.05},
+        'delta_i_pd': {'min': -5.0, 'max': 0.0, 'size': 1, 'sigma': 0.2, 'loc': -0.5, 'scale': 0.05},
     }
 
     param_map = {
@@ -172,8 +172,8 @@ if __name__ == "__main__":
         'delta_i': {'vars': ['qif_full/delta_i'], 'nodes': ['stn_gpe']}
     }
 
-    T = 10000.
-    dt = 1e-2
+    T = 5000.
+    dt = 2e-3
     dts = 1.0
     compute_dir = f"{os.getcwd()}/results"
 
@@ -187,7 +187,7 @@ if __name__ == "__main__":
                        'sampling_step_size': dts,
                        'inputs': {},
                        'outputs': {'r_e': "stn_gpe/qif_full/R_e", 'r_i': 'stn_gpe/qif_full/R_i'},
-                       'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
+                       'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt}
                    },
                    cgs_config={'nodes': ['animals', 'spanien', 'kongo', 'tschad',
                                          'osttimor', 'carpenters', 'uganda'
@@ -202,7 +202,7 @@ if __name__ == "__main__":
 
     winner = ga.run(
         initial_gene_pool=pop_genes,
-        gene_sampling_func=np.random.uniform,
+        gene_sampling_func=np.random.normal,
         target=[[20, 60],   # healthy control
                 [np.nan, 40],  # stn blockade
                 [np.nan, 90],  # gabaa blockade in GPe
@@ -220,6 +220,7 @@ if __name__ == "__main__":
         candidate_save=f'{compute_dir}/GeneticCGSCandidate.h5',
         drop_save=drop_save_dir,
         new_pop_on_drop=True,
-    )
+	    pop_save=True
+        )
 
     winner.to_hdf(f'{compute_dir}/PopulationDrops/winner.h5', key='data')
