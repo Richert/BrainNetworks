@@ -218,40 +218,54 @@ qif_stn:
   base: OperatorTemplate
   equations:
     - "d/dt * R_e = delta/(PI*tau_e^2) + 2.*R_e*V_e/tau_e"
-    - "d/dt * V_e = (V_e^2 + eta_e)/tau_e + I_e - I_i - tau_e*(PI*R_e)^2"
+    - "d/dt * V_e = (V_e^2 + eta_e)/tau_e + I_ee - I_ei*(1.0-I_a) - tau_e*(PI*R_e)^2"
     - "d/dt * I_ee = X_ee"
-    - "d/dt * X_ee = (k_ee*R_ee - X_ee*(tau_re+tau_de) - I_ee)/(tau_re*tau_de)"
-    - "d/dt * I_ie = X_ie"
-    - "d/dt * X_ie = (k_ei*GPe - X_ie*(tau_ri+tau_di) - I_ie)/(tau_ri*tau_di)"
+    - "d/dt * X_ee = (k*k_ee*R_e - X_ee*(tau_re+tau_de) - I_ee)/(tau_re*tau_de)"
+    - "d/dt * I_ei = X_ei"
+    - "d/dt * X_ei = (k*k_i*k_ei*GPe - X_ei*(tau_ri+tau_di) - I_ei)/(tau_ri*tau_di)"
+    - "d/dt * I_a = X_a"
+    - "d/dt * X_a = (alpha*GPe - 2.0*X_a - I_a/tau_a)/tau_a"
   variables:
     R_e:
       default: output
     V_e:
       default: variable
-    I_e:
+    I_ee:
       default: variable
-    I_i:
+    I_ei:
       default: variable
-    X_e:
+    I_a:
       default: variable
-    X_i:
+    X_ee:
+      default: variable
+    X_ei:
+      default: variable
+    X_a:
       default: variable
     eta_e:
-      default: -5.0
+      default: -3.0
     k_ee:
-      default: 1.0
+      default: 2.9
     k_ei:
-      default: 10.0
+      default: 30.4
+    k:
+      default: 1.0
+    k_i:
+      default: 1.0
     tau_e:
-      default: 0.006
+      default: 6.0
     tau_re:
-      default: 0.0008
+      default: 0.8
     tau_de:
-      default: 0.0037
+      default: 3.7
     tau_ri:
-      default: 0.0008
+      default: 0.8
     tau_di:
-      default: 0.01
+      default: 10.0
+    tau_a:
+      default: 500.0
+    alpha:
+      default: 0.0
     delta:
       default: 2.0
     GPe:
@@ -262,11 +276,11 @@ qif_gpe:
   base: OperatorTemplate
   equations:
     - "d/dt * R_i = delta/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
-    - "d/dt * V_i = (V_i^2 + eta_i + eta_str + eta_tha)/tau_i + I_e - I_i - I_a - tau_i*(PI*R_i)^2"
+    - "d/dt * V_i = (V_i^2 + eta_i + eta_str + eta_tha)/tau_i + I_ie - I_ii*(1.0-I_a) - tau_i*(PI*R_i)^2"
     - "d/dt * I_ie = X_ie"
-    - "d/dt * X_ie = (k_ie*STN - X_ie*(tau_re+tau_de) - I_ie)/(tau_re*tau_de)"
+    - "d/dt * X_ie = (k*k_ie*STN - X_ie*(tau_re+tau_de) - I_ie)/(tau_re*tau_de)"
     - "d/dt * I_ii = X_ii"
-    - "d/dt * X_ii = (k_ii*R_i - X_ii*(tau_ri+tau_di) - I_ii)/(tau_ri*tau_di)"
+    - "d/dt * X_ii = (k*k_i*k_ii*R_i - X_ii*(tau_ri+tau_di) - I_ii)/(tau_ri*tau_di)"
     - "d/dt * I_a = X_a"
     - "d/dt * X_a = (alpha*R_i - 2.0*X_a - I_a/tau_a)/tau_a"
   variables:
@@ -287,29 +301,33 @@ qif_gpe:
     X_a:
       default: variable
     eta_i:
-      default: 5.0
+      default: 16.6
     eta_str:
-      default: -2.0
+      default: -78.0
     eta_tha:
-      default: 2.0
+      default: 18.8
     k_ie:
-      default: 10.0
+      default: 97.9
     k_ii:
+      default: 7.2
+    k:
+      default: 1.0
+    k_i:
       default: 1.0
     alpha:
       default: 0.0
     tau_i:
-      default: 0.014
+      default: 14.0
     tau_re:
-      default: 0.0008
+      default: 0.8
     tau_de:
-      default: 0.0037
+      default: 3.7
     tau_ri:
-      default: 0.0005
+      default: 0.5
     tau_di:
-      default: 0.005
+      default: 5.0
     tau_a:
-      default: 0.2
+      default: 500.0
     delta:
       default: 2.0
     STN:
