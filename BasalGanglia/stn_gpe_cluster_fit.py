@@ -143,9 +143,9 @@ if __name__ == "__main__":
         'eta_i': {'min': -30, 'max': 30, 'size': 2, 'sigma': 0.4, 'loc': 0.0, 'scale': 2.0},
         'eta_str': {'min': -30, 'max': 0, 'size': 2, 'sigma': 0.4, 'loc': -10.0, 'scale': 2.0},
         'eta_tha': {'min': 0, 'max': 30, 'size': 2, 'sigma': 0.4, 'loc': 10.0, 'scale': 2.0},
-        'alpha': {'min': 0, 'max': 0.1, 'size': 2, 'sigma': 0.2, 'loc': 0.01, 'scale': 0.001},
-        'delta_e': {'min': 0.1, 'max': 5.0, 'size': 2, 'sigma': 0.2, 'loc': 1.5, 'scale': 0.2},
-        'delta_i': {'min': 0.1, 'max': 5.0, 'size': 2, 'sigma': 0.2, 'loc': 1.5, 'scale': 0.2},
+        'alpha': {'min': 0, 'max': 0.1, 'size': 1, 'sigma': 0.2, 'loc': 0.01, 'scale': 0.001},
+        'delta_e': {'min': 0.1, 'max': 5.0, 'size': 1, 'sigma': 0.2, 'loc': 1.5, 'scale': 0.2},
+        'delta_i': {'min': 0.1, 'max': 5.0, 'size': 1, 'sigma': 0.2, 'loc': 1.5, 'scale': 0.2},
         'k_ee_pd': {'min': 0, 'max': 50, 'size': 1, 'sigma': 0.4, 'loc': 10.0, 'scale': 1.0},
         'k_ei_pd': {'min': 0, 'max': 150, 'size': 1, 'sigma': 0.8, 'loc': 50.0, 'scale': 5.0},
         'k_ie_pd': {'min': 0, 'max': 150, 'size': 1, 'sigma': 0.8, 'loc': 50.0, 'scale': 5.0},
@@ -214,13 +214,13 @@ if __name__ == "__main__":
         max_iter=200,
         min_fit=0.2,
         n_winners=20,
-        n_parent_pairs=1600,
-        n_new=428,
+        n_parent_pairs=200,
+        n_new=36,
         sigma_adapt=0.015,
         candidate_save=f'{compute_dir}/GeneticCGSCandidate.h5',
         drop_save=drop_save_dir,
         new_pop_on_drop=True,
-	    pop_save=True
-        )
+        pop_save='pop_summary'
+    )
 
     winner.to_hdf(f'{compute_dir}/PopulationDrops/winner.h5', key='data')
