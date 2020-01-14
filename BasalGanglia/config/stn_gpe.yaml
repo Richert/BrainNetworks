@@ -265,9 +265,9 @@ qif_stn:
     tau_a:
       default: 500.0
     alpha:
-      default: 0.0
+      default: 0.035
     delta:
-      default: 2.0
+      default: 2.8
     GPe:
       default: input
 
@@ -315,7 +315,7 @@ qif_gpe:
     k_i:
       default: 1.0
     alpha:
-      default: 0.0
+      default: 0.035
     tau_i:
       default: 14.0
     tau_re:
@@ -329,7 +329,7 @@ qif_gpe:
     tau_a:
       default: 500.0
     delta:
-      default: 2.0
+      default: 1.5
     STN:
       default: input
 

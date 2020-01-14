@@ -1,5 +1,7 @@
-from pyrates.utility import grid_search
+from pyrates.utility import grid_search, fft, plot_connectivity
 import matplotlib.pyplot as plt
+import numpy as np
+from pandas import DataFrame
 
 # define system parameters
 param_map = {
@@ -19,57 +21,64 @@ param_map = {
     }
 
 param_grid = {
-        'd': [0.0, 0.004],
-        's': [0.0, 0.002]
+        'd': np.arange(0, 8, 1.0),
+        's': np.arange(0, 2, 0.5)
     }
 
-# define simulation conditions
-conditions = [
-    # {'k_ie': 0.0},  # STN blockade
-    # {'k_ii': 0.0, 'eta_str': 0.0},  # GABAA blockade in GPe
-    # {'k_ie': 0.0, 'k_ii': 0.0, 'eta_str': 0.0},  # STN blockade and GABAA blockade in GPe
-    # {'k_ie': 0.0, 'eta_tha': 0.0},  # AMPA + NMDA blocker in GPe
-    # {'k_ei': 0.0},  # GABAA antagonist in STN
-    # {'k_ei': param_grid['k_ei'][0] + param_grid['k_ei_pd'][0],
-    #  'k_ie': param_grid['k_ie'][0] + param_grid['k_ie_pd'][0],
-    #  'k_ee': param_grid['k_ee'][0] + param_grid['k_ee_pd'][0],
-    #  'k_ii': param_grid['k_ii'][0] + param_grid['k_ii_pd'][0],
-    #  'eta_e': param_grid['eta_e'][0] + param_grid['eta_e_pd'][0],
-    #  'eta_i': param_grid['eta_i'][0] + param_grid['eta_i_pd'][0],
-    #  'eta_str': param_grid['eta_str'][0] + param_grid['eta_str_pd'][0],
-    #  'eta_tha': param_grid['eta_tha'][0] + param_grid['eta_tha_pd'][0],
-    #  'delta_e': param_grid['delta_e'][0] + param_grid['delta_e_pd'][0],
-    #  'delta_i': param_grid['delta_i'][0] + param_grid['delta_i_pd'][0],
-    #  }  # parkinsonian condition
-              ]
-
-models_vars = ['k_ie', 'k_ii', 'k_ei', 'k_ee', 'eta_e', 'eta_i', 'eta_str', 'eta_tha', 'alpha',
-               'delta_e', 'delta_i', 'd', 's']
-for c_dict in conditions:
-
-    for key in models_vars:
-        param_grid[key].append(param_grid[key][0] if key not in c_dict else c_dict[key])
-
-for key in param_grid.copy():
-    if key not in models_vars:
-        param_grid.pop(key)
-
 # define simulation parameters
-dt = 5e-6
-T = 2000.0
-dts = 1.0
+dt = 1e-3
+T = 1000.0
+dts = 1e-1
 
 # perform simulation
-results, _ = grid_search(circuit_template="config/stn_gpe/net_qif_syn_adapt",
-                         param_grid=param_grid,
-                         param_map=param_map,
-                         simulation_time=T,
-                         step_size=dt,
-                         sampling_step_size=dts,
-                         permute_grid=True,
-                         inputs={},
-                         outputs={},
-                         init_kwargs={'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
-                         )
+results, params = grid_search(circuit_template="config/stn_gpe/net_qif_syn_adapt",
+                              param_grid=param_grid,
+                              param_map=param_map,
+                              simulation_time=T,
+                              step_size=dt,
+                              sampling_step_size=dts,
+                              permute_grid=True,
+                              inputs={},
+                              outputs={'r': "gpe/qif_gpe/R_i"},
+                              init_kwargs={'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
+                              )
+results = results * 1e3
+results.index = results.index * 1e-3
+
+# extract spectral properties
+max_freq = np.zeros((len(param_grid['s']), len(param_grid['d'])))
+max_pow = np.zeros_like(max_freq)
+
+for key in params.index:
+
+    # calculate PSDs
+    freqs, power = fft(DataFrame(results[('r', key)]), tmin=0.1)
+
+    # store output quantities
+    idx_c = np.argwhere(param_grid['d'] == params.loc[key, 'd'])[0]
+    idx_r = np.argwhere(param_grid['s'] == params.loc[key, 's'])[0]
+    max_idx = np.argmax(power)
+    max_freq[idx_r, idx_c] = freqs[max_idx]
+    max_pow[idx_r, idx_c] = power[max_idx]
+
+# visualization
+###############
 results.plot()
+
+fig, axes = plt.subplots(ncols=2, figsize=(12, 5))
+
+# plot dominating frequency
+plot_connectivity(max_freq, xticklabels=np.round(param_grid['d'], decimals=2),
+                  yticklabels=np.round(param_grid['s'], decimals=3), ax=axes[0])
+axes[0].set_xlabel('delay mean')
+axes[0].set_ylabel('delay std')
+axes[0].set_title('Dominant Frequency')
+
+# plot power density of dominating frequency
+plot_connectivity(max_pow, xticklabels=np.round(param_grid['d'], decimals=2),
+                  yticklabels=np.round(param_grid['s'], decimals=3), ax=axes[1])
+axes[1].set_xlabel('delay mean')
+axes[1].set_ylabel('delay std')
+axes[1].set_title('PSD at Dominant Frequency')
+
 plt.show()
