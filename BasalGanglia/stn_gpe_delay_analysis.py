@@ -22,16 +22,16 @@ param_map = {
     }
 
 param_grid = {
-        'd': np.arange(0, 8, 0.5),
-        's': np.arange(0, 2, 0.2)
+        'd': np.arange(0, 7.2, 0.5),
+        's': np.arange(0, 2.05, 0.1)
     }
 
 # define simulation parameters
 dt = 1e-3
 T = 5000.0
 dts = 2e-1
-nodes = ['animals', 'spanien', 'kongo', 'tschad', 'osttimor', 'uganda']
-chunk_sizes = [100, 50, 20, 20, 50, 20]
+nodes = ['animals', 'spanien', 'kongo', 'tschad', 'uganda']
+chunk_sizes = [50, 40, 20, 20, 20]
 compute_dir = f"{os.getcwd()}/stn_gpe_delay_analysis"
 
 # perform simulation
