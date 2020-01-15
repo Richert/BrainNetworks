@@ -47,14 +47,12 @@ fname = cgs.run(circuit_template="config/stn_gpe/net_qif_syn_adapt",
                 outputs={'r': "gpe/qif_gpe/R_i"},
                 chunk_size=chunk_sizes,
                 worker_env="/nobackup/spanien1/rgast/anaconda3/envs/pyrates_test/bin/python3",
-                worker_file="",
+                worker_file=f'{os.getcwd()}/stn_gpe_worker_delays.py',
                 gs_kwargs={'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt}},
 
                 )
 results = read_hdf(fname, key=f'Results/results')
 params = read_hdf(fname, key="Results/result_map")
-results = results * 1e3
-results.index = results.index * 1e-3
 
 # extract spectral properties
 max_freq = np.zeros((len(param_grid['s']), len(param_grid['d'])))
