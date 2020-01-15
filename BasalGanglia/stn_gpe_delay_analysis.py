@@ -1,7 +1,8 @@
-from pyrates.utility import grid_search, fft, plot_connectivity
+from pyrates.utility import fft, plot_connectivity, ClusterGridSearch
 import matplotlib.pyplot as plt
 import numpy as np
-from pandas import DataFrame
+import os
+from pandas import DataFrame, read_hdf
 
 # define system parameters
 param_map = {
@@ -21,27 +22,37 @@ param_map = {
     }
 
 param_grid = {
-        'd': np.arange(0, 8, 1.0),
-        's': np.arange(0, 2, 0.5)
+        'd': np.arange(0, 8, 0.5),
+        's': np.arange(0, 2, 0.2)
     }
 
 # define simulation parameters
 dt = 1e-3
-T = 1000.0
-dts = 1e-1
+T = 5000.0
+dts = 2e-1
+nodes = ['animals', 'spanien', 'kongo', 'tschad', 'osttimor', 'uganda']
+chunk_sizes = [100, 50, 20, 20, 50, 20]
+compute_dir = f"{os.getcwd()}/stn_gpe_delay_analysis"
 
 # perform simulation
-results, params = grid_search(circuit_template="config/stn_gpe/net_qif_syn_adapt",
-                              param_grid=param_grid,
-                              param_map=param_map,
-                              simulation_time=T,
-                              step_size=dt,
-                              sampling_step_size=dts,
-                              permute_grid=True,
-                              inputs={},
-                              outputs={'r': "gpe/qif_gpe/R_i"},
-                              init_kwargs={'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
-                              )
+cgs = ClusterGridSearch(nodes=nodes, compute_dir=compute_dir)
+fname = cgs.run(circuit_template="config/stn_gpe/net_qif_syn_adapt",
+                param_grid=param_grid,
+                param_map=param_map,
+                simulation_time=T,
+                dt=dt,
+                sampling_step_size=dts,
+                permute_grid=True,
+                inputs={},
+                outputs={'r': "gpe/qif_gpe/R_i"},
+                chunk_size=chunk_sizes,
+                worker_env="/nobackup/spanien1/rgast/anaconda3/envs/pyrates_test/bin/python3",
+                worker_file="",
+                gs_kwargs={'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt}},
+
+                )
+results = read_hdf(fname, key=f'Results/results')
+params = read_hdf(fname, key="Results/result_map")
 results = results * 1e3
 results.index = results.index * 1e-3
 
@@ -52,7 +63,7 @@ max_pow = np.zeros_like(max_freq)
 for key in params.index:
 
     # calculate PSDs
-    freqs, power = fft(DataFrame(results[('r', key)]), tmin=0.1)
+    freqs, power = fft(DataFrame(results[('r', key)]), tmin=0.5)
 
     # store output quantities
     idx_c = np.argwhere(param_grid['d'] == params.loc[key, 'd'])[0]

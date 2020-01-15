@@ -175,7 +175,7 @@ if __name__ == "__main__":
     T = 5000.
     dt = 2e-3
     dts = 1.0
-    compute_dir = f"{os.getcwd()}/results"
+    compute_dir = f"{os.getcwd()}/stn_gpe_fit"
 
     ga = CustomGOA(fitness_measure=fitness,
                    gs_config={
