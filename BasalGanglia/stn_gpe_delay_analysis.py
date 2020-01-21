@@ -6,37 +6,26 @@ from pandas import DataFrame, read_hdf
 
 # define system parameters
 param_map = {
-        'k_ee': {'vars': ['qif_stn/k_ee'], 'nodes': ['stn']},
-        'k_ei': {'vars': ['qif_stn/k_ei'], 'nodes': ['stn']},
-        'k_ie': {'vars': ['qif_gpe/k_ie'], 'nodes': ['gpe']},
-        'k_ii': {'vars': ['qif_gpe/k_ii'], 'nodes': ['gpe']},
-        'eta_e': {'vars': ['qif_stn/eta_e'], 'nodes': ['stn']},
-        'eta_i': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'eta_str': {'vars': ['qif_gpe/eta_str'], 'nodes': ['gpe']},
-        'eta_tha': {'vars': ['qif_gpe/eta_tha'], 'nodes': ['gpe']},
-        'alpha': {'vars': ['qif_stn/alpha', 'qif_gpe/alpha'], 'nodes': ['stn', 'gpe']},
-        'delta_e': {'vars': ['qif_stn/delta'], 'nodes': ['stn']},
-        'delta_i': {'vars': ['qif_stn/delta'], 'nodes': ['gpe']},
         'd': {'vars': ['delay'], 'edges': [('stn', 'gpe'), ('gpe', 'stn')]},
         's': {'vars': ['spread'], 'edges': [('stn', 'gpe'), ('gpe', 'stn')]}
     }
 
 param_grid = {
-        'd': np.arange(0, 7.2, 0.5),
-        's': np.arange(0, 2.05, 0.1)
+        'd': np.arange(0, 8.0, 1.0),
+        's': np.arange(0.5, 2.2, 0.25)
     }
 
 # define simulation parameters
 dt = 1e-3
 T = 5000.0
 dts = 2e-1
-nodes = ['animals', 'spanien', 'kongo', 'tschad', 'uganda']
-chunk_sizes = [50, 40, 20, 20, 20]
+nodes = ['animals']
+chunk_sizes = [50]
 compute_dir = f"{os.getcwd()}/stn_gpe_delay_analysis"
 
 # perform simulation
 cgs = ClusterGridSearch(nodes=nodes, compute_dir=compute_dir)
-fname = cgs.run(circuit_template="config/stn_gpe/net_qif_syn_adapt",
+fname = cgs.run(circuit_template=f"{os.getcwd()}/config/stn_gpe/net_qif_syn_adapt",
                 param_grid=param_grid,
                 param_map=param_map,
                 simulation_time=T,
@@ -49,9 +38,9 @@ fname = cgs.run(circuit_template="config/stn_gpe/net_qif_syn_adapt",
                 worker_env="/nobackup/spanien1/rgast/anaconda3/envs/pyrates_test/bin/python3",
                 worker_file=f'{os.getcwd()}/stn_gpe_worker_delays.py',
                 gs_kwargs={'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt}},
-
                 )
-results = read_hdf(fname, key=f'Results/results')
+#fname = "/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_delay_analysis/Results/DefaultGrid_8/CGS_result_DefaultGrid_8.h5"
+results = read_hdf(fname, key='Results/results')
 params = read_hdf(fname, key="Results/result_map")
 
 # extract spectral properties
@@ -90,4 +79,5 @@ axes[1].set_xlabel('delay mean')
 axes[1].set_ylabel('delay std')
 axes[1].set_title('PSD at Dominant Frequency')
 
+plt.savefig(f"{compute_dir}/oscillations", dpi=600, format='svg')
 plt.show()

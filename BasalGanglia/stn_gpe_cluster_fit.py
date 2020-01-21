@@ -6,6 +6,7 @@ from pyrates.utility import welch
 from pandas import DataFrame, read_hdf
 from copy import deepcopy
 
+
 class CustomGOA(CGSGeneticAlgorithm):
 
     def eval_fitness(self, target: list, **kwargs):
@@ -16,7 +17,7 @@ class CustomGOA(CGSGeneticAlgorithm):
         models_vars = ['k_ie', 'k_ii', 'k_ei', 'k_ee', 'eta_e', 'eta_i', 'eta_str', 'eta_tha', 'alpha',
                        'delta_e', 'delta_i']
         result_vars = ['frequency', 'power', 'r_e', 'r_i']
-        freq_targets = [0.0, 0.0, 0.0, 0.0, [40.0, 80.0], 0.0, [12.0, 100.0]]
+        freq_targets = [0.0, 0.0, 0.0, 0.0, [40.0, 80.0], 0.0, [12.0, 200.0]]
         param_grid, invalid_params = eval_params(param_grid)
         conditions = [{},  # healthy control
                       {'k_ie': 0.0},  # STN blockade
@@ -38,13 +39,11 @@ class CustomGOA(CGSGeneticAlgorithm):
                        }  # parkinsonian condition
                       ]
         chunk_size = [
-            300,   # animals
-            200,  # spanien
-            50,   # kongo
-            50,   # tschad
-            200,   # osttimor
-            300,   # carpenters
-            50,   # uganda
+            #50,   # carpenters
+            50,   # spanien
+            20,   # kongo
+            20,   # uganda
+            20,   # tschad
         ]
 
         # perform simulations
@@ -173,9 +172,9 @@ if __name__ == "__main__":
     }
 
     T = 5000.
-    dt = 2e-3
-    dts = 1.0
-    compute_dir = f"{os.getcwd()}/stn_gpe_fit"
+    dt = 1e-2
+    dts = 2e-1
+    compute_dir = f"{os.getcwd()}/results"
 
     ga = CustomGOA(fitness_measure=fitness,
                    gs_config={
@@ -189,8 +188,12 @@ if __name__ == "__main__":
                        'outputs': {'r_e': "stn_gpe/qif_full/R_e", 'r_i': 'stn_gpe/qif_full/R_i'},
                        'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
                    },
-                   cgs_config={'nodes': ['animals', 'spanien', 'kongo', 'tschad',
-                                         'osttimor', 'carpenters', 'uganda'
+                   cgs_config={'nodes': [
+                                         #'osttimor',
+                                         'spanien',
+                                         'kongo',
+                                         'tschad',
+                                         'uganda'
                                          ],
                                'compute_dir': compute_dir,
                                'worker_file': f'{os.getcwd()}/stn_gpe_worker.py',
@@ -213,14 +216,14 @@ if __name__ == "__main__":
                 ],
         max_iter=200,
         min_fit=0.2,
-        n_winners=20,
+        n_winners=6,
         n_parent_pairs=200,
-        n_new=36,
+        n_new=50,
         sigma_adapt=0.015,
         candidate_save=f'{compute_dir}/GeneticCGSCandidate.h5',
         drop_save=drop_save_dir,
         new_pop_on_drop=True,
-        pop_save='pop_summary'
+        pop_save=f'{compute_dir}/Results/pop_summary'
     )
 
     winner.to_hdf(f'{compute_dir}/PopulationDrops/winner.h5', key='data')
