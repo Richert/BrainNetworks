@@ -7,7 +7,7 @@ from numba import jit
 
 # parameters
 dt = 1e-5
-T = 2000.0
+T = 4000.0
 dts = 1.0
 
 # eic = CircuitIR.from_yaml("config/stn_gpe/net_qif_syn_adapt").compile(backend='numpy', step_size=dt, solver='euler')
@@ -33,6 +33,7 @@ results2, t = eic2.run(simulation_time=T, sampling_step_size=dts, profile=True,
                            #'v_i': 'stn_gpe/qif_full/V_i',
                                 },
                        )
+results2 = results2 * 1e3
 
 # eic2 = CircuitIR.from_yaml("config/stn_gpe/delay_net").compile(backend='numpy', step_size=dt, solver='scipy')
 # results2, t = eic2.run(simulation_time=T, sampling_step_size=dts, profile=True,

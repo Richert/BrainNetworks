@@ -187,7 +187,7 @@ if __name__ == "__main__":
                        'sampling_step_size': dts,
                        'inputs': {},
                        'outputs': {'r_e': "stn_gpe/qif_full/R_e", 'r_i': 'stn_gpe/qif_full/R_i'},
-                       'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt}
+                       'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
                    },
                    cgs_config={'nodes': ['animals', 'spanien', 'kongo', 'tschad',
                                          'osttimor', 'carpenters', 'uganda'
