@@ -11,13 +11,13 @@ param_map = {
     }
 
 param_grid = {
-        'd': np.arange(0, 8.0, 1.0),
+        'd': np.arange(0, 8.0, 0.5),
         's': np.arange(0.5, 2.2, 0.25)
     }
 
 # define simulation parameters
 dt = 1e-3
-T = 5000.0
+T = 8000.0
 dts = 2e-1
 nodes = ['animals']
 chunk_sizes = [50]
@@ -44,8 +44,10 @@ results = read_hdf(fname, key='Results/results')
 params = read_hdf(fname, key="Results/result_map")
 
 # extract spectral properties
-max_freq = np.zeros((len(param_grid['s']), len(param_grid['d'])))
-max_pow = np.zeros_like(max_freq)
+max_freq1 = np.zeros((len(param_grid['s']), len(param_grid['d'])))
+max_pow1 = np.zeros_like(max_freq1)
+max_freq2 = np.zeros_like(max_freq1)
+max_pow2 = np.zeros_like(max_freq1)
 
 for key in params.index:
 
@@ -55,29 +57,48 @@ for key in params.index:
     # store output quantities
     idx_c = np.argwhere(param_grid['d'] == params.loc[key, 'd'])[0]
     idx_r = np.argwhere(param_grid['s'] == params.loc[key, 's'])[0]
-    max_idx = np.argmax(power)
-    max_freq[idx_r, idx_c] = freqs[max_idx]
-    max_pow[idx_r, idx_c] = power[max_idx]
+    idx1 = freqs < 25.0
+    idx2 = freqs > 35.0
+    max_idx1 = np.argmax(power[idx1])
+    max_idx2 = np.argmax(power[idx2])
+    max_freq1[idx_r, idx_c] = freqs[idx1][max_idx1]
+    max_pow1[idx_r, idx_c] = power[idx1][max_idx1]
+    max_freq2[idx_r, idx_c] = freqs[idx2][max_idx2]
+    max_pow2[idx_r, idx_c] = power[idx2][max_idx2]
 
 # visualization
 ###############
 results.plot()
 
-fig, axes = plt.subplots(ncols=2, figsize=(12, 5))
+fig, axes = plt.subplots(ncols=2, nrows=2, figsize=(12, 10))
 
-# plot dominating frequency
-plot_connectivity(max_freq, xticklabels=np.round(param_grid['d'], decimals=2),
-                  yticklabels=np.round(param_grid['s'], decimals=3), ax=axes[0])
-axes[0].set_xlabel('delay mean')
-axes[0].set_ylabel('delay std')
-axes[0].set_title('Dominant Frequency')
+# plot dominating beta frequency
+plot_connectivity(max_freq1, xticklabels=np.round(param_grid['d'], decimals=2),
+                  yticklabels=np.round(param_grid['s'], decimals=3), ax=axes[0, 0])
+axes[0, 0].set_xlabel('delay mean')
+axes[0, 0].set_ylabel('delay std')
+axes[0, 0].set_title('Dominant Beta Frequency')
 
-# plot power density of dominating frequency
-plot_connectivity(max_pow, xticklabels=np.round(param_grid['d'], decimals=2),
-                  yticklabels=np.round(param_grid['s'], decimals=3), ax=axes[1])
-axes[1].set_xlabel('delay mean')
-axes[1].set_ylabel('delay std')
-axes[1].set_title('PSD at Dominant Frequency')
+# plot power density of dominating beta frequency
+plot_connectivity(max_pow1, xticklabels=np.round(param_grid['d'], decimals=2),
+                  yticklabels=np.round(param_grid['s'], decimals=3), ax=axes[0, 1])
+axes[0, 1].set_xlabel('delay mean')
+axes[0, 1].set_ylabel('delay std')
+axes[0, 1].set_title('PSD at Dominant Beta Frequency')
+
+# plot dominating gamma frequency
+plot_connectivity(max_freq2, xticklabels=np.round(param_grid['d'], decimals=2),
+                  yticklabels=np.round(param_grid['s'], decimals=3), ax=axes[1, 0])
+axes[1, 0].set_xlabel('delay mean')
+axes[1, 0].set_ylabel('delay std')
+axes[1, 0].set_title('Dominant Gamma Frequency')
+
+# plot power density of dominating gamma frequency
+plot_connectivity(max_pow2, xticklabels=np.round(param_grid['d'], decimals=2),
+                  yticklabels=np.round(param_grid['s'], decimals=3), ax=axes[1, 1])
+axes[1, 1].set_xlabel('delay mean')
+axes[1, 1].set_ylabel('delay std')
+axes[1, 1].set_title('PSD at Dominant Gamma Frequency')
 
 plt.savefig(f"{compute_dir}/oscillations", dpi=600, format='svg')
 plt.show()
