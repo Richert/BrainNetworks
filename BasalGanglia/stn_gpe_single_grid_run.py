@@ -1,94 +1,56 @@
 from pyrates.utility import grid_search
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gs
+import numpy as np
+import scipy.io as scio
 
 # define system parameters
-param_map = {
-        'k_ee': {'vars': ['qif_full/k_ee'], 'nodes': ['stn_gpe']},
-        'k_ei': {'vars': ['qif_full/k_ei'], 'nodes': ['stn_gpe']},
-        'k_ie': {'vars': ['qif_full/k_ie'], 'nodes': ['stn_gpe']},
-        'k_ii': {'vars': ['qif_full/k_ii'], 'nodes': ['stn_gpe']},
-        'eta_e': {'vars': ['qif_full/eta_e'], 'nodes': ['stn_gpe']},
-        'eta_i': {'vars': ['qif_full/eta_i'], 'nodes': ['stn_gpe']},
-        'eta_str': {'vars': ['qif_full/eta_str'], 'nodes': ['stn_gpe']},
-        'eta_tha': {'vars': ['qif_full/eta_tha'], 'nodes': ['stn_gpe']},
-        'alpha': {'vars': ['qif_full/alpha'], 'nodes': ['stn_gpe']},
-        'delta_e': {'vars': ['qif_full/delta_e'], 'nodes': ['stn_gpe']},
-        'delta_i': {'vars': ['qif_full/delta_i'], 'nodes': ['stn_gpe']}
-    }
+param_map = {'k': {'vars': ['qif_full/k'], 'nodes': ['stn_gpe']},
+             'eta_str': {'vars': ['qif_full/eta_str'], 'nodes': ['stn_gpe']}}
 
 param_grid = {
-        'k_ee': [2.55],
-        'k_ei': [79.77],
-        'k_ie': [50.09],
-        'k_ii': [1.13],
-        'eta_e': [-4.93],
-        'eta_i': [12.92],
-        'eta_str': [-2.24],
-        'eta_tha': [2.88],
-        'alpha': [2.35],
-        'k_ee_pd': [10.98],
-        'k_ei_pd': [8.17],
-        'k_ie_pd': [21.28],
-        'k_ii_pd': [19.73],
-        'eta_e_pd': [-5.99],
-        'eta_i_pd': [-0.39],
-        'eta_str_pd': [-2.94],
-        'eta_tha_pd': [5.36],
-        'delta_e': [2.13],
-        'delta_i': [2.88],
-        'delta_e_pd': [-1.54],
-        'delta_i_pd': [-1.72],
+        'k': [1.6, 1.8, 2.0, 2.2],
+        'eta_str': [-50.0, -100.0],
     }
 
-# define simulation conditions
-conditions = [
-    # {'k_ie': 0.0},  # STN blockade
-    # {'k_ii': 0.0, 'eta_str': 0.0},  # GABAA blockade in GPe
-    # {'k_ie': 0.0, 'k_ii': 0.0, 'eta_str': 0.0},  # STN blockade and GABAA blockade in GPe
-    # {'k_ie': 0.0, 'eta_tha': 0.0},  # AMPA + NMDA blocker in GPe
-    # {'k_ei': 0.0},  # GABAA antagonist in STN
-    # {'k_ei': param_grid['k_ei'][0] + param_grid['k_ei_pd'][0],
-    #  'k_ie': param_grid['k_ie'][0] + param_grid['k_ie_pd'][0],
-    #  'k_ee': param_grid['k_ee'][0] + param_grid['k_ee_pd'][0],
-    #  'k_ii': param_grid['k_ii'][0] + param_grid['k_ii_pd'][0],
-    #  'eta_e': param_grid['eta_e'][0] + param_grid['eta_e_pd'][0],
-    #  'eta_i': param_grid['eta_i'][0] + param_grid['eta_i_pd'][0],
-    #  'eta_str': param_grid['eta_str'][0] + param_grid['eta_str_pd'][0],
-    #  'eta_tha': param_grid['eta_tha'][0] + param_grid['eta_tha_pd'][0],
-    #  'delta_e': param_grid['delta_e'][0] + param_grid['delta_e_pd'][0],
-    #  'delta_i': param_grid['delta_i'][0] + param_grid['delta_i_pd'][0],
-    #  }  # parkinsonian condition
-              ]
-
-models_vars = ['k_ie', 'k_ii', 'k_ei', 'k_ee', 'eta_e', 'eta_i', 'eta_str', 'eta_tha', 'alpha',
-               'delta_e', 'delta_i']
-for c_dict in conditions:
-
-    for key in models_vars:
-        param_grid[key].append(param_grid[key][0] if key not in c_dict else c_dict[key])
-
-for key in param_grid.copy():
-    if key not in models_vars:
-        param_grid.pop(key)
-
 # define simulation parameters
-dt = 5e-6
-T = 2000.0
+dt = 1e-2
+T = 21000.0
 dts = 1e-1
 
 # perform simulation
-results, _ = grid_search(circuit_template="config/stn_gpe/net_stn_gpe",
-                         param_grid=param_grid,
-                         param_map=param_map,
-                         simulation_time=T,
-                         dt=dt,
-                         sampling_step_size=dts,
-                         permute_grid=False,
-                         inputs={},
-                         outputs={},
-                         init_kwargs={'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
-                         )
-results.plot()
-for col in results.columns.values:
-    print(col, results.loc[:, col].iloc[-1])
-plt.show()
+results, result_map = grid_search(circuit_template="config/stn_gpe/net_stn_gpe",
+                                  param_grid=param_grid,
+                                  param_map=param_map,
+                                  simulation_time=T,
+                                  step_size=dt,
+                                  sampling_step_size=dts,
+                                  permute_grid=True,
+                                  inputs={},
+                                  outputs={'Ie': 'stn_gpe/qif_full/I_ee',
+                                           'Ii': 'stn_gpe/qif_full/I_ei'},
+                                  init_kwargs={'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
+                                  )
+results = results * 1e3
+
+#fig = plt.figure(figsize=(12, 10), tight_layout=True)
+#grid = gs.GridSpec(6, 2)
+#results.plot()
+# codim 1
+# for i, k in enumerate(param_grid['k']):
+#     r, c = i % 6, i // 6
+#     ax_tmp = fig.add_subplot(grid[r, c])
+#     idx = result_map.index[result_map.loc[:, 'k'] == k]
+#     for c, idx_tmp in zip(['r', 'g', 'b'], idx):
+#         ax_tmp.plot(results.loc[1800:, ('R', idx_tmp)], c=c)
+#     ax_tmp.set_title(f"k = {k}")
+#
+# plt.savefig(f"test_fig.svg", format='svg', dpi=600)
+#plt.show()
+
+results_dict = {}
+for key in result_map.index:
+    data1, data2 = results.loc[:, ('Ie', key)].values, results.loc[:, ('Ii', key)].values
+    results_dict[key] = {"k": result_map.loc[key, 'k'], 'eta_str': result_map.loc[key, 'eta_str'],
+                         "data": data1 + data2}
+scio.savemat('PAC_timeseries.mat', mdict=results_dict, long_field_names=True)

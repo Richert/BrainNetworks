@@ -2,12 +2,11 @@ from pyrates.utility import plot_timeseries, grid_search, plot_psd, plot_connect
 from pyrates.ir import CircuitIR
 import numpy as np
 import matplotlib.pyplot as plt
-from numba import jit
 
 
 # parameters
-dt = 1e-5
-T = 4000.0
+dt = 1e-2
+T = 50000.0
 dts = 1.0
 
 # eic = CircuitIR.from_yaml("config/stn_gpe/net_qif_syn_adapt").compile(backend='numpy', step_size=dt, solver='euler')
@@ -24,16 +23,17 @@ dts = 1.0
 # #print(results.iloc[-1, :])
 # results.plot()
 
-eic2 = CircuitIR.from_yaml("config/stn_gpe/net_stn_gpe").compile(backend='numpy', step_size=dt, solver='scipy')
+eic2 = CircuitIR.from_yaml("config/stn_gpe/net_stn_gpe").compile(backend='fortran', step_size=dt, solver='scipy',
+                                                                 auto_compat=True)
 results2, t = eic2.run(simulation_time=T, sampling_step_size=dts, profile=True,
                        outputs={
-                           'r_e': 'stn_gpe/qif_full/R_e',
-                           'r_i': 'stn_gpe/qif_full/R_i',
-                           #'v_e': 'stn_gpe/qif_full/V_e',
-                           #'v_i': 'stn_gpe/qif_full/V_i',
+                           'r_e': 'stn_gpe/qif_driver/R_e',
+                           'r_i': 'stn_gpe/qif_driver/R_i',
                                 },
+                       DSMIN=1e-6
                        )
-results2 = results2 * 1e3
+eic2.generate_auto_def(None)
+#results2 = results2 * 1e3
 
 # eic2 = CircuitIR.from_yaml("config/stn_gpe/delay_net").compile(backend='numpy', step_size=dt, solver='scipy')
 # results2, t = eic2.run(simulation_time=T, sampling_step_size=dts, profile=True,
