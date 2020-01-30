@@ -31,20 +31,21 @@ class ExtendedWorker(MinimalWorker):
             param_grid_tmp = DataFrame.from_dict(c_dict)
             f = terminate_at_threshold
             f.terminal = True
-            r, self.result_map, sim_time = grid_search(*args, param_grid=param_grid_tmp, events=f, **kwargs_tmp)
-            r.columns.droplevel(2)
+            r, self.result_map, sim_time = grid_search(*args, param_grid=param_grid_tmp, events=f, **deepcopy(kwargs_tmp))
+            r = r.droplevel(2, axis=1)
             if any(r.values[-1, :] > 1.0):
                 invalid_genes = []
-                for id in gene_ids:
-                    if r.loc[-1, ('r_e', id)] > 1.0 or r.loc[-1, ('r_i', id)] > 1.0:
+                for id in param_grid.index:
+                    if r.loc[r.index[-1], ('r_e', f'circuit_{id}')] > 1.0 or \
+                            r.loc[r.index[-1], ('r_i', f'circuit_{id}')] > 1.0:
                         invalid_genes.append(id)
-                        param_grid.pop(id)
+                        param_grid.drop(index=id, inplace=True)
                 kwargs['param_grid'] = param_grid
                 sim_time = self.worker_gs(*args, **kwargs)
                 for r in self.results:
                     for id in invalid_genes:
-                        r[('r_e', id)] = np.zeros((r.shape[0],)) + np.inf
-                        r[('r_i', id)] = np.zeros((r.shape[0],)) + np.inf
+                        r[('r_e', f'circuit_{id}')] = np.zeros((r.shape[0],)) + np.inf
+                        r[('r_i', f'circuit_{id}')] = np.zeros((r.shape[0],)) + np.inf
                 return sim_time
             else:
                 results.append(r)
@@ -81,8 +82,8 @@ class ExtendedWorker(MinimalWorker):
             self.processed_results.loc[gene_id, 'fitness'] = dist1+dist2
             self.processed_results.loc[gene_id, 'frequency'] = freq[-1][idx]
             self.processed_results.loc[gene_id, 'power'] = pow[-1][0][idx]
-            self.processed_results.loc[gene_id, 'r_e'] = np.mean(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])[0]*1e3
-            self.processed_results.loc[gene_id, 'r_i'] = np.mean(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:])[0]*1e3
+            self.processed_results.loc[gene_id, 'r_e'] = np.mean(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])*1e3
+            self.processed_results.loc[gene_id, 'r_i'] = np.mean(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:])*1e3
 
 
 def fitness(y, t):
@@ -124,8 +125,8 @@ if __name__ == "__main__":
     cgs_worker = ExtendedWorker()
     cgs_worker.worker_init()
     #cgs_worker.worker_init(
-    #    config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Config/DefaultConfig_0.yaml",
-    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/results/Grids/Subgrids/DefaultGrid_102/animals/animals_Subgrid_0.h5",
+    #    config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_optimization/Config/DefaultConfig_0.yaml",
+    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_optimization/Grids/Subgrids/DefaultGrid_1/spanien/spanien_Subgrid_0.h5",
     #    result_file="~/my_result.h5",
     #    build_dir=os.getcwd()
     #)
