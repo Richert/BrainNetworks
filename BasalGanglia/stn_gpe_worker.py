@@ -1,7 +1,7 @@
 # my_cgs_worker.py
 from pyrates.utility.grid_search import ClusterWorkerTemplate
 import os
-from pandas import DataFrame, concat, MultiIndex
+from pandas import DataFrame
 from pyrates.utility import grid_search, welch
 import numpy as np
 from copy import deepcopy
@@ -17,12 +17,12 @@ class MinimalWorker(ClusterWorkerTemplate):
 
 class ExtendedWorker(MinimalWorker):
     def worker_gs(self, *args, **kwargs):
-        kwargs_tmp = kwargs.copy()
+        kwargs_tmp = deepcopy(kwargs)
         conditions = kwargs_tmp.pop('conditions')
         model_vars = kwargs_tmp.pop('model_vars')
         param_grid = kwargs_tmp.pop('param_grid')
         results, gene_ids = [], param_grid.index
-        for c_dict in conditions:
+        for c_dict in conditions[6:]:
             for key in model_vars:
                 if key in c_dict and type(c_dict[key]) is float:
                     c_dict[key] = np.zeros((param_grid.shape[0],)) + c_dict[key]
@@ -33,23 +33,23 @@ class ExtendedWorker(MinimalWorker):
             f.terminal = True
             r, self.result_map, sim_time = grid_search(*args, param_grid=param_grid_tmp, events=f, **deepcopy(kwargs_tmp))
             r = r.droplevel(2, axis=1)
-            if any(r.values[-1, :] > 1.0):
+            if any(r.values[-1, :] > 10.0):
                 invalid_genes = []
                 for id in param_grid.index:
-                    if r.loc[r.index[-1], ('r_e', f'circuit_{id}')] > 1.0 or \
-                            r.loc[r.index[-1], ('r_i', f'circuit_{id}')] > 1.0:
+                    if r.loc[r.index[-1], ('r_e', f'circuit_{id}')] > 10.0 or \
+                            r.loc[r.index[-1], ('r_i', f'circuit_{id}')] > 10.0:
                         invalid_genes.append(id)
                         param_grid.drop(index=id, inplace=True)
                 kwargs['param_grid'] = param_grid
                 sim_time = self.worker_gs(*args, **kwargs)
                 for r in self.results:
                     for id in invalid_genes:
-                        r[('r_e', f'circuit_{id}')] = np.zeros((r.shape[0],)) + np.inf
-                        r[('r_i', f'circuit_{id}')] = np.zeros((r.shape[0],)) + np.inf
+                        r[('r_e', f'circuit_{id}')] = np.zeros((r.shape[0],)) + 1e6
+                        r[('r_i', f'circuit_{id}')] = np.zeros((r.shape[0],)) + 1e6
                 return sim_time
             else:
                 results.append(r)
-        self.results = results
+                self.results = results
         return sim_time
 
     def worker_postprocessing(self, **kwargs):
@@ -117,7 +117,7 @@ def analyze_oscillations(freq_targets, freqs, pows):
 
 
 def terminate_at_threshold(t, y, *args):
-    threshold = 1000.0
+    threshold = 10000.0
     return np.sqrt(np.mean(y**2)) - threshold
 
 
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     cgs_worker.worker_init()
     #cgs_worker.worker_init(
     #    config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_optimization/Config/DefaultConfig_0.yaml",
-    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_optimization/Grids/Subgrids/DefaultGrid_1/spanien/spanien_Subgrid_0.h5",
+    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_optimization/Grids/Subgrids/DefaultGrid_11/spanien/spanien_Subgrid_2.h5",
     #    result_file="~/my_result.h5",
     #    build_dir=os.getcwd()
     #)

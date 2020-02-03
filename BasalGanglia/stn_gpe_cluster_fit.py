@@ -2,7 +2,6 @@ import os
 import warnings
 import numpy as np
 from pyrates.utility.genetic_algorithm import CGSGeneticAlgorithm
-from pyrates.utility import welch
 from pandas import DataFrame, read_hdf
 from copy import deepcopy
 
@@ -39,8 +38,10 @@ class CustomGOA(CGSGeneticAlgorithm):
                        }  # parkinsonian condition
                       ]
         chunk_size = [
-            #50,   # carpenters
+            50,   # carpenters
+            50,   # osttimor
             50,   # spanien
+            100,   # animals
             20,   # kongo
             20,   # uganda
             20,   # tschad
@@ -64,7 +65,8 @@ class CustomGOA(CGSGeneticAlgorithm):
                 worker_env=self.cgs_config['worker_env'],
                 gs_kwargs={'init_kwargs': self.gs_config['init_kwargs'], 'conditions': conditions,
                            'model_vars': models_vars},
-                worker_kwargs={'freq_targets': freq_targets, 'targets': target})
+                worker_kwargs={'freq_targets': freq_targets, 'targets': target},
+                result_concat_axis=0)
             results_tmp = read_hdf(res_file, key=f'Results/results')
 
             # calculate fitness
@@ -142,9 +144,9 @@ if __name__ == "__main__":
         'eta_i': {'min': -30, 'max': 30, 'size': 2, 'sigma': 0.4, 'loc': 0.0, 'scale': 2.0},
         'eta_str': {'min': -30, 'max': 0, 'size': 2, 'sigma': 0.4, 'loc': -10.0, 'scale': 2.0},
         'eta_tha': {'min': 0, 'max': 30, 'size': 2, 'sigma': 0.4, 'loc': 10.0, 'scale': 2.0},
-        'alpha': {'min': 0, 'max': 0.1, 'size': 1, 'sigma': 0.2, 'loc': 0.01, 'scale': 0.001},
-        'delta_e': {'min': 0.1, 'max': 5.0, 'size': 1, 'sigma': 0.2, 'loc': 1.5, 'scale': 0.2},
-        'delta_i': {'min': 0.1, 'max': 5.0, 'size': 1, 'sigma': 0.2, 'loc': 1.5, 'scale': 0.2},
+        'alpha': {'min': 0, 'max': 0.1, 'size': 2, 'sigma': 0.2, 'loc': 0.01, 'scale': 0.001},
+        'delta_e': {'min': 0.1, 'max': 5.0, 'size': 2, 'sigma': 0.2, 'loc': 1.5, 'scale': 0.2},
+        'delta_i': {'min': 0.1, 'max': 5.0, 'size': 2, 'sigma': 0.2, 'loc': 1.5, 'scale': 0.2},
         'k_ee_pd': {'min': 0, 'max': 50, 'size': 1, 'sigma': 0.4, 'loc': 10.0, 'scale': 1.0},
         'k_ei_pd': {'min': 0, 'max': 150, 'size': 1, 'sigma': 0.8, 'loc': 50.0, 'scale': 5.0},
         'k_ie_pd': {'min': 0, 'max': 150, 'size': 1, 'sigma': 0.8, 'loc': 50.0, 'scale': 5.0},
@@ -173,8 +175,8 @@ if __name__ == "__main__":
 
     T = 5000.
     dt = 1e-2
-    dts = 2e-1
-    compute_dir = f"{os.getcwd()}/stn_gpe_optimization"
+    dts = 1e-1
+    compute_dir = f"{os.getcwd()}/stn_gpe_optimization3"
 
     ga = CustomGOA(fitness_measure=fitness,
                    gs_config={
@@ -189,11 +191,13 @@ if __name__ == "__main__":
                        'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
                    },
                    cgs_config={'nodes': [
-                                         #'osttimor',
+                                         'carpenters',
+                                         'osttimor',
                                          'spanien',
+                                         'animals',
                                          'kongo',
-                                         'tschad',
-                                         'uganda'
+                                         'uganda',
+                                         'tschad'
                                          ],
                                'compute_dir': compute_dir,
                                'worker_file': f'{os.getcwd()}/stn_gpe_worker.py',
@@ -214,11 +218,11 @@ if __name__ == "__main__":
                 [35, 80],  # GABAA antagonist in STN
                 [30, 40]   # parkinsonian condition
                 ],
-        max_iter=200,
-        min_fit=0.2,
-        n_winners=6,
-        n_parent_pairs=200,
-        n_new=50,
+        max_iter=100,
+        min_fit=0.5,
+        n_winners=20,
+        n_parent_pairs=1600,
+        n_new=428,
         sigma_adapt=0.015,
         candidate_save=f'{compute_dir}/GeneticCGSCandidate.h5',
         drop_save=drop_save_dir,
