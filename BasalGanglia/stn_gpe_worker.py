@@ -22,7 +22,7 @@ class ExtendedWorker(MinimalWorker):
         model_vars = kwargs_tmp.pop('model_vars')
         param_grid = kwargs_tmp.pop('param_grid')
         results, gene_ids = [], param_grid.index
-        for c_dict in conditions[6:]:
+        for c_dict in conditions:
             for key in model_vars:
                 if key in c_dict and type(c_dict[key]) is float:
                     c_dict[key] = np.zeros((param_grid.shape[0],)) + c_dict[key]
@@ -70,7 +70,7 @@ class ExtendedWorker(MinimalWorker):
                 mean_ri = np.mean(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:])
                 outputs.append([mean_re, mean_ri])
                 tmin = 0.0 if i == 4 else cutoff
-                psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=tmin, fmin=5.0, fmax=100.0)
+                psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=tmin, fmin=5.0, fmax=200.0)
                 freq.append(freqs)
                 pow.append(psds)
 

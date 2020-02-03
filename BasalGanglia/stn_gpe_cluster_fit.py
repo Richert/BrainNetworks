@@ -25,14 +25,10 @@ class CustomGOA(CGSGeneticAlgorithm):
                       # STN blockade and GABAA blockade in GPe
                       {'k_ie': 0.0, 'eta_tha': 0.0},  # AMPA + NMDA blocker in GPe
                       {'k_ei': 0.0},  # GABAA antagonist in STN
-                      {'k_ei': param_grid['k_ei'] + param_grid['k_ei_pd'],
-                       'k_ie': param_grid['k_ie'] + param_grid['k_ie_pd'],
-                       'k_ee': param_grid['k_ee'] + param_grid['k_ee_pd'],
-                       'k_ii': param_grid['k_ii'] + param_grid['k_ii_pd'],
+                      {'k': param_grid['k_pd'],
+                       'k_i': param_grid['k_i_pd'],
                        'eta_e': param_grid['eta_e'] + param_grid['eta_e_pd'],
-                       'eta_i': param_grid['eta_i'] + param_grid['eta_i_pd'],
                        'eta_str': param_grid['eta_str'] + param_grid['eta_str_pd'],
-                       'eta_tha': param_grid['eta_tha'] + param_grid['eta_tha_pd'],
                        'delta_e': param_grid['delta_e'] + param_grid['delta_e_pd'],
                        'delta_i': param_grid['delta_i'] + param_grid['delta_i_pd'],
                        }  # parkinsonian condition
@@ -41,7 +37,7 @@ class CustomGOA(CGSGeneticAlgorithm):
             50,   # carpenters
             50,   # osttimor
             50,   # spanien
-            100,   # animals
+            100,  # animals
             20,   # kongo
             20,   # uganda
             20,   # tschad
@@ -136,7 +132,7 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
     pop_genes = {
-        'k_ee': {'min': 0, 'max': 100, 'size': 2, 'sigma': 0.4, 'loc': 20.0, 'scale': 2.0},
+        'k_ee': {'min': 0, 'max': 10, 'size': 2, 'sigma': 0.4, 'loc': 5.0, 'scale': 1.0},
         'k_ei': {'min': 0, 'max': 300, 'size': 2, 'sigma': 0.8, 'loc': 100.0, 'scale': 10.0},
         'k_ie': {'min': 0, 'max': 300, 'size': 2, 'sigma': 0.8, 'loc': 100.0, 'scale': 10.0},
         'k_ii': {'min': 0, 'max': 200, 'size': 2, 'sigma': 0.8, 'loc': 50.0, 'scale': 5.0},
@@ -147,14 +143,10 @@ if __name__ == "__main__":
         'alpha': {'min': 0, 'max': 0.1, 'size': 2, 'sigma': 0.2, 'loc': 0.01, 'scale': 0.001},
         'delta_e': {'min': 0.1, 'max': 5.0, 'size': 2, 'sigma': 0.2, 'loc': 1.5, 'scale': 0.2},
         'delta_i': {'min': 0.1, 'max': 5.0, 'size': 2, 'sigma': 0.2, 'loc': 1.5, 'scale': 0.2},
-        'k_ee_pd': {'min': 0, 'max': 50, 'size': 1, 'sigma': 0.4, 'loc': 10.0, 'scale': 1.0},
-        'k_ei_pd': {'min': 0, 'max': 150, 'size': 1, 'sigma': 0.8, 'loc': 50.0, 'scale': 5.0},
-        'k_ie_pd': {'min': 0, 'max': 150, 'size': 1, 'sigma': 0.8, 'loc': 50.0, 'scale': 5.0},
-        'k_ii_pd': {'min': 0, 'max': 100, 'size': 1, 'sigma': 0.8, 'loc': 20.0, 'scale': 2.0},
+        'k_pd': {'min': 1.0, 'max': 3.0, 'size': 1, 'sigma': 0.4, 'loc': 1.5, 'scale': 0.2},
+        'k_i_pd': {'min': 1.0, 'max': 3.0, 'size': 1, 'sigma': 0.4, 'loc': 1.0, 'scale': 0.2},
         'eta_e_pd': {'min': -10, 'max': 10, 'size': 1, 'sigma': 0.4, 'loc': 0.0, 'scale': 1.0},
-        'eta_i_pd': {'min': -10, 'max': 10, 'size': 1, 'sigma': 0.4, 'loc': 0.0, 'scale': 1.0},
-        'eta_str_pd': {'min': -30, 'max': 0, 'size': 1, 'sigma': 0.4, 'loc': -10.0, 'scale': 1.0},
-        'eta_tha_pd': {'min': -10.0, 'max': 10, 'size': 1, 'sigma': 0.4, 'loc': 0.0, 'scale': 1.0},
+        'eta_str_pd': {'min': -50, 'max': 0, 'size': 1, 'sigma': 0.4, 'loc': -10.0, 'scale': 1.0},
         'delta_e_pd': {'min': -5.0, 'max': 0.0, 'size': 1, 'sigma': 0.2, 'loc': -0.5, 'scale': 0.05},
         'delta_i_pd': {'min': -5.0, 'max': 0.0, 'size': 1, 'sigma': 0.2, 'loc': -0.5, 'scale': 0.05},
     }
@@ -164,6 +156,8 @@ if __name__ == "__main__":
         'k_ei': {'vars': ['qif_full/k_ei'], 'nodes': ['stn_gpe']},
         'k_ie': {'vars': ['qif_full/k_ie'], 'nodes': ['stn_gpe']},
         'k_ii': {'vars': ['qif_full/k_ii'], 'nodes': ['stn_gpe']},
+        'k': {'vars': ['qif_full/k'], 'nodes': ['stn_gpe']},
+        'k_i': {'vars': ['qif_full/k_i'], 'nodes': ['stn_gpe']},
         'eta_e': {'vars': ['qif_full/eta_e'], 'nodes': ['stn_gpe']},
         'eta_i': {'vars': ['qif_full/eta_i'], 'nodes': ['stn_gpe']},
         'eta_str': {'vars': ['qif_full/eta_str'], 'nodes': ['stn_gpe']},

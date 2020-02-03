@@ -217,10 +217,10 @@ qif_full:
 qif_driver:
   base: OperatorTemplate
   equations:
-    - "d/dt * R_e = delta_e/(PI*tau_e^2) + 2.*R_e*V_e/tau_e"
-    - "d/dt * V_e = (V_e^2 + eta_e)/tau_e + I_ee - I_ei*(1.0-I_a) - tau_e*(PI*R_e)^2"
-    - "d/dt * R_i = delta_i/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
-    - "d/dt * V_i = (V_i^2 + eta_i + eta_str + eta_tha + beta*X1)/tau_i + I_ie - I_ii*(1.0-I_a) - tau_i*(PI*R_i)^2"
+    - "d/dt * R_e = delta_e/(PI*tau_e*tau_e) + 2.*R_e*V_e/tau_e"
+    - "d/dt * V_e = (V_e*V_e + eta_e)/tau_e + I_ee - I_ei*(1.0-I_a) - tau_e*(PI*PI*R_e*R_e)"
+    - "d/dt * R_i = delta_i/(PI*tau_i*tau_i) + 2.*R_i*V_i/tau_i"
+    - "d/dt * V_i = (V_i*V_i + eta_i + eta_str + eta_tha + beta*X)/tau_i + I_ie - I_ii*(1.0-I_a) - tau_i*(PI*PI*R_i*R_i)"
     - "d/dt * I_ee = X_ee"
     - "d/dt * X_ee = (k*k_ee*R_e - X_ee*(tau_ee_r+tau_ee_d) - I_ee)/(tau_ee_r*tau_ee_d)"
     - "d/dt * I_ei = X_ei"
@@ -263,8 +263,8 @@ qif_driver:
     - "d/dt * R_i14 = (R_i13 - R_i14)*16.0/d_i"
     - "d/dt * R_i15 = (R_i14 - R_i15)*16.0/d_i"
     - "d/dt * R_i16 = (R_i15 - R_i16)*16.0/d_i"
-    - "d/dt * X1 = X1 + omega*X2 - X1*(X1**2+X2**2)"
-    - "d/dt * X2 = X2 - omega*X1 - X2*(X1**2+X2**2)"
+    - "d/dt * X = X + omega*2.0*PI*Z - X*(X*X+Z*Z)"
+    - "d/dt * Z = Z - omega*2.0*PI*X - Z*(X*X+Z*Z)"
   variables:
     R_e:
       default: output
@@ -294,16 +294,16 @@ qif_driver:
       default: variable
     X_a:
       default: variable
-    X1:
+    X:
       default: variable
-    X2:
+    Z:
       default: variable(1.0)
     eta_e:
       default: -3.0
     eta_i:
       default: 16.6
     eta_str:
-      default: -4.0
+      default: -20.0
     eta_tha:
       default: 18.8
     k_ee:
@@ -351,9 +351,9 @@ qif_driver:
     d_i:
       default: 4.0
     beta:
-      default: 0.0
+      default: 1.0
     omega:
-      default: 20.0
+      default: 0.02
     R_e1:
       default: variable
     R_e2:

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 # parameters
 dt = 1e-2
-T = 50000.0
+T = 4000.0
 dts = 1.0
 
 # eic = CircuitIR.from_yaml("config/stn_gpe/net_qif_syn_adapt").compile(backend='numpy', step_size=dt, solver='euler')
@@ -23,16 +23,15 @@ dts = 1.0
 # #print(results.iloc[-1, :])
 # results.plot()
 
-eic2 = CircuitIR.from_yaml("config/stn_gpe/net_stn_gpe").compile(backend='fortran', step_size=dt, solver='scipy',
-                                                                 auto_compat=True)
+eic2 = CircuitIR.from_yaml("config/stn_gpe/net_stn_gpe").compile(backend='numpy', step_size=dt, solver='scipy',
+                                                                 )
 results2, t = eic2.run(simulation_time=T, sampling_step_size=dts, profile=True,
                        outputs={
-                           'r_e': 'stn_gpe/qif_driver/R_e',
-                           'r_i': 'stn_gpe/qif_driver/R_i',
+                           'R_e': 'stn_gpe/qif_driver/R_e',
+                           'R_i': 'stn_gpe/qif_driver/R_i',
                                 },
-                       DSMIN=1e-6
                        )
-eic2.generate_auto_def(None)
+#eic2.generate_auto_def(None)
 #results2 = results2 * 1e3
 
 # eic2 = CircuitIR.from_yaml("config/stn_gpe/delay_net").compile(backend='numpy', step_size=dt, solver='scipy')
