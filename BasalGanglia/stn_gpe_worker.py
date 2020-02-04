@@ -26,7 +26,7 @@ class ExtendedWorker(MinimalWorker):
             for key in model_vars:
                 if key in c_dict and type(c_dict[key]) is float:
                     c_dict[key] = np.zeros((param_grid.shape[0],)) + c_dict[key]
-                else:
+                elif key in param_grid:
                     c_dict[key] = param_grid[key]
             param_grid_tmp = DataFrame.from_dict(c_dict)
             f = terminate_at_threshold
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     cgs_worker.worker_init()
     #cgs_worker.worker_init(
     #    config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_optimization/Config/DefaultConfig_0.yaml",
-    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_optimization/Grids/Subgrids/DefaultGrid_11/spanien/spanien_Subgrid_2.h5",
+    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_optimization/Grids/Subgrids/DefaultGrid_12/spanien/spanien_Subgrid_0.h5",
     #    result_file="~/my_result.h5",
     #    build_dir=os.getcwd()
     #)

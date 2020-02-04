@@ -764,6 +764,11 @@ GPe:
 pop_stn_gpe:
   base: NodeTemplate
   operators:
+    - qif_full
+
+stn_gpe_driven:
+  base: NodeTemplate
+  operators:
     - qif_driver
 
 delay_pop:
