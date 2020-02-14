@@ -18,6 +18,85 @@ delay_test:
     t:
       default: variable
 
+stn_simple:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * R_e = delta_e/(PI*tau_e^2) + 2.*R_e*V_e/tau_e"
+    - "d/dt * V_e = (V_e^2 + eta_e + u)/tau_e + J_ee*R_e - tau_e*(PI*R_e)^2"
+  variables:
+    R_e:
+      default: variable
+    V_e:
+      default: variable
+    delta_e:
+      default: 1.05
+    tau_e:
+      default: 6.0
+    eta_e:
+      default: -3.0
+    J_ee:
+      default: 1.0
+    u:
+      default: input
+
+gpe_simple:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * R_i = delta_i/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
+    - "d/dt * V_i = (V_i^2 + eta_i + u)/tau_i - J_ii*R_i - tau_i*(PI*R_i)^2"
+  variables:
+    R_i:
+      default: variable
+    V_i:
+      default: variable
+    delta_i:
+      default: 1.05
+    tau_i:
+      default: 14.0
+    eta_i:
+      default: 20.0
+    J_ii:
+      default: 10.0
+    u:
+      default: input
+
+qif_simple:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * R_e = delta_e/(PI*tau_e^2) + 2.*R_e*V_e/tau_e"
+    - "d/dt * V_e = (V_e^2 + eta_e)/tau_e + J_ee*R_e - J_ei*R_i - tau_e*(PI*R_e)^2"
+    - "d/dt * R_i = delta_i/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
+    - "d/dt * V_i = (V_i^2 + eta_i)/tau_i + J_ie*R_e - J_ii*R_i - tau_i*(PI*R_i)^2"
+  variables:
+    R_e:
+      default: variable
+    V_e:
+      default: variable
+    R_i:
+      default: variable
+    V_i:
+      default: variable
+    delta_e:
+      default: 0.4
+    delta_i:
+      default: 0.4
+    tau_e:
+      default: 6.0
+    tau_i:
+      default: 14.0
+    eta_e:
+      default: -1.0
+    eta_i:
+      default: 2.0
+    J_ee:
+      default: 10.0
+    J_ei:
+      default: 80.0
+    J_ie:
+      default: 100.0
+    J_ii:
+      default: 40.0
+
 qif_full:
   base: OperatorTemplate
   equations:
@@ -754,25 +833,40 @@ STN_GPe_Pop:
 STN:
   base: NodeTemplate
   operators:
-    - qif_stn
+    - stn_simple
 
 GPe:
   base: NodeTemplate
   operators:
-    - qif_gpe
+    - gpe_simple
 
 pop_stn_gpe:
   base: NodeTemplate
   operators:
-    - qif_driver
+    - qif_full
 
-delay_pop:
+stn_gpe_driven:
   base: NodeTemplate
   operators:
-    - delay_test
+    - qif_driver
+
+stn_gpe_simple:
+  base: NodeTemplate
+  operators:
+    - qif_simple
 
 # circuit templates
 ###################
+
+stn_pop:
+  base: CircuitTemplate
+  nodes:
+    stn: STN
+
+gpe_pop:
+  base: CircuitTemplate
+  nodes:
+    gpe: GPe
 
 net_qif_syn_adapt:
   base: CircuitTemplate
@@ -787,6 +881,16 @@ net_stn_gpe:
   base: CircuitTemplate
   nodes:
     stn_gpe: pop_stn_gpe
+
+stn_gpe_driver:
+  base: CircuitTemplate
+  nodes:
+    stn_gpe: stn_gpe_driven
+
+stn_gpe_reduced:
+  base: CircuitTemplate
+  nodes:
+    stn_gpe: stn_gpe_simple
 
 delay_net:
   base: CircuitTemplate
