@@ -14,7 +14,7 @@ class CustomGOA(CGSGeneticAlgorithm):
         worker_file = self.cgs_config['worker_file'] if 'worker_file' in self.cgs_config else None
         param_grid = self.pop.drop(['fitness', 'sigma', 'results'], axis=1)
         models_vars = ['k_ie', 'k_ii', 'k_ei', 'k_ee', 'eta_e', 'eta_i', 'eta_str', 'eta_tha', 'alpha',
-                       'delta_e', 'delta_i']
+                       'delta_e', 'delta_i', 'k', 'k_i']
         result_vars = ['frequency', 'power', 'r_e', 'r_i']
         freq_targets = [0.0, 0.0, 0.0, 0.0, [40.0, 80.0], 0.0, [12.0, 200.0]]
         param_grid, invalid_params = eval_params(param_grid)
@@ -34,7 +34,7 @@ class CustomGOA(CGSGeneticAlgorithm):
                        }  # parkinsonian condition
                       ]
         chunk_size = [
-            50,   # carpenters
+            #50,   # carpenters
             50,   # osttimor
             50,   # spanien
             100,  # animals
@@ -98,13 +98,9 @@ def eval_params(params):
             valid = False
         if params.loc[gene_id, 'k_ie'] < 0.25*params.loc[gene_id, 'k_ei']:
             valid = False
-        if params.loc[gene_id, 'k_ee_pd'] < 0.0:
+        if params.loc[gene_id, 'k_pd'] < 1.0:
             valid = False
-        if params.loc[gene_id, 'k_ei_pd'] < 0.0:
-            valid = False
-        if params.loc[gene_id, 'k_ie_pd'] < 0.0:
-            valid = False
-        if params.loc[gene_id, 'k_ii_pd'] < 0.0:
+        if params.loc[gene_id, 'k_i_pd'] < 1.0:
             valid = False
         if params.loc[gene_id, 'eta_str_pd'] > 0.0:
             valid = False
@@ -185,7 +181,7 @@ if __name__ == "__main__":
                        'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
                    },
                    cgs_config={'nodes': [
-                                         'carpenters',
+                                         #'carpenters',
                                          'osttimor',
                                          'spanien',
                                          'animals',
