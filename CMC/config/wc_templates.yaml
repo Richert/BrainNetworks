@@ -1,0 +1,162 @@
+%YAML 1.2
+---
+
+# operators
+###########
+
+# excitatory node operator
+E_op:
+  base: OperatorTemplate
+  equations:
+    - "m = max(tanh(s*(v-theta)), 0)"
+    - "d/dt * v = (I_e - I_i + I_ext + B - v) / tau"
+    - "d/dt * meg = ((I_e+I_i)/(2.0*N)-meg)/0.1"
+  variables:
+    m:
+      default: output
+    v:
+      default: variable
+    meg:
+      default: variable
+    I_e:
+      default: input
+    I_i:
+      default: input
+    s:
+      default: 0.6667
+    theta:
+      default: 0.0
+    tau:
+      default: 20.0
+    I_ext:
+      default: input
+    B:
+      default: 0.0
+    N:
+      default: 1.0
+
+# inhibitory node operator
+I_op:
+  base: OperatorTemplate
+  equations:
+    - "m_i = max(tanh(s*(v_i-theta)), 0)"
+    - "d/dt * v_i = (I_e - I_i + I_ext + B - v_i) / tau"
+  variables:
+    m_i:
+      default: output
+    v_i:
+      default: variable
+    I_e:
+      default: input
+    I_i:
+      default: input
+    s:
+      default: 0.6667
+    theta:
+      default: 0.0
+    tau:
+      default: 100.0
+    I_ext:
+      default: input
+    B:
+      default: 0.0
+
+# edge operator
+STP_op:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * x = (1.0-x)/tau_r - k_r*u*x*m_in"
+    - "d/dt * u = (1.0-u)/tau_f + k_f*U*(1.0/U-u)*m_in"
+    - "m_out = m_in*x*u"
+  variables:
+    m_in:
+      default: input
+    m_out:
+      default: output
+    x:
+      default: variable(1.0)
+    u:
+      default: variable(1.0)
+    tau_r:
+      default: 200.0
+    tau_f:
+      default: 1.0
+    k_r:
+      default: 0.1
+    k_f:
+      default: 0.0
+    U:
+      default: 1.0
+
+# alternative edge operator parametrization
+STP_op_2:
+  base: STP_op
+  variables:
+    tau_r:
+      default: 1.0
+    tau_f:
+      default: 500.0
+    k_r:
+      default: 0.0
+    k_f:
+      default: 0.4
+    U:
+      default: 0.05
+
+# observation operator
+Obs_op:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * meg = (I_syn/(2.0*N)-meg)/0.1"
+  variables:
+    meg:
+      default: variable
+    I_syn:
+      default: input
+    N:
+      default: 15.0
+
+# nodes and edges
+#################
+
+# basic wilson-cowan type populations
+E_pop:
+  base: NodeTemplate
+  operators:
+    - E_op
+
+I_pop:
+  base: NodeTemplate
+  operators:
+    - I_op
+
+# edge 1
+EE_edge:
+  base: EdgeTemplate
+  operators:
+    - STP_op
+
+# edge 2
+EI_edge:
+  base: EdgeTemplate
+  operators:
+    - STP_op_2
+
+# observer
+Obs:
+  base: NodeTemplate
+  operators:
+    - Obs_op
+
+# circuits
+##########
+
+WC:
+  base: CircuitTemplate
+  nodes:
+    E: E_pop
+    I: I_pop
+  edges:
+    - [E/E_op/m, E/E_op/I_e, EE_edge, {weight: 1.0}]
+    - [E/E_op/m, I/I_op/I_e, EI_edge, {weight: 0.3}]
+    - [I/I_op/m_i, E/E_op/I_i, null, {weight: 0.7}]
