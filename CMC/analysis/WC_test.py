@@ -14,16 +14,18 @@ dts = 1.0                                     # variable storage sub-sampling st
 sub = int(dts/dt)                              # sub-sampling rate
 T = 8000                                        # total simulation time in ms
 delay = 1000
-N = 15
+N = 100
 m = 5
 inp = np.zeros((int(T/dt), N), dtype='float32')
-#inp[5000:15000, :] = 1.0 # external input to the population
+
 dur = 50.0
 ramp = 15.0
 i = 0
+sequential = False
 while (i+1)*dur < T-delay:
     if i*dur > delay:
-        i_tmp = i % m
+        # sequential input
+        i_tmp = i % m if sequential else int(np.random.uniform(0, m))
         inp[int(((i+1)*dur+ramp)/dt):int(((i+2)*dur-ramp)/dt), i_tmp] = 1.0
     i += 1
 inp = gaussian_filter1d(inp, sigma=0.5*ramp/dt, axis=0)
@@ -33,11 +35,15 @@ plt.show()
 
 # circuit setup
 # circuit = CircuitTemplate.from_yaml("../config/wc_templates/WC").apply()
-C_ee = np.zeros((N, N))
-C_ee[np.eye(N) == 0] = 2.0/N
+C_ee = np.random.randn(N, N)
+c_sorted = np.sort(C_ee.flatten())
+threshold = c_sorted[int(0.9*len(c_sorted))]
+C_ee[C_ee < threshold] = 0.0
 
-C_ie = np.zeros((N, N))
-C_ie[np.eye(N) == 0] = 2.5/N
+C_ie = np.random.randn(N, N)
+c_sorted = np.sort(C_ie.flatten())
+threshold = c_sorted[int(0.95*len(c_sorted))]
+C_ee[C_ie < threshold] = 0.0
 
 circuit = CircuitIR()
 edge1 = EdgeTemplate.from_yaml("../config/wc_templates/EE_edge")
@@ -67,5 +73,7 @@ result, t = compute_graph.run(T,
 #                               )
 
 # visualization
+result.plot()
+plt.figure()
 result.mean(axis=1).plot()
 plt.show()

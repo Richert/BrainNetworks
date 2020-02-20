@@ -33,7 +33,7 @@ E_op:
     B:
       default: 0.0
     N:
-      default: 1.0
+      default: 100.0
 
 # inhibitory node operator
 I_op:

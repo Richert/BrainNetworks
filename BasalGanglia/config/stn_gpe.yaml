@@ -566,7 +566,7 @@ qif_driver:
       default: variable
 
 
-qif_stn:
+qif_stn_syns:
   base: OperatorTemplate
   equations:
     - "d/dt * R_e = delta/(PI*tau_e^2) + 2.*R_e*V_e/tau_e"
@@ -664,7 +664,7 @@ qif_stn:
       default: input
 
 
-qif_gpe:
+qif_gpe_syns:
   base: OperatorTemplate
   equations:
     - "d/dt * R_i = delta/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
@@ -763,6 +763,103 @@ qif_gpe:
     str:
       default: input
 
+
+stn_basic:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * R_e = delta_e/(PI*tau_e^2) + 2.*R_e*V_e/tau_e"
+    - "d/dt * V_e = (V_e^2 + eta_e)/tau_e + I_ampa - I_gabaa - tau_e*(PI*R_e)^2"
+    - "d/dt * I_ampa = X_ampa"
+    - "d/dt * X_ampa = (k_ee*R_e + k_ctx*ctx - X_ampa*(tau_ampa_r+tau_ampa_d) - I_ampa)/(tau_ampa_r*tau_ampa_d)"
+    - "d/dt * I_gabaa = X_gabaa"
+    - "d/dt * X_gabaa = (k_ei*gpe - X_gabaa*(tau_gabaa_r+tau_gabaa_d) - I_gabaa)/(tau_gabaa_r*tau_gabaa_d)"
+  variables:
+    R_e:
+      default: output
+    V_e:
+      default: variable
+    I_ampa:
+      default: variable
+    I_gabaa:
+      default: variable
+    X_ampa:
+      default: variable
+    X_gabaa:
+      default: variable
+    eta_e:
+      default: 10.0
+    k_ee:
+      default: 30.0
+    k_ei:
+      default: 200.0
+    k_ctx:
+      default: 200.0
+    tau_e:
+      default: 12.8
+    tau_ampa_r:
+      default: 0.8
+    tau_ampa_d:
+      default: 3.7
+    tau_gabaa_r:
+      default: 0.8
+    tau_gabaa_d:
+      default: 10.0
+    delta_e:
+      default: 1.0
+    gpe:
+      default: input
+    ctx:
+      default: input
+
+
+gpe_basic:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * R_i = delta_i/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
+    - "d/dt * V_i = (V_i^2 + eta_i)/tau_i + I_ampa - I_gabaa - tau_i*(PI*R_i)^2"
+    - "d/dt * I_ampa = X_ampa"
+    - "d/dt * X_ampa = (k_ie*stn - X_ampa*(tau_ampa_r+tau_ampa_d) - I_ampa)/(tau_ampa_r*tau_ampa_d)"
+    - "d/dt * I_gabaa = X_gabaa"
+    - "d/dt * X_gabaa = (k_ii*R_i + k_str*str - X_gabaa*(tau_gabaa_r+tau_gabaa_d) - I_gabaa)/(tau_gabaa_r*tau_gabaa_d)"
+  variables:
+    R_i:
+      default: output
+    V_i:
+      default: variable
+    I_ampa:
+      default: variable
+    I_gabaa:
+      default: variable
+    X_ampa:
+      default: variable
+    X_gabaa:
+      default: variable
+    eta_i:
+      default: 5.0
+    k_ie:
+      default: 200.0
+    k_ii:
+      default: 50.0
+    k_str:
+      default: 500.0
+    tau_i:
+      default: 25.4
+    tau_ampa_r:
+      default: 0.8
+    tau_ampa_d:
+      default: 3.7
+    tau_gabaa_r:
+      default: 0.5
+    tau_gabaa_d:
+      default: 5.0
+    delta_i:
+      default: 2.0
+    stn:
+      default: input
+    str:
+      default: 0.002
+
+
 # population templates
 ######################
 
@@ -804,25 +901,25 @@ STN_GPe_Pop:
   operators:
     - STN_GPe_rate
 
-STN:
+stn:
   base: NodeTemplate
   operators:
-    - stn_simple
+    - stn_basic
 
 stn_full:
   base: NodeTemplate
   operators:
-    - qif_stn
+    - qif_stn_syns
 
 gpe_full:
   base: NodeTemplate
   operators:
-    - qif_gpe
+    - qif_gpe_syns
 
-GPe:
+gpe:
   base: NodeTemplate
   operators:
-    - gpe_simple
+    - gpe_basic
 
 pop_stn_gpe:
   base: NodeTemplate
@@ -855,22 +952,22 @@ synapse:
 stn_pop:
   base: CircuitTemplate
   nodes:
-    stn: STN
+    stn: stn
 
 gpe_pop:
   base: CircuitTemplate
   nodes:
-    gpe: GPe
+    gpe: gpe
 
-stn_gpe_syns:
+stn_gpe_basic:
   base: CircuitTemplate
   nodes:
-    stn: stn_full
-    gpe: gpe_full
+    stn: stn
+    gpe: gpe
   edges:
     #- [stn/qif_stn/R_e, stn/qif_stn/r_ee, null, {weight: 1.0, delay: 0.8, spread: 0.2}]
-    - [stn/qif_stn/R_e, gpe/qif_gpe/r_ie, null, {weight: 1.0, delay: 3.0, spread: 1.0}]
-    - [gpe/qif_gpe/R_i, stn/qif_stn/r_ei, null, {weight: 1.0, delay: 1.5, spread: 0.5}]
+    - [stn/stn_basic/R_e, gpe/gpe_basic/stn, null, {weight: 1.0, delay: 3.0, spread: 1.0}]
+    - [gpe/gpe_basic/R_i, stn/stn_basic/gpe, null, {weight: 1.0, delay: 1.5, spread: 0.5}]
     #- [gpe/qif_gpe/R_i, gpe/qif_gpe/r_ii, null, {weight: 1.0, delay: 1.0, spread: 0.3}]
 
 net_stn_gpe:

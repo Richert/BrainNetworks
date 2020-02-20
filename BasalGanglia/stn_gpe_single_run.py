@@ -32,13 +32,13 @@ plt.show()
 # results = results * 1e3
 # results.plot()
 
-eic2 = CircuitIR.from_yaml("config/stn_gpe/stn_gpe_syns").compile(backend='numpy', solver='euler', step_size=dt)
+eic2 = CircuitIR.from_yaml("config/stn_gpe/stn_gpe_basic").compile(backend='numpy', solver='scipy', step_size=dt)
 results2, t = eic2.run(simulation_time=T, sampling_step_size=dts, profile=True,
                        outputs={
-                           'R_e': 'stn/qif_stn/R_e',
-                           'R_i': 'gpe/qif_gpe/R_i',
+                           'R_e': 'stn/stn_basic/R_e',
+                           'R_i': 'gpe/gpe_basic/R_i',
                                 },
-                       inputs={'stn/qif_stn/ctx': ctx, 'gpe/qif_gpe/str': str}
+                       inputs={'stn/stn_basic/ctx': ctx, 'gpe/gpe_basic/str': str}
                        )
 # eic2.set_node_var('stn_gpe/qif_driver/delta_e', 2.0)
 #eic2.generate_auto_def(None)

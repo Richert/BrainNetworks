@@ -19,18 +19,17 @@ class CustomGOA(CGSGeneticAlgorithm):
         conditions = [{},  # healthy control
                       {'k_ie': 0.0},  # STN blockade
                       {'k_ii': 0.0, 'k_str': 0.0},  # GABAA blockade in GPe
-                      {'k_ie': 0.0, 'k_ii': 0.0, 'k_str': 0.0},
-                      # STN blockade and GABAA blockade in GPe
+                      {'k_ie': 0.0, 'k_ii': 0.0, 'k_str': 0.0},  # STN blockade and GABAA blockade in GPe
                       {'k_ie': 0.0, 'eta_tha': 0.0},  # AMPA + NMDA blocker in GPe
                       {'k_ei': 0.0},  # GABAA antagonist in STN
                       ]
         chunk_size = [
             70,   # carpenters
-            #70,   # osttimor
+            70,   # osttimor
             70,   # spanien
-            70,  # animals
-            28,   # kongo
-            28,   # tschad
+            70,   # animals
+            46,   # kongo
+            #28,   # tschad
         ]
 
         # perform simulations
@@ -107,41 +106,25 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
     pop_genes = {
-        'k_ee': {'min': 0, 'max': 10, 'size': 2, 'sigma': 0.4, 'loc': 3.0, 'scale': 0.5},
-        'k_ei': {'min': 0, 'max': 120, 'size': 2, 'sigma': 0.8, 'loc': 30.0, 'scale': 10.0},
-        'k_ie': {'min': 0, 'max': 120, 'size': 2, 'sigma': 0.8, 'loc': 30.0, 'scale': 10.0},
-        'k_ii': {'min': 0, 'max': 120, 'size': 2, 'sigma': 0.8, 'loc': 15.0, 'scale': 5.0},
-        'k_str': {'min': 0, 'max': 100, 'size': 2, 'sigma': 0.4, 'loc': 50.0, 'scale': 10.0},
-        'eta_e': {'min': -30, 'max': 30, 'size': 2, 'sigma': 0.4, 'loc': 0.0, 'scale': 10.0},
-        'eta_i': {'min': -30, 'max': 30, 'size': 2, 'sigma': 0.4, 'loc': 0.0, 'scale': 10.0},
-        'eta_tha': {'min': 0, 'max': 30, 'size': 2, 'sigma': 0.4, 'loc': 10.0, 'scale': 5.0},
-        'g_ee': {'min': 0, 'max': 1, 'size': 1, 'sigma': 0.05, 'loc': 0.5, 'scale': 0.1},
-        'g_ie': {'min': 0, 'max': 1, 'size': 1, 'sigma': 0.1, 'loc': 0.5, 'scale': 0.1},
-        'g_ei': {'min': 0, 'max': 1, 'size': 1, 'sigma': 0.1, 'loc': 0.5, 'scale': 0.1},
-        'g_ii': {'min': 0, 'max': 1, 'size': 1, 'sigma': 0.1, 'loc': 0.5, 'scale': 0.1},
-        'a_ee': {'min': 0, 'max': 10, 'size': 1, 'sigma': 0.2, 'loc': 1.0, 'scale': 0.2},
-        'a_ei': {'min': 0, 'max': 10, 'size': 1, 'sigma': 0.2, 'loc': 1.0, 'scale': 0.2},
-        'a_ie': {'min': 0, 'max': 10, 'size': 1, 'sigma': 0.2, 'loc': 1.0, 'scale': 0.2},
-        'a_ii': {'min': 0, 'max': 10, 'size': 1, 'sigma': 0.2, 'loc': 1.0, 'scale': 0.2},
+        'k_ee': {'min': 0, 'max': 100, 'size': 2, 'sigma': 1.0, 'loc': 10.0, 'scale': 1.0},
+        'k_ei': {'min': 0, 'max': 1000, 'size': 2, 'sigma': 10.0, 'loc': 100.0, 'scale': 10.0},
+        'k_ie': {'min': 0, 'max': 1000, 'size': 2, 'sigma': 10.0, 'loc': 100.0, 'scale': 10.0},
+        'k_ii': {'min': 0, 'max': 1000, 'size': 2, 'sigma': 10.0, 'loc': 50.0, 'scale': 5.0},
+        'k_str': {'min': 0, 'max': 10000, 'size': 2, 'sigma': 20.0, 'loc': 200.0, 'scale': 20.0},
+        'eta_e': {'min': -20, 'max': 20, 'size': 2, 'sigma': 0.5, 'loc': 0.0, 'scale': 5.0},
+        'eta_i': {'min': -20, 'max': 20, 'size': 2, 'sigma': 0.5, 'loc': 0.0, 'scale': 5.0},
+        'eta_tha': {'min': 0, 'max': 20, 'size': 2, 'sigma': 0.5, 'loc': 10.0, 'scale': 5.0},
     }
 
     param_map = {
-        'k_ee': {'vars': ['qif_stn/k_ee'], 'nodes': ['stn']},
-        'k_ei': {'vars': ['qif_stn/k_ei'], 'nodes': ['stn']},
-        'k_ie': {'vars': ['qif_gpe/k_ie'], 'nodes': ['gpe']},
-        'k_ii': {'vars': ['qif_gpe/k_ii'], 'nodes': ['gpe']},
-        'eta_e': {'vars': ['qif_stn/eta_e'], 'nodes': ['stn']},
-        'eta_i': {'vars': ['qif_gpe/eta_i'], 'nodes': ['gpe']},
-        'k_str': {'vars': ['qif_gpe/k_str'], 'nodes': ['gpe']},
-        'eta_tha': {'vars': ['qif_gpe/eta_tha'], 'nodes': ['gpe']},
-        'a_ee': {'vars': ['qif_stn/g_e'], 'nodes': ['stn']},
-        'a_ei': {'vars': ['qif_stn/g_i'], 'nodes': ['stn']},
-        'a_ie': {'vars': ['qif_gpe/g_e'], 'nodes': ['gpe']},
-        'a_ii': {'vars': ['qif_gpe/g_i'], 'nodes': ['gpe']},
-        'g_ee': {'vars': ['qif_stn/a_e'], 'nodes': ['stn']},
-        'g_ei': {'vars': ['qif_stn/a_i'], 'nodes': ['stn']},
-        'g_ie': {'vars': ['qif_gpe/a_e'], 'nodes': ['gpe']},
-        'g_ii': {'vars': ['qif_gpe/a_i'], 'nodes': ['gpe']},
+        'k_ee': {'vars': ['stn_basic/k_ee'], 'nodes': ['stn']},
+        'k_ei': {'vars': ['stn_basic/k_ei'], 'nodes': ['stn']},
+        'k_ie': {'vars': ['gpe_basic/k_ie'], 'nodes': ['gpe']},
+        'k_ii': {'vars': ['gpe_basic/k_ii'], 'nodes': ['gpe']},
+        'eta_e': {'vars': ['stn_basic/eta_e'], 'nodes': ['stn']},
+        'eta_i': {'vars': ['gpe_basic/eta_i'], 'nodes': ['gpe']},
+        'k_str': {'vars': ['gpe_basic/k_str'], 'nodes': ['gpe']},
+        'eta_tha': {'vars': ['gpe_basic/eta_tha'], 'nodes': ['gpe']},
     }
 
     T = 5000.
@@ -151,23 +134,23 @@ if __name__ == "__main__":
 
     ga = CustomGOA(fitness_measure=fitness,
                    gs_config={
-                       'circuit_template': f"{os.getcwd()}/config/stn_gpe/stn_gpe_syns",
+                       'circuit_template': f"{os.getcwd()}/config/stn_gpe/stn_gpe_basic",
                        'permute_grid': True,
                        'param_map': param_map,
                        'simulation_time': T,
                        'step_size': dt,
                        'sampling_step_size': dts,
                        'inputs': {},
-                       'outputs': {'r_e': "stn/qif_stn/R_e", 'r_i': 'gpe/qif_gpe/R_i'},
+                       'outputs': {'r_e': "stn/stn_basic/R_e", 'r_i': 'gpe/gpe_basic/R_i'},
                        'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
                    },
                    cgs_config={'nodes': [
                                          'carpenters',
-                                         #'osttimor',
+                                         'osttimor',
                                          'spanien',
                                          'animals',
                                          'kongo',
-                                         'tschad'
+                                         #'tschad'
                                          ],
                                'compute_dir': compute_dir,
                                'worker_file': f'{os.getcwd()}/stn_gpe_healthy_worker.py',
