@@ -16,13 +16,13 @@ class CustomGOA(CGSGeneticAlgorithm):
         result_vars = ['r_e', 'r_i']
         param_grid, invalid_params = eval_params(param_grid)
         chunk_size = [
-            50,   # carpenters
-            50,   # osttimor
-            50,   # spanien
-            100,  # animals
-            20,   # kongo
-            20,   # uganda
-            20,   # tschad
+            300,   # carpenters
+            300,   # osttimor
+            200,   # spanien
+            300,  # animals
+            100,   # kongo
+            100,   # uganda
+            #100,   # tschad
         ]
 
         # perform simulations
@@ -58,10 +58,12 @@ class CustomGOA(CGSGeneticAlgorithm):
 
 
 def fitness(y, t):
+    t = np.asarray(t)
+    weights = t/sum(t)
     y = np.asarray(y).flatten()
     t = np.asarray(t).flatten()
     diff = np.asarray([0.0 if np.isnan(t_tmp) else y_tmp - t_tmp for y_tmp, t_tmp in zip(y, t)])
-    return np.sqrt(np.mean(diff**2))
+    return np.sqrt(weights @ diff**2)
 
 
 def eval_params(params):
@@ -71,13 +73,11 @@ def eval_params(params):
 
         # check validity conditions
         valid = True
-        if params.loc[gene_id, 'k_ee'] > 0.3*params.loc[gene_id, 'k_ie']:
+        if params.loc[gene_id, 'J_ee'] > 0.3*params.loc[gene_id, 'J_ie']:
             valid = False
-        if params.loc[gene_id, 'k_ii'] > 0.6*params.loc[gene_id, 'k_ei']:
+        if params.loc[gene_id, 'J_ie'] > 10.0*params.loc[gene_id, 'J_ei']:
             valid = False
-        if params.loc[gene_id, 'k_ie'] > 4.0*params.loc[gene_id, 'k_ei']:
-            valid = False
-        if params.loc[gene_id, 'k_ie'] < 0.25*params.loc[gene_id, 'k_ei']:
+        if params.loc[gene_id, 'J_ie'] < 0.1*params.loc[gene_id, 'J_ei']:
             valid = False
 
         # add parametrization to valid or invalid parameter sets
@@ -99,12 +99,12 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
     pop_genes = {
-        'J_ee': {'min': 0, 'max': 10, 'size': 3, 'sigma': 0.4, 'loc': 5.0, 'scale': 0.5},
-        'J_ei': {'min': 0, 'max': 100, 'size': 3, 'sigma': 0.8, 'loc': 50.0, 'scale': 5.0},
-        'J_ie': {'min': 0, 'max': 100, 'size': 3, 'sigma': 0.8, 'loc': 50.0, 'scale': 5.0},
-        'J_ii': {'min': 0, 'max': 50, 'size': 3, 'sigma': 0.8, 'loc': 20.0, 'scale': 2.0},
-        'eta_e': {'min': -10, 'max': 10, 'size': 3, 'sigma': 0.4, 'loc': 0.0, 'scale': 2.0},
-        'eta_i': {'min': 0, 'max': 60, 'size': 3, 'sigma': 0.4, 'loc': 20.0, 'scale': 2.0},
+        'J_ee': {'min': 0, 'max': 10, 'size': 4, 'sigma': 0.1, 'loc': 2.0, 'scale': 0.5},
+        'J_ei': {'min': 0, 'max': 120, 'size': 4, 'sigma': 1.0, 'loc': 50.0, 'scale': 10.0},
+        'J_ie': {'min': 0, 'max': 120, 'size': 4, 'sigma': 1.0, 'loc': 50.0, 'scale': 10.0},
+        'J_ii': {'min': 0, 'max': 120, 'size': 4, 'sigma': 1.0, 'loc': 20.0, 'scale': 10.0},
+        'eta_e': {'min': -20, 'max': 30, 'size': 4, 'sigma': 1.0, 'loc': 0.0, 'scale': 10.0},
+        'eta_i': {'min': -20, 'max': 30, 'size': 4, 'sigma': 1.0, 'loc': 20.0, 'scale': 10.0},
     }
 
     param_map = {
@@ -140,10 +140,10 @@ if __name__ == "__main__":
                                          'animals',
                                          'kongo',
                                          'uganda',
-                                         'tschad'
+                                         #'tschad'
                                          ],
                                'compute_dir': compute_dir,
-                               'worker_file': f'{os.getcwd()}/stn_gpe_worker.py',
+                               'worker_file': f'{os.getcwd()}/stn_gpe_simple_cfit_worker.py',
                                'worker_env': "/nobackup/spanien1/rgast/anaconda3/envs/pyrates_test/bin/python3",
                                })
 
@@ -153,12 +153,13 @@ if __name__ == "__main__":
     winner = ga.run(
         initial_gene_pool=pop_genes,
         gene_sampling_func=np.random.normal,
+        new_member_sampling_func=np.random.uniform,
         target=[20.0, 60.0],
         max_iter=100,
         min_fit=1.0,
-        n_winners=10,
-        n_parent_pairs=600,
-        n_new=119,
+        n_winners=20,
+        n_parent_pairs=3600,
+        n_new=476,
         sigma_adapt=0.015,
         candidate_save=f'{compute_dir}/GeneticCGSCandidate.h5',
         drop_save=drop_save_dir,

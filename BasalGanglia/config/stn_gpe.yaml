@@ -668,7 +668,7 @@ qif_gpe:
   base: OperatorTemplate
   equations:
     - "d/dt * R_i = delta/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
-    - "d/dt * V_i = (V_i^2 + eta_i)/tau_i + g_e*(1-I_ae)*I_ampa + (1-g_e)*I_nmda - g_i*(1-I_ai)*I_gabaa - (1-g_i)*I_gabab - tau_i*(PI*R_i)^2"
+    - "d/dt * V_i = (V_i^2 + eta_i + eta_tha)/tau_i + g_e*(1-I_ae)*I_ampa + (1-g_e)*I_nmda - g_i*(1-I_ai)*I_gabaa - (1-g_i)*I_gabab - tau_i*(PI*R_i)^2"
     - "d/dt * I_ampa = X_ampa"
     - "d/dt * X_ampa = (k_ie*r_ie - X_ampa*(tau_ampa_r+tau_ampa_d) - I_ampa)/(tau_ampa_r*tau_ampa_d)"
     - "d/dt * I_nmda = X_nmda"
@@ -712,6 +712,8 @@ qif_gpe:
       default: variable
     eta_i:
       default: 5.0
+    eta_tha:
+      default: 0.0
     k_ie:
       default: 20.0
     k_ii:

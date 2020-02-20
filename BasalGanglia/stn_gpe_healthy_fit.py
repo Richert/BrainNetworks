@@ -14,7 +14,7 @@ class CustomGOA(CGSGeneticAlgorithm):
         worker_file = self.cgs_config['worker_file'] if 'worker_file' in self.cgs_config else None
         param_grid = self.pop.drop(['fitness', 'sigma', 'results'], axis=1)
         result_vars = ['r_e', 'r_i']
-        no_oscillations = [True, True, True, True, False, True]
+        freq_targets = [0.0, 0.0, 0.0, 0.0, np.nan, 0.0]
         param_grid, invalid_params = eval_params(param_grid)
         conditions = [{},  # healthy control
                       {'k_ie': 0.0},  # STN blockade
@@ -25,13 +25,12 @@ class CustomGOA(CGSGeneticAlgorithm):
                       {'k_ei': 0.0},  # GABAA antagonist in STN
                       ]
         chunk_size = [
-            50,   # carpenters
-            50,   # osttimor
-            50,   # spanien
-            100,  # animals
-            20,   # kongo
-            20,   # uganda
-            20,   # tschad
+            70,   # carpenters
+            #70,   # osttimor
+            70,   # spanien
+            70,  # animals
+            28,   # kongo
+            28,   # tschad
         ]
 
         # perform simulations
@@ -51,7 +50,7 @@ class CustomGOA(CGSGeneticAlgorithm):
                 worker_file=worker_file,
                 worker_env=self.cgs_config['worker_env'],
                 gs_kwargs={'init_kwargs': self.gs_config['init_kwargs'], 'conditions': conditions},
-                worker_kwargs={'no_oscillations': no_oscillations, 'targets': target},
+                worker_kwargs={'freq_targets': freq_targets, 'targets': target},
                 result_concat_axis=0)
             results_tmp = read_hdf(res_file, key=f'Results/results')
 
@@ -67,10 +66,12 @@ class CustomGOA(CGSGeneticAlgorithm):
 
 
 def fitness(y, t):
+    t = np.asarray(t)
+    weights = t/sum(t)
     y = np.asarray(y).flatten()
     t = np.asarray(t).flatten()
     diff = np.asarray([0.0 if np.isnan(t_tmp) else y_tmp - t_tmp for y_tmp, t_tmp in zip(y, t)])
-    return np.sqrt(np.mean(diff**2))
+    return np.sqrt(weights @ diff**2)
 
 
 def eval_params(params):
@@ -82,11 +83,9 @@ def eval_params(params):
         valid = True
         if params.loc[gene_id, 'k_ee'] > 0.3*params.loc[gene_id, 'k_ie']:
             valid = False
-        if params.loc[gene_id, 'k_ii'] > 0.6*params.loc[gene_id, 'k_ei']:
+        if params.loc[gene_id, 'k_ie'] > 10.0*params.loc[gene_id, 'k_ei']:
             valid = False
-        if params.loc[gene_id, 'k_ie'] > 4.0*params.loc[gene_id, 'k_ei']:
-            valid = False
-        if params.loc[gene_id, 'k_ie'] < 0.25*params.loc[gene_id, 'k_ei']:
+        if params.loc[gene_id, 'k_ie'] < 0.1*params.loc[gene_id, 'k_ei']:
             valid = False
 
         # add parametrization to valid or invalid parameter sets
@@ -164,11 +163,10 @@ if __name__ == "__main__":
                    },
                    cgs_config={'nodes': [
                                          'carpenters',
-                                         'osttimor',
+                                         #'osttimor',
                                          'spanien',
                                          'animals',
                                          'kongo',
-                                         'uganda',
                                          'tschad'
                                          ],
                                'compute_dir': compute_dir,

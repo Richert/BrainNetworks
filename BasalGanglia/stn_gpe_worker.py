@@ -123,10 +123,10 @@ def terminate_at_threshold(t, y, *args):
 
 if __name__ == "__main__":
     cgs_worker = ExtendedWorker()
-    cgs_worker.worker_init()
-    #cgs_worker.worker_init(
-    #    config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_optimization/Config/DefaultConfig_0.yaml",
-    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_optimization/Grids/Subgrids/DefaultGrid_12/spanien/spanien_Subgrid_0.h5",
-    #    result_file="~/my_result.h5",
-    #    build_dir=os.getcwd()
-    #)
+    #cgs_worker.worker_init()
+    cgs_worker.worker_init(
+        config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_optimization3/Config/DefaultConfig_0.yaml",
+        subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_optimization3/Grids/Subgrids/DefaultGrid_14/spanien/spanien_Subgrid_0.h5",
+        result_file="~/my_result.h5",
+        build_dir=os.getcwd()
+    )

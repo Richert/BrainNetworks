@@ -61,57 +61,32 @@ class ExtendedWorker(MinimalWorker):
 
         # calculate fitness
         for gene_id in param_grid.index:
-            outputs, freq, pow = [], [], []
+            outputs, vars = [], []
             for i, r in enumerate(self.results):
                 r = r * 1e3
                 r.index = r.index * 1e-3
-                cutoff = r.index[-1]*0.1
+                cutoff = r.index[-1]*0.5
                 mean_re = np.mean(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])
                 mean_ri = np.mean(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:])
                 outputs.append([mean_re, mean_ri])
-                tmin = 0.0 if i == 4 else cutoff
-                psds, freqs = welch(r['r_i'][f'circuit_{gene_id}'], tmin=tmin, fmin=5.0, fmax=200.0)
-                freq.append(freqs)
-                pow.append(psds)
+                vars.append(np.var(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:]))
 
             dist1 = fitness(outputs, targets)
-            dist2 = analyze_oscillations(freq_targets, freq, pow)
-            idx = np.argmax(pow[-1][0])
+            dist2 = fitness(vars, freq_targets)
             r = self.results[0]
-            cutoff = r.index[-1]*0.1
+            cutoff = r.index[-1]*0.5
             self.processed_results.loc[gene_id, 'fitness'] = dist1+dist2
-            self.processed_results.loc[gene_id, 'r_e'] = np.mean(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])*1e3
-            self.processed_results.loc[gene_id, 'r_i'] = np.mean(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:])*1e3
+            self.processed_results.loc[gene_id, 'r_e'] = [rates[0] for rates in outputs]
+            self.processed_results.loc[gene_id, 'r_i'] = [rates[1] for rates in outputs]
 
 
 def fitness(y, t):
     y = np.asarray(y).flatten()
     t = np.asarray(t).flatten()
-    diff = np.asarray([0.0 if np.isnan(t_tmp) else y_tmp - t_tmp for y_tmp, t_tmp in zip(y, t)])
-    return np.sqrt(np.mean(diff**2))
-
-
-def analyze_oscillations(freq_targets, freqs, pows):
-    dist = []
-    for i, (t, f, p) in enumerate(zip(freq_targets, freqs, pows)):
-        if type(t) is list:
-            f_tmp = f[np.argmax(p)]
-            dist.append(f_tmp)
-            if f_tmp < t[0]:
-                freq_targets[i] = t[0]
-            elif f_tmp > t[1]:
-                freq_targets[i] = t[1]
-            else:
-                freq_targets[i] = f_tmp
-        elif np.isnan(t):
-            dist.append(0.0)
-        elif t:
-            f_tmp = f[np.argmax(p)]
-            dist.append(f_tmp)
-        else:
-            p_tmp = np.max(p)
-            dist.append(p_tmp)
-    return fitness(dist, freq_targets)
+    diff = np.asarray([0.0 if np.isnan(t_tmp) else y_tmp - t_tmp for y_tmp, t_tmp in zip(y, t)]).flatten()
+    t[np.isnan(t)] = 0.0
+    weights = t / np.sum(t) if np.sum(t) > 0 else np.ones_like(t)/len(t)
+    return np.sqrt(weights @ diff**2)
 
 
 def terminate_at_threshold(t, y, *args):
@@ -123,8 +98,8 @@ if __name__ == "__main__":
     cgs_worker = ExtendedWorker()
     cgs_worker.worker_init()
     #cgs_worker.worker_init(
-    #    config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_optimization/Config/DefaultConfig_0.yaml",
-    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_optimization/Grids/Subgrids/DefaultGrid_12/spanien/spanien_Subgrid_0.h5",
+    #    config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_healthy_opt/Config/DefaultConfig_0.yaml",
+    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_healthy_opt/Grids/Subgrids/DefaultGrid_5/spanien/spanien_Subgrid_0.h5",
     #    result_file="~/my_result.h5",
     #    build_dir=os.getcwd()
     #)
