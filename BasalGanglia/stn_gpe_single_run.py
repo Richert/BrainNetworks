@@ -9,15 +9,15 @@ dt = 1e-2
 T = 2000.0
 dts = 1.0
 ctx = np.zeros((int(T/dt), 1))
-ctx[151000, 0] = 1.0
+ctx[150000, 0] = 1.0
 str = np.zeros((int(T/dt), 1))
 str[152200, 0] = 1.0
 ctx = gaussian_filter1d(ctx, 100, axis=0)
 str = gaussian_filter1d(str, 100, axis=0)
 
-plt.plot(ctx)
-plt.plot(str)
-plt.show()
+# plt.plot(ctx)
+# plt.plot(str)
+# plt.show()
 
 # eic = CircuitIR.from_yaml("config/stn_gpe/stn_pop").compile(backend='numpy', step_size=dt, solver='scipy')
 # results, t = eic.run(simulation_time=T, sampling_step_size=dts, profile=True,
@@ -38,7 +38,7 @@ results2, t = eic2.run(simulation_time=T, sampling_step_size=dts, profile=True,
                            'R_e': 'stn/stn_basic/R_e',
                            'R_i': 'gpe/gpe_basic/R_i',
                                 },
-                       inputs={'stn/stn_basic/ctx': ctx, 'gpe/gpe_basic/str': str}
+                       inputs={'stn/stn_basic/ctx': ctx}
                        )
 # eic2.set_node_var('stn_gpe/qif_driver/delta_e', 2.0)
 #eic2.generate_auto_def(None)
