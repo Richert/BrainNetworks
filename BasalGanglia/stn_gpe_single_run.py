@@ -19,29 +19,17 @@ str = gaussian_filter1d(str, 100, axis=0)
 # plt.plot(str)
 # plt.show()
 
-# eic = CircuitIR.from_yaml("config/stn_gpe/stn_pop").compile(backend='numpy', step_size=dt, solver='scipy')
-# results, t = eic.run(simulation_time=T, sampling_step_size=dts, profile=True,
-#                      outputs={
-#                          'r_e': 'stn/stn_simple/R_e',
-#                          #'v_e': 'stn/qif_stn/V_e',
-#                          #'v_i': 'gpe/qif_gpe/V_i',
-#                               },
-#                      inputs={'stn/stn_simple/u': inp}
-#                      )
-#
-# results = results * 1e3
-# results.plot()
+eic = CircuitIR.from_yaml("config/stn_gpe/stn_gpe_basic").compile(backend='numpy', solver='scipy', step_size=dt)
+results, t = eic.run(simulation_time=T, sampling_step_size=dts, profile=True,
+                     outputs={
+                         'Re': 'stn/stn_op/R_e',
+                         'Ri': 'gpe/gpe_proto_op/R_i',
+                     },
+                     )
+#eic2.generate_auto_def('config')
 
-eic2 = CircuitIR.from_yaml("config/stn_gpe/stn_gpe_basic").compile(backend='numpy', solver='scipy', step_size=dt)
-results2, t = eic2.run(simulation_time=T, sampling_step_size=dts, profile=True,
-                       outputs={
-                           'R_e': 'stn/stn_basic/R_e',
-                           'R_i': 'gpe/gpe_basic/R_i',
-                                },
-                       inputs={'stn/stn_basic/ctx': ctx}
-                       )
 # eic2.set_node_var('stn_gpe/qif_driver/delta_e', 2.0)
 #eic2.generate_auto_def(None)
-# print(results2.iloc[-1, :])
-results2.plot()
+print(results.iloc[-1, :])
+results.plot()
 plt.show()

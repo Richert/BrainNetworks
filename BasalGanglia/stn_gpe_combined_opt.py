@@ -93,7 +93,7 @@ def eval_params(params):
             valid = False
         if params.loc[gene_id, 'k_ie'] < 0.2*params.loc[gene_id, 'k_ei']:
             valid = False
-        if params.loc[gene_id, 'k_ii'] > params.loc[gene_id, 'k_ei']:
+        if params.loc[gene_id, 'k_ii'] > 0.8*params.loc[gene_id, 'k_ei']:
             valid = False
         if params.loc[gene_id, 'delta_e'] + params.loc[gene_id, 'delta_e_pd'] < 0:
             valid = False
@@ -128,6 +128,16 @@ if __name__ == "__main__":
         'eta_i': {'min': 0, 'max': 40, 'size': 2, 'sigma': 4.0, 'loc': 20.0, 'scale': 5.0},
         'delta_e': {'min': 1.0, 'max': 20.0, 'size': 2, 'sigma': 1.0, 'loc': 8.0, 'scale': 5.0},
         'delta_i': {'min': 1.0, 'max': 20.0, 'size': 2, 'sigma': 1.0, 'loc': 12.0, 'scale': 5.0},
+        'tau_e': {'min': 5, 'max': 15, 'size': 2, 'sigma': 0.5, 'loc': 10.0, 'scale': 2.0},
+        'tau_i': {'min': 10, 'max': 30, 'size': 2, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
+        'tau_ee': {'min': 0.5, 'max': 2.0, 'size': 1, 'sigma': 0.1, 'loc': 1.0, 'scale': 0.2},
+        'tau_ee_v': {'min': 0.2, 'max': 2.0, 'size': 1, 'sigma': 0.1, 'loc': 0.5, 'scale': 0.1},
+        'tau_ei': {'min': 2.0, 'max': 6.0, 'size': 1, 'sigma': 0.1, 'loc': 4.0, 'scale': 0.5},
+        'tau_ei_v': {'min': 0.5, 'max': 2.0, 'size': 1, 'sigma': 0.1, 'loc': 1.0, 'scale': 0.2},
+        'tau_ie': {'min': 2.0, 'max': 6.0, 'size': 1, 'sigma': 0.1, 'loc': 4.0, 'scale': 0.5},
+        'tau_ie_v': {'min': 0.5, 'max': 2.0, 'size': 1, 'sigma': 0.1, 'loc': 1.0, 'scale': 0.2},
+        'tau_ii': {'min': 0.5, 'max': 2.0, 'size': 1, 'sigma': 0.1, 'loc': 1.0, 'scale': 0.2},
+        'tau_ii_v': {'min': 0.2, 'max': 2.0, 'size': 1, 'sigma': 0.1, 'loc': 0.5, 'scale': 0.1},
         'k_ee_pd': {'min': 0, 'max': 10, 'size': 1, 'sigma': 0.5, 'loc': 2.0, 'scale': 0.5},
         'k_ei_pd': {'min': 0, 'max': 100, 'size': 1, 'sigma': 1.0, 'loc': 20.0, 'scale': 5.0},
         'k_ie_pd': {'min': 0, 'max': 100, 'size': 1, 'sigma': 1.0, 'loc': 20.0, 'scale': 5.0},
@@ -140,24 +150,34 @@ if __name__ == "__main__":
     }
 
     param_map = {
-        'k_ee': {'vars': ['stn_basic/k_ee'], 'nodes': ['stn']},
-        'k_ei': {'vars': ['stn_basic/k_ei'], 'nodes': ['stn']},
-        'k_ie': {'vars': ['gpe_basic/k_ie'], 'nodes': ['gpe']},
-        'k_ii': {'vars': ['gpe_basic/k_ii'], 'nodes': ['gpe']},
-        'k_str': {'vars': ['gpe_basic/k_str'], 'nodes': ['gpe']},
-        'eta_e': {'vars': ['stn_basic/eta_e'], 'nodes': ['stn']},
-        'eta_i': {'vars': ['gpe_basic/eta_i'], 'nodes': ['gpe']},
-        'delta_e': {'vars': ['stn_basic/delta_e'], 'nodes': ['stn']},
-        'delta_i': {'vars': ['gpe_basic/delta_i'], 'nodes': ['gpe']},
-        'k_ee_pd': {'vars': ['stn_basic/k_ee'], 'nodes': ['stn']},
-        'k_ei_pd': {'vars': ['stn_basic/k_ei'], 'nodes': ['stn']},
-        'k_ie_pd': {'vars': ['gpe_basic/k_ie'], 'nodes': ['gpe']},
-        'k_ii_pd': {'vars': ['gpe_basic/k_ii'], 'nodes': ['gpe']},
-        'k_str_pd': {'vars': ['gpe_basic/k_str'], 'nodes': ['gpe']},
-        'eta_e_pd': {'vars': ['stn_basic/eta_e'], 'nodes': ['stn']},
-        'eta_i_pd': {'vars': ['gpe_basic/eta_i'], 'nodes': ['gpe']},
-        'delta_e_pd': {'vars': ['stn_basic/delta_e'], 'nodes': ['stn']},
-        'delta_i_pd': {'vars': ['gpe_basic/delta_i'], 'nodes': ['gpe']}
+        'k_ee': {'vars': ['weight'], 'edges': ['stn/stn']},
+        'k_ei': {'vars': ['weight'], 'edges': ['gpe/stn']},
+        'k_ie': {'vars': ['weight'], 'edges': ['stn/gpe']},
+        'k_ii': {'vars': ['weight'], 'edges': ['gpe/gpe']},
+        'k_str': {'vars': ['gpe_proto_op/k_str'], 'nodes': ['gpe']},
+        'eta_e': {'vars': ['stn_op/eta_e'], 'nodes': ['stn']},
+        'eta_i': {'vars': ['gpe_proto_op/eta_i'], 'nodes': ['gpe']},
+        'delta_e': {'vars': ['stn_op/delta_e'], 'nodes': ['stn']},
+        'delta_i': {'vars': ['gpe_proto_op/delta_i'], 'nodes': ['gpe']},
+        'tau_e': {'vars': ['stn_op/tau_e'], 'nodes': ['stn']},
+        'tau_i': {'vars': ['gpe_proto_op/tau_i'], 'nodes': ['gpe']},
+        'tau_ee': {'vars': ['delay'], 'edges': ['stn/stn']},
+        'tau_ee_v': {'vars': ['spread'], 'edges': ['stn/stn']},
+        'tau_ei': {'vars': ['delay'], 'edges': ['gpe/stn']},
+        'tau_ei_v': {'vars': ['spread'], 'edges': ['gpe/stn']},
+        'tau_ie': {'vars': ['delay'], 'edges': ['stn/gpe']},
+        'tau_ie_v': {'vars': ['spread'], 'edges': ['stn/gpe']},
+        'tau_ii': {'vars': ['delay'], 'edges': ['gpe/gpe']},
+        'tau_ii_v': {'vars': ['spread'], 'edges': ['gpe/gpe']},
+        'k_ee_pd': {'vars': ['weight'], 'edges': ['stn/stn']},
+        'k_ei_pd': {'vars': ['weight'], 'edges': ['gpe/stn']},
+        'k_ie_pd': {'vars': ['weight'], 'edges': ['stn/gpe']},
+        'k_ii_pd': {'vars': ['weight'], 'edges': ['gpe/gpe']},
+        'k_str_pd': {'vars': ['gpe_proto_op/k_str'], 'nodes': ['gpe']},
+        'eta_e_pd': {'vars': ['stn_op/eta_e'], 'nodes': ['stn']},
+        'eta_i_pd': {'vars': ['gpe_protp_op/eta_i'], 'nodes': ['gpe']},
+        'delta_e_pd': {'vars': ['stn_op/delta_e'], 'nodes': ['stn']},
+        'delta_i_pd': {'vars': ['gpe_proto_op/delta_i'], 'nodes': ['gpe']}
     }
 
     T = 2000.
@@ -175,16 +195,16 @@ if __name__ == "__main__":
                        'step_size': dt,
                        'sampling_step_size': dts,
                        'inputs': {},
-                       'outputs': {'r_e': "stn/stn_basic/R_e", 'r_i': 'gpe/gpe_basic/R_i'},
+                       'outputs': {'r_e': "stn/stn_op/R_e", 'r_i': 'gpe/gpe_proto_op/R_i'},
                        'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
                    },
                    cgs_config={'nodes': [
-                                         #'carpenters',
+                                         'carpenters',
                                          'osttimor',
                                          'spanien',
                                          'animals',
                                          'kongo',
-                                         #'tschad',
+                                         'tschad',
                                          #'uganda'
                                          ],
                                'compute_dir': compute_dir,

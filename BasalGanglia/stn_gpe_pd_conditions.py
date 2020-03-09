@@ -4,21 +4,17 @@ import matplotlib.gridspec as gs
 import numpy as np
 import scipy.io as scio
 
-conditions = [{'k_ie': 0.2},  # AMPA blockade in GPe
-              {'k_ie': 0.2, 'k_ii': 0.2, 'k_str': 0.2},  # AMPA blockade and GABAA blockade in GPe
-              {'k_ii': 0.2, 'k_str': 0.2},  # GABAA blockade in GPe
-              {'k_ie': 0.0},  # STN blockade
-              {'k_ie': 0.0},  # STN blockade and AMPA+NMDA blockade in GPe
-              {'k_ei': 0.2}  # GABAA blocker in STN
+conditions = [{'k_ie': 0.2},  # PD + AMPA blockade in GPe
+              {'k_ii': 0.2, 'k_str': 0.2},  # PD + GABAA bloacked in GPe
+              {'k_ee': 0.2},  # PD + AMPA blockade in STN
+              {'k_ei': 0.0}  # PD + GPe blockade
               ]
 
-target = [[20, 60],   # healthy control
-          [np.nan, 40],  # ampa blockade in GPe
-          [np.nan, 70],  # ampa and gabaa blockade in GPe
-          [np.nan, 100],  # GABAA blockade in GPe
-          [np.nan, 30],  # STN blockade
-          [np.nan, 15],  # STN blockade and AMPA+NMDA blockade in GPe
-          [np.nan, 120]  # GABAA blockade in STN
+target = [[30, 40],   # healthy control
+          [np.nan, 20],  # ampa blockade in GPe
+          [np.nan, 90],  # ampa and gabaa blockade in GPe
+          [30.0, np.nan],  # GABAA blockade in GPe
+          [50.0, np.nan],  # STN blockade
           ],
 
 param_map = {
@@ -33,16 +29,18 @@ param_map = {
         'delta_i': {'vars': ['gpe_proto_op/delta_i'], 'nodes': ['gpe']}
     }
 
+k = 1.5
+d = 0.4
 param_grid_orig = {
-        'k_ee': [1.3],
-        'k_ei': [70.3],
-        'k_ie': [81.3],
-        'k_ii': [33.7],
-        'k_str': [93.2],
+        'k_ee': [0.0*k],
+        'k_ei': [40.3*k],
+        'k_ie': [81.3*k],
+        'k_ii': [33.7*k],
+        'k_str': [93.2*k + 200.0],
         'eta_e': [0.1],
         'eta_i': [11.0],
-        'delta_e': [10.6],
-        'delta_i': [14.7]
+        'delta_e': [10.6*d],
+        'delta_i': [14.7*d]
     }
 
 param_grid = param_grid_orig.copy()
