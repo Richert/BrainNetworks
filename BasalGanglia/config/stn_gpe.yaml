@@ -795,7 +795,7 @@ stn_basic:
     k_ctx:
       default: 10.0
     tau_e:
-      default: 12.8
+      default: 6.0
     tau_ampa_r:
       default: 0.8
     tau_ampa_d:
@@ -816,7 +816,7 @@ gpe_basic:
   base: OperatorTemplate
   equations:
     - "d/dt * R_i = delta_i/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
-    - "d/dt * V_i = (V_i^2 + eta_i + eta_tha)/tau_i + I_ampa - I_gabaa - tau_i*(PI*R_i)^2"
+    - "d/dt * V_i = (V_i^2 + eta_i)/tau_i + I_ampa - I_gabaa - tau_i*(PI*R_i)^2"
     - "d/dt * I_ampa = X_ampa"
     - "d/dt * X_ampa = (k_ie*stn - X_ampa*(tau_ampa_r+tau_ampa_d) - I_ampa)/(tau_ampa_r*tau_ampa_d)"
     - "d/dt * I_gabaa = X_gabaa"
@@ -836,8 +836,6 @@ gpe_basic:
       default: variable
     eta_i:
       default: 0.0
-    eta_tha:
-      default: 1.0
     k_ie:
       default: 1.0
     k_ii:
@@ -845,7 +843,7 @@ gpe_basic:
     k_str:
       default: 10.0
     tau_i:
-      default: 25.4
+      default: 14.0
     tau_ampa_r:
       default: 0.8
     tau_ampa_d:
@@ -968,8 +966,8 @@ stn_gpe_basic:
     gpe: gpe
   edges:
     #- [stn/qif_stn/R_e, stn/qif_stn/r_ee, null, {weight: 1.0, delay: 0.8, spread: 0.2}]
-    - [stn/stn_basic/R_e, gpe/gpe_basic/stn, null, {weight: 1.0, delay: 3.0, spread: 1.0}]
-    - [gpe/gpe_basic/R_i, stn/stn_basic/gpe, null, {weight: 1.0, delay: 1.5, spread: 0.5}]
+    - [stn/stn_basic/R_e, gpe/gpe_basic/stn, null, {weight: 1.0, delay: 4.0, spread: 1.0}]
+    - [gpe/gpe_basic/R_i, stn/stn_basic/gpe, null, {weight: 1.0, delay: 2.0, spread: 0.5}]
     #- [gpe/qif_gpe/R_i, gpe/qif_gpe/r_ii, null, {weight: 1.0, delay: 1.0, spread: 0.3}]
 
 net_stn_gpe:

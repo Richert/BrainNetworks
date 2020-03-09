@@ -6,11 +6,11 @@ import os
 import matplotlib.pyplot as plt
 
 # parameters
-directories = ["/home/rgast/ownCloud/data/stn_gpe_healthy_opt3"]
+directories = ["/data/tu_rgast_cloud/owncloud-gwdg/data/stn_gpe_healthy_opt3"]
 fid = "pop_summary"
 dv = 'fitness'
 ivs = ['eta_e', 'eta_i', 'eta_tha', 'k_str', 'k_ee', 'k_ei', 'k_ie', 'k_ii', 'delta_e', 'delta_i']
-n_comps = 6
+n_comps = 3
 
 # load data into frame
 df = DataFrame(data=np.zeros((1, 11)), columns=ivs + [dv])
@@ -30,7 +30,7 @@ dim_red = Isomap(n_components=n_comps, n_neighbors=30)
 X_ld = dim_red.fit_transform(X, y)
 
 # fit linear classifier to dim-reduced data
-lm = Ridge(alpha=0.1)
+lm = LassoLars(alpha=1.0)
 lm = lm.fit(X_ld, y)
 
 # plot regression coefficient
@@ -39,8 +39,17 @@ plt.bar(np.arange(0, n_comps), lm.coef_)
 
 # visualize dim-reduced data along the two dimension with the greatest coefficients
 indices = np.argsort(lm.coef_)
-fig, ax = plt.subplots()
-plt.scatter(X_ld[:, indices[-1]], X_ld[:, indices[-2]], c=y, cmap=plt.cm.inferno)
-
+y -= np.min(y)
+y /= np.max(y)
+cmap = plt.cm.inferno
+colors = cmap(y)
+colors[:, 3] = y
+fig, axes = plt.subplots(nrows=3)
+plt.sca(axes[0])
+plt.scatter(X_ld[:, indices[-1]], X_ld[:, indices[-2]], c=colors)
+plt.sca(axes[1])
+plt.scatter(X_ld[:, indices[-1]], X_ld[:, indices[-3]], c=colors)
+plt.sca(axes[2])
+plt.scatter(X_ld[:, indices[-2]], X_ld[:, indices[-3]], c=colors)
 print(lm.score(X_ld, y))
 plt.show()

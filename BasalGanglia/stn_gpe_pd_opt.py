@@ -14,23 +14,20 @@ class CustomGOA(CGSGeneticAlgorithm):
         worker_file = self.cgs_config['worker_file'] if 'worker_file' in self.cgs_config else None
         param_grid = self.pop.drop(['fitness', 'sigma', 'results'], axis=1)
         result_vars = ['r_e', 'r_i']
-        freq_targets = [0.0, np.nan, np.nan, np.nan, np.nan]
+        freq_targets = [0.0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
         param_grid, invalid_params = eval_params(param_grid)
-        conditions = [{},  # healthy control
-                      {'k_ie': 0.2},  # AMPA blockade in GPe
-                      {'k_ie': 0.2, 'k_ii': 0.2, 'k_str': 0.2},  # AMPA blockade and GABAA blockade in GPe
+        conditions = [{},  # pd control
+                      {'k_ie': 0.2, 'eta_tha': 0.2},  # AMPA blockade in GPe
                       {'k_ii': 0.2, 'k_str': 0.2},  # GABAA blockade in GPe
-                      {'k_ie': 0.0},  # STN blockade
-                      {'k_ei': 0.2}  # GABAA blocker in STN
+                      {'k_ee': 0.2, 'eta_ee': 0.2},  # AMPA blockade in STN
+                      {'k_ei': 0.0},  # GPe blockade
                       ]
         chunk_size = [
-            100,   # carpenters
-            150,   # osttimor
-            #100,   # spanien
+            #100,   # carpenters
+            #150,   # osttimor
+            150,   # spanien
             150,   # animals
             50,   # kongo
-            50,   # tschad
-            #50,  # uganda
         ]
 
         # perform simulations
@@ -50,7 +47,7 @@ class CustomGOA(CGSGeneticAlgorithm):
                 worker_file=worker_file,
                 worker_env=self.cgs_config['worker_env'],
                 gs_kwargs={'init_kwargs': self.gs_config['init_kwargs'], 'conditions': conditions},
-                worker_kwargs={'freq_targets': freq_targets, 'targets': target, 'time_lim': 2000.0},
+                worker_kwargs={'freq_targets': freq_targets, 'targets': target},
                 result_concat_axis=0)
             results_tmp = read_hdf(res_file, key=f'Results/results')
 
@@ -108,15 +105,17 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
     pop_genes = {
-        'k_ee': {'min': 0, 'max': 50, 'size': 2, 'sigma': 1.0, 'loc': 2.0, 'scale': 0.5},
-        'k_ei': {'min': 0, 'max': 200, 'size': 2, 'sigma': 4.0, 'loc': 50.0, 'scale': 10.0},
-        'k_ie': {'min': 0, 'max': 200, 'size': 2, 'sigma': 4.0, 'loc': 50.0, 'scale': 10.0},
-        'k_ii': {'min': 0, 'max': 150, 'size': 2, 'sigma': 2.0, 'loc': 30.0, 'scale': 10.0},
-        'k_str': {'min': 0, 'max': 800, 'size': 2, 'sigma': 8.0, 'loc': 100.0, 'scale': 20.0},
-        'eta_e': {'min': -20, 'max': 60, 'size': 2, 'sigma': 4.0, 'loc': 10.0, 'scale': 5.0},
-        'eta_i': {'min': 0, 'max': 80, 'size': 2, 'sigma': 4.0, 'loc': 20.0, 'scale': 5.0},
-        'delta_e': {'min': 0.1, 'max': 25.0, 'size': 3, 'sigma': 1.0, 'loc': 8.0, 'scale': 5.0},
-        'delta_i': {'min': 0.1, 'max': 25.0, 'size': 3, 'sigma': 1.0, 'loc': 12.0, 'scale': 5.0}
+        'k_ee': {'min': 0, 'max': 30, 'size': 2, 'sigma': 0.1, 'loc': 5.0, 'scale': 0.5},
+        'k_ei': {'min': 0, 'max': 200, 'size': 2, 'sigma': 1.0, 'loc': 100.0, 'scale': 20.0},
+        'k_ie': {'min': 0, 'max': 200, 'size': 2, 'sigma': 1.0, 'loc': 100.0, 'scale': 20.0},
+        'k_ii': {'min': 0, 'max': 150, 'size': 2, 'sigma': 1.0, 'loc': 50.0, 'scale': 10.0},
+        'k_str': {'min': 0, 'max': 800, 'size': 2, 'sigma': 5.0, 'loc': 100.0, 'scale': 20.0},
+        'eta_e': {'min': -20, 'max': 40, 'size': 1, 'sigma': 1.0, 'loc': 0.0, 'scale': 5.0},
+        'eta_i': {'min': -20, 'max': 40, 'size': 2, 'sigma': 1.0, 'loc': 10.0, 'scale': 5.0},
+        'eta_tha': {'min': 0, 'max': 60, 'size': 2, 'sigma': 1.0, 'loc': 20.0, 'scale': 5.0},
+        'eta_ee': {'min': 0.0, 'max': 60, 'size': 2, 'sigma': 1.0, 'loc': 20.0, 'scale': 5.0},
+        'delta_e': {'min': 0.5, 'max': 15.0, 'size': 2, 'sigma': 0.05, 'loc': 2.0, 'scale': 0.2},
+        'delta_i': {'min': 0.5, 'max': 15.0, 'size': 2, 'sigma': 0.05, 'loc': 4.0, 'scale': 0.4}
     }
 
     param_map = {
@@ -124,9 +123,11 @@ if __name__ == "__main__":
         'k_ei': {'vars': ['stn_basic/k_ei'], 'nodes': ['stn']},
         'k_ie': {'vars': ['gpe_basic/k_ie'], 'nodes': ['gpe']},
         'k_ii': {'vars': ['gpe_basic/k_ii'], 'nodes': ['gpe']},
-        'k_str': {'vars': ['gpe_basic/k_str'], 'nodes': ['gpe']},
         'eta_e': {'vars': ['stn_basic/eta_e'], 'nodes': ['stn']},
+        'eta_ee': {'vars': ['stn_basic/eta_ee'], 'nodes': ['stn']},
         'eta_i': {'vars': ['gpe_basic/eta_i'], 'nodes': ['gpe']},
+        'k_str': {'vars': ['gpe_basic/k_str'], 'nodes': ['gpe']},
+        'eta_tha': {'vars': ['gpe_basic/eta_tha'], 'nodes': ['gpe']},
         'delta_e': {'vars': ['stn_basic/delta_e'], 'nodes': ['stn']},
         'delta_i': {'vars': ['gpe_basic/delta_i'], 'nodes': ['gpe']}
     }
@@ -137,7 +138,7 @@ if __name__ == "__main__":
 
     # perform genetic optimization
 
-    compute_dir = f"{os.getcwd()}/stn_gpe_healthy_opt"
+    compute_dir = f"{os.getcwd()}/stn_gpe_healthy_opt1"
 
     ga = CustomGOA(fitness_measure=fitness,
                    gs_config={
@@ -152,13 +153,12 @@ if __name__ == "__main__":
                        'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
                    },
                    cgs_config={'nodes': [
-                                         'carpenters',
-                                         'osttimor',
-                                         #'spanien',
+                                         #'carpenters',
+                                         #'osttimor',
+                                         'spanien',
                                          'animals',
                                          'kongo',
-                                         'tschad',
-                                         #'uganda'
+                                         #'tschad'
                                          ],
                                'compute_dir': compute_dir,
                                'worker_file': f'{os.getcwd()}/stn_gpe_healthy_worker.py',
@@ -172,21 +172,20 @@ if __name__ == "__main__":
         initial_gene_pool=pop_genes,
         gene_sampling_func=np.random.normal,
         new_member_sampling_func=np.random.uniform,
-        target=[[20, 60],   # healthy control
-                [np.nan, 2/3],  # ampa blockade in GPe
-                [np.nan, 1],  # ampa and gabaa blockade in GPe
-                [np.nan, 5/3],  # GABAA blockade in GPe
-                [np.nan, 1/2],  # STN blockade
-                [2, 5/3]  # GABAA blockade in STN
+        target=[[30, 40, 14, 14],   # healthy control
+                [np.nan, 20, np.nan, 0.0],  # ampa blockade in GPe
+                [np.nan, 90, np.nan, 14],  # gabaa blockade in GPe
+                [30, np.nan, 0.0, np.nan],  # AMPA blockade in STN
+                [50, np.nan, 0.0, np.nan],  # GPe blockade
                 ],
         max_iter=100,
         enforce_max_iter=True,
-        min_fit=1.0,
-        n_winners=8,
-        n_parent_pairs=250,
-        n_new=142,
-        sigma_adapt=0.1,
-        candidate_save=f'{compute_dir}/GeneticCGSCandidatestn.h5',
+        min_fit=2.0,
+        n_winners=10,
+        n_parent_pairs=800,
+        n_new=214,
+        sigma_adapt=0.05,
+        candidate_save=f'{compute_dir}/GeneticCGSCandidate.h5',
         drop_save=drop_save_dir,
         new_pop_on_drop=True,
         pop_save=f'{drop_save_dir}/pop_summary'

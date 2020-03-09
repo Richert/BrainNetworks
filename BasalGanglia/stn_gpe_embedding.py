@@ -1,15 +1,15 @@
 from pandas import DataFrame, read_hdf
 import numpy as np
-from sklearn.manifold import MDS
+from sklearn.manifold import MDS, Isomap
 import os
 import matplotlib.pyplot as plt
 
 # parameters
-directories = ["/home/rgast/ownCloud/data/stn_gpe_healthy_opt3"]
+directories = ["/data/tu_rgast_cloud/owncloud-gwdg/data/stn_gpe_healthy_opt3"]
 fid = "pop_summary"
 dv = 'fitness'
 ivs = ['eta_e', 'eta_i', 'eta_tha', 'k_str', 'k_ee', 'k_ei', 'k_ie', 'k_ii', 'delta_e', 'delta_i']
-n_comps = 6
+n_comps = 2
 
 # load data into frame
 df = DataFrame(data=np.zeros((1, 11)), columns=ivs + [dv])
@@ -25,7 +25,7 @@ y = df.pop(dv)
 X = np.asarray([df.pop(iv) for iv in ivs]).T
 
 # perform dimensionality reduction on data
-dim_red = MDS(n_components=n_comps)
+dim_red = Isomap(n_components=n_comps, n_neighbors=30)
 X_ld = dim_red.fit_transform(X, y)
 
 # visualize dim-reduced data along the two dimension with the greatest coefficients
