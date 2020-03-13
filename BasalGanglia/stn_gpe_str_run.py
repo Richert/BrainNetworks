@@ -20,38 +20,34 @@ mpl.rcParams['legend.fontsize'] = 12
 
 # parameters
 dt = 1e-2
-T = 500.0
+T = 1000.0
 dts = 1e-1
-# ctx = np.zeros((int(T/dt), 1))
-# ctx[150000, 0] = 1.0
-# str = np.zeros((int(T/dt), 1))
-# str[152200, 0] = 1.0
+freq = 14.0
+amp = 2.0
+sim_steps = int(np.round(T/dt, decimals=0))
+# ctx = np.zeros((sim_steps, 1))
+# ctx[50000, 0] = 8000.0
 # ctx = gaussian_filter1d(ctx, 100, axis=0)
-# str = gaussian_filter1d(str, 100, axis=0)
+time = np.linspace(0., T, sim_steps)
+ctx = np.sin(2.0*np.pi*freq*time*1e-3)*amp
 
-# plt.plot(ctx)
-# plt.plot(str)
-# plt.show()
+plt.plot(ctx)
+plt.show()
 
-eic = CircuitIR.from_yaml("config/stn_gpe/stn_gpe_basic").compile(backend='numpy', solver='scipy', step_size=dt)
+eic = CircuitIR.from_yaml("config/stn_gpe/stn_gpe_str").compile(backend='numpy', solver='scipy', step_size=dt)
 results, t = eic.run(simulation_time=T, sampling_step_size=dts, profile=True,
-                     outputs={'Re': 'stn/stn_op/R_e', 'Ri': 'gpe/gpe_proto_op/R_i'},
+                     outputs={'STN': 'stn/stn_op/R_e',
+                              'GPe_proto': 'gpe_p/gpe_proto_op/R_i',
+                              'GPe_arky': 'gpe_a/gpe_arky_op/R_a',
+                              'STR': 'str/str_op/R_s'},
+                     inputs={'stn/stn_op/ctx': ctx,
+                             'str/str_op/ctx': ctx*2.0}
                      )
-# eic = CircuitIR.from_yaml("config/stn_gpe/net_stn_gpe").compile(backend='numpy', solver='scipy', step_size=dt)
-# results, t = eic.run(simulation_time=T, sampling_step_size=dts, profile=True,
-#                      outputs={
-#                          'Re': 'stn_gpe/qif_full/R_e',
-#                          'Ri': 'stn_gpe/qif_full/R_i',
-#                      },
-#                      )
-#eic2.generate_auto_def('config')
 
-# eic2.set_node_var('stn_gpe/qif_driver/delta_e', 2.0)
-#eic2.generate_auto_def(None)
 results = results * 1e3
 fig, ax = plt.subplots(dpi=200, figsize=(10, 3.5))
-ax = plot_timeseries(results, cmap=create_cmap('pyrates_purple', as_cmap=False, n_colors=2), ax=ax)
-plt.legend(['STN', 'GPe'])
+ax = plot_timeseries(results, cmap=create_cmap('cubehelix', as_cmap=False, n_colors=4), ax=ax)
+plt.legend(['STN', 'GPe_p', 'GPe_a', 'STR'])
 ax.set_title('Healthy Firing Rates')
 ax.set_ylabel('firing rate (spikes/s)')
 ax.set_xlabel('time (s)')
