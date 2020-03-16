@@ -1141,16 +1141,16 @@ stn_gpe_str:
   edges:
     - [stn/stn_op/R_e, gpe_p/gpe_proto_op/I_e, null, {weight: 60.0, delay: 4.0, spread: 1.0}]
     - [stn/stn_op/R_e, gpe_a/gpe_arky_op/I_e, null, {weight: 100.0, delay: 4.0, spread: 1.0}]
-    - [stn/stn_op/R_e, stn/stn_op/I_e, null, {weight: 2.0, delay: 1.0, spread: 0.5}]
-    - [gpe_p/gpe_proto_op/R_i, stn/stn_op/I_i, null, {weight: 60.0, delay: 2.0, spread: 0.5}]
-    - [gpe_p/gpe_proto_op/R_i, gpe_p/gpe_proto_op/I_i, null, {weight: 5.0, delay: 1.0, spread: 0.5}]
-    - [gpe_p/gpe_proto_op/R_i, gpe_a/gpe_arky_op/I_i, null, {weight: 15.0, delay: 1.0, spread: 0.5}]
-    - [gpe_a/gpe_arky_op/R_a, gpe_p/gpe_proto_op/I_i, null, {weight: 15.0, delay: 1.0, spread: 0.5}]
-    - [gpe_a/gpe_arky_op/R_a, gpe_a/gpe_arky_op/I_i, null, {weight: 15.0, delay: 1.0, spread: 0.5}]
-    - [gpe_a/gpe_arky_op/R_a, str/str_op/I_i, null, {weight: 60.0, delay: 2.0, spread: 0.5}]
+    - [stn/stn_op/R_e, stn/stn_op/I_e, null, {weight: 2.0, delay: 2.0, spread: 0.5}]
+    - [gpe_p/gpe_proto_op/R_i, stn/stn_op/I_i, null, {weight: 60.0, delay: 3.0, spread: 1.0}]
+    - [gpe_p/gpe_proto_op/R_i, gpe_p/gpe_proto_op/I_i, null, {weight: 5.0, delay: 2.0, spread: 0.5}]
+    - [gpe_p/gpe_proto_op/R_i, gpe_a/gpe_arky_op/I_i, null, {weight: 15.0, delay: 2.0, spread: 0.5}]
+    - [gpe_a/gpe_arky_op/R_a, gpe_p/gpe_proto_op/I_i, null, {weight: 15.0, delay: 2.0, spread: 0.5}]
+    - [gpe_a/gpe_arky_op/R_a, gpe_a/gpe_arky_op/I_i, null, {weight: 15.0, delay: 2.0, spread: 0.5}]
+    - [gpe_a/gpe_arky_op/R_a, str/str_op/I_i, null, {weight: 60.0, delay: 3.0, spread: 1.0}]
     - [str/str_op/R_s, gpe_p/gpe_proto_op/I_i, null, {weight: 200.0, delay: 8.0, spread: 1.5}]
     - [str/str_op/R_s, gpe_a/gpe_arky_op/I_i, null, {weight: 100.0, delay: 8.0, spread: 1.5}]
-    - [str/str_op/R_s, str/str_op/I_i, null, {weight: 200.0, delay: 4.0, spread: 1.0}]
+    - [str/str_op/R_s, str/str_op/I_i, null, {weight: 100.0, delay: 3.0, spread: 1.0}]
 
 gpe_str:
   base: CircuitTemplate
