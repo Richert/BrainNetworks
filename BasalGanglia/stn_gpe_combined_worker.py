@@ -23,13 +23,15 @@ class ExtendedWorker(MinimalWorker):
         results, gene_ids = [], param_grid.index
         for i, c_dict in enumerate(conditions):
             for key in param_grid:
-                if '_pd' in key:
-                    continue
-                param = param_grid[key] if i < 6 else param_grid[key] + param_grid[f"{key}_pd"]
-                if key in c_dict:
-                    c_dict[key] = param * c_dict[key]
-                else:
-                    c_dict[key] = param
+                if '_pd' not in key:
+                    if i < 6 or f"{key}_pd" not in param_grid:
+                        param = param_grid[key]
+                    else:
+                        param = param_grid[key] + param_grid[f"{key}_pd"]
+                    if key in c_dict:
+                        c_dict[key] = param * c_dict[key]
+                    else:
+                        c_dict[key] = param
             param_grid_tmp = DataFrame.from_dict(c_dict)
             kwargs_gs = deepcopy(kwargs_tmp)
             if i > 5:
@@ -99,8 +101,8 @@ if __name__ == "__main__":
     cgs_worker = ExtendedWorker()
     cgs_worker.worker_init()
     #cgs_worker.worker_init(
-    #    config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_combined_opt/Config/DefaultConfig_0.yaml",
-    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_combined_opt/Grids/Subgrids/DefaultGrid_11/animals/animals_Subgrid_0.h5",
+    #    config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_combined_opt1/Config/DefaultConfig_0.yaml",
+    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_combined_opt1/Grids/Subgrids/DefaultGrid_2/animals/animals_Subgrid_1.h5",
     #    result_file="~/my_result.h5",
     #    build_dir=os.getcwd()
     #)

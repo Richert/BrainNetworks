@@ -29,13 +29,37 @@ class CustomGOA(CGSGeneticAlgorithm):
                       {'k_ei': 0.0}  # PD + GPe blockade
                       ]
         chunk_size = [
-            #50,   # carpenters
-            150,   # osttimor
-            100,   # spanien
-            150,   # animals
-            50,   # kongo
-            #50,   # tschad
-            #50,  # uganda
+            40,   # carpenters
+            80,   # osttimor
+            40,   # spanien
+            80,   # animals
+            40,   # kongo
+            40,   # tschad
+            80,  # uganda
+            #50,  # tiber
+            40,  # giraffe
+            20,  # lech
+            10,  # rilke
+            10,  # dinkel
+            10,  # rosmarin
+            10,  # mosambik
+            #50,  # compute servers
+            #40,
+            #30,
+            #20,
+            #10,
+            #50,
+            #40,
+            #30,
+            #20,
+            #10,
+            #50,
+            #40,
+            #30,
+            #20,
+            #10,
+            #50,
+            #40,
         ]
 
         # perform simulations
@@ -55,7 +79,7 @@ class CustomGOA(CGSGeneticAlgorithm):
                 worker_file=worker_file,
                 worker_env=self.cgs_config['worker_env'],
                 gs_kwargs={'init_kwargs': self.gs_config['init_kwargs'], 'conditions': conditions},
-                worker_kwargs={'freq_targets': freq_targets, 'targets': target, 'time_lim': 3600.0},
+                worker_kwargs={'freq_targets': freq_targets, 'targets': target, 'time_lim': 2000.0},
                 result_concat_axis=0)
             results_tmp = read_hdf(res_file, key=f'Results/results')
 
@@ -99,7 +123,7 @@ def eval_params(params):
             valid = False
         if params.loc[gene_id, 'delta_i'] + params.loc[gene_id, 'delta_i_pd'] < 0:
             valid = False
-
+            
         # add parametrization to valid or invalid parameter sets
         if valid:
             valid_params.append(i)
@@ -119,41 +143,43 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
     pop_genes = {
-        'k_ee': {'min': 0, 'max': 15, 'size': 2, 'sigma': 1.0, 'loc': 5.0, 'scale': 1.0},
-        'k_ei': {'min': 0, 'max': 150, 'size': 2, 'sigma': 4.0, 'loc': 75.0, 'scale': 20.0},
-        'k_ie': {'min': 0, 'max': 150, 'size': 2, 'sigma': 4.0, 'loc': 75.0, 'scale': 20.0},
-        'k_ii': {'min': 0, 'max': 100, 'size': 2, 'sigma': 2.0, 'loc': 50.0, 'scale': 10.0},
-        'k_str': {'min': 0, 'max': 400, 'size': 2, 'sigma': 8.0, 'loc': 200.0, 'scale': 50.0},
-        'eta_e': {'min': -20, 'max': 20, 'size': 2, 'sigma': 4.0, 'loc': 0.0, 'scale': 5.0},
-        'eta_i': {'min': 0, 'max': 40, 'size': 2, 'sigma': 4.0, 'loc': 20.0, 'scale': 5.0},
-        'delta_e': {'min': 1.0, 'max': 20.0, 'size': 2, 'sigma': 1.0, 'loc': 8.0, 'scale': 5.0},
-        'delta_i': {'min': 1.0, 'max': 20.0, 'size': 2, 'sigma': 1.0, 'loc': 12.0, 'scale': 5.0},
+        'k_ee': {'min': 0, 'max': 15, 'size': 1, 'sigma': 0.5, 'loc': 5.0, 'scale': 1.0},
+        'k_ei': {'min': 0, 'max': 150, 'size': 1, 'sigma': 2.0, 'loc': 75.0, 'scale': 20.0},
+        'k_ie': {'min': 0, 'max': 150, 'size': 1, 'sigma': 2.0, 'loc': 75.0, 'scale': 20.0},
+        'k_ii': {'min': 0, 'max': 100, 'size': 1, 'sigma': 1.0, 'loc': 50.0, 'scale': 10.0},
+        'k_str': {'min': 0, 'max': 400, 'size': 1, 'sigma': 4.0, 'loc': 200.0, 'scale': 50.0},
+        'eta_e': {'min': -20, 'max': 20, 'size': 1, 'sigma': 2.0, 'loc': 0.0, 'scale': 5.0},
+        'eta_i': {'min': 0, 'max': 40, 'size': 1, 'sigma': 2.0, 'loc': 20.0, 'scale': 5.0},
+        'delta_e': {'min': 1.0, 'max': 20.0, 'size': 4, 'sigma': 0.5, 'loc': 4.0, 'scale': 2.0},
+        'delta_i': {'min': 1.0, 'max': 20.0, 'size': 4, 'sigma': 0.5, 'loc': 8.0, 'scale': 2.0},
         'tau_e': {'min': 5, 'max': 15, 'size': 2, 'sigma': 0.5, 'loc': 10.0, 'scale': 2.0},
         'tau_i': {'min': 10, 'max': 30, 'size': 2, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
-        'tau_ee': {'min': 0.5, 'max': 2.0, 'size': 1, 'sigma': 0.1, 'loc': 1.0, 'scale': 0.2},
-        'tau_ee_v': {'min': 0.2, 'max': 2.0, 'size': 1, 'sigma': 0.1, 'loc': 0.5, 'scale': 0.1},
-        'tau_ei': {'min': 2.0, 'max': 6.0, 'size': 1, 'sigma': 0.1, 'loc': 4.0, 'scale': 0.5},
-        'tau_ei_v': {'min': 0.5, 'max': 2.0, 'size': 1, 'sigma': 0.1, 'loc': 1.0, 'scale': 0.2},
-        'tau_ie': {'min': 2.0, 'max': 6.0, 'size': 1, 'sigma': 0.1, 'loc': 4.0, 'scale': 0.5},
-        'tau_ie_v': {'min': 0.5, 'max': 2.0, 'size': 1, 'sigma': 0.1, 'loc': 1.0, 'scale': 0.2},
-        'tau_ii': {'min': 0.5, 'max': 2.0, 'size': 1, 'sigma': 0.1, 'loc': 1.0, 'scale': 0.2},
-        'tau_ii_v': {'min': 0.2, 'max': 2.0, 'size': 1, 'sigma': 0.1, 'loc': 0.5, 'scale': 0.1},
+        'tau_ee_v': {'min': 0.5, 'max': 1.0, 'size': 2, 'sigma': 0.1, 'loc': 0.5, 'scale': 0.1},
+        #'tau_ei': {'min': 3.0, 'max': 5.0, 'size': 1, 'sigma': 0.1, 'loc': 4.0, 'scale': 0.1},
+        'tau_ei_v': {'min': 0.5, 'max': 1.0, 'size': 2, 'sigma': 0.1, 'loc': 1.0, 'scale': 0.2},
+        #'tau_ie': {'min': 2.0, 'max': 4.0, 'size': 1, 'sigma': 0.1, 'loc': 3.0, 'scale': 0.1},
+        'tau_ie_v': {'min': 0.8, 'max': 1.6, 'size': 2, 'sigma': 0.1, 'loc': 0.7, 'scale': 0.1},
+        'tau_ii_v': {'min': 0.5, 'max': 1.0, 'size': 2, 'sigma': 0.1, 'loc': 0.5, 'scale': 0.1},
         'k_ee_pd': {'min': 0, 'max': 10, 'size': 1, 'sigma': 0.5, 'loc': 2.0, 'scale': 0.5},
         'k_ei_pd': {'min': 0, 'max': 100, 'size': 1, 'sigma': 1.0, 'loc': 20.0, 'scale': 5.0},
         'k_ie_pd': {'min': 0, 'max': 100, 'size': 1, 'sigma': 1.0, 'loc': 20.0, 'scale': 5.0},
         'k_ii_pd': {'min': 0, 'max': 75, 'size': 1, 'sigma': 0.8, 'loc': 10.0, 'scale': 2.0},
-        'k_str_pd': {'min': 0, 'max': 400, 'size': 2, 'sigma': 4.0, 'loc': 200.0, 'scale': 20.0},
+        'k_str_pd': {'min': 0, 'max': 400, 'size': 1, 'sigma': 4.0, 'loc': 200.0, 'scale': 20.0},
         'eta_e_pd': {'min': -20, 'max': 20, 'size': 1, 'sigma': 1.0, 'loc': 0.0, 'scale': 1.0},
         'eta_i_pd': {'min': -30, 'max': 10, 'size': 1, 'sigma': 1.0, 'loc': -10.0, 'scale': 1.0},
         'delta_e_pd': {'min': -10.0, 'max': 0.0, 'size': 1, 'sigma': 0.5, 'loc': -2.0, 'scale': 2.0},
         'delta_i_pd': {'min': -10.0, 'max': 0.0, 'size': 1, 'sigma': 0.5, 'loc': -2.0, 'scale': 2.0},
+        'tau_ee_v_pd': {'min': -0.5, 'max': 0.5, 'size': 1, 'sigma': 0.1, 'loc': 0.0, 'scale': 0.1},
+        'tau_ei_v_pd': {'min': -0.5, 'max': 0.5, 'size': 1, 'sigma': 0.1, 'loc': 0.0, 'scale': 0.1},
+        'tau_ie_v_pd': {'min': -0.5, 'max': 0.5, 'size': 1, 'sigma': 0.1, 'loc': 0.0, 'scale': 0.1},
+        'tau_ii_v_pd': {'min': -0.5, 'max': 0.5, 'size': 1, 'sigma': 0.1, 'loc': 0.0, 'scale': 0.1},
     }
 
     param_map = {
-        'k_ee': {'vars': ['weight'], 'edges': ['stn/stn']},
-        'k_ei': {'vars': ['weight'], 'edges': ['gpe/stn']},
-        'k_ie': {'vars': ['weight'], 'edges': ['stn/gpe']},
-        'k_ii': {'vars': ['weight'], 'edges': ['gpe/gpe']},
+        'k_ee': {'vars': ['weight'], 'edges': [('stn', 'stn')]},
+        'k_ei': {'vars': ['weight'], 'edges': [('gpe', 'stn')]},
+        'k_ie': {'vars': ['weight'], 'edges': [('stn', 'gpe')]},
+        'k_ii': {'vars': ['weight'], 'edges': [('gpe', 'gpe')]},
         'k_str': {'vars': ['gpe_proto_op/k_str'], 'nodes': ['gpe']},
         'eta_e': {'vars': ['stn_op/eta_e'], 'nodes': ['stn']},
         'eta_i': {'vars': ['gpe_proto_op/eta_i'], 'nodes': ['gpe']},
@@ -161,29 +187,33 @@ if __name__ == "__main__":
         'delta_i': {'vars': ['gpe_proto_op/delta_i'], 'nodes': ['gpe']},
         'tau_e': {'vars': ['stn_op/tau_e'], 'nodes': ['stn']},
         'tau_i': {'vars': ['gpe_proto_op/tau_i'], 'nodes': ['gpe']},
-        'tau_ee': {'vars': ['delay'], 'edges': ['stn/stn']},
-        'tau_ee_v': {'vars': ['spread'], 'edges': ['stn/stn']},
-        'tau_ei': {'vars': ['delay'], 'edges': ['gpe/stn']},
-        'tau_ei_v': {'vars': ['spread'], 'edges': ['gpe/stn']},
-        'tau_ie': {'vars': ['delay'], 'edges': ['stn/gpe']},
-        'tau_ie_v': {'vars': ['spread'], 'edges': ['stn/gpe']},
-        'tau_ii': {'vars': ['delay'], 'edges': ['gpe/gpe']},
-        'tau_ii_v': {'vars': ['spread'], 'edges': ['gpe/gpe']},
-        'k_ee_pd': {'vars': ['weight'], 'edges': ['stn/stn']},
-        'k_ei_pd': {'vars': ['weight'], 'edges': ['gpe/stn']},
-        'k_ie_pd': {'vars': ['weight'], 'edges': ['stn/gpe']},
-        'k_ii_pd': {'vars': ['weight'], 'edges': ['gpe/gpe']},
+        'tau_ee': {'vars': ['delay'], 'edges': [('stn', 'stn')]},
+        'tau_ee_v': {'vars': ['spread'], 'edges': [('stn', 'stn')]},
+        'tau_ei': {'vars': ['delay'], 'edges': [('gpe', 'stn')]},
+        'tau_ei_v': {'vars': ['spread'], 'edges': [('gpe', 'stn')]},
+        'tau_ie': {'vars': ['delay'], 'edges': [('stn', 'gpe')]},
+        'tau_ie_v': {'vars': ['spread'], 'edges': [('stn', 'gpe')]},
+        'tau_ii': {'vars': ['delay'], 'edges': [('gpe', 'gpe')]},
+        'tau_ii_v': {'vars': ['spread'], 'edges': [('gpe', 'gpe')]},
+        'k_ee_pd': {'vars': ['weight'], 'edges': [('stn', 'stn')]},
+        'k_ei_pd': {'vars': ['weight'], 'edges': [('gpe', 'stn')]},
+        'k_ie_pd': {'vars': ['weight'], 'edges': [('stn', 'gpe')]},
+        'k_ii_pd': {'vars': ['weight'], 'edges': [('gpe', 'gpe')]},
         'k_str_pd': {'vars': ['gpe_proto_op/k_str'], 'nodes': ['gpe']},
         'eta_e_pd': {'vars': ['stn_op/eta_e'], 'nodes': ['stn']},
         'eta_i_pd': {'vars': ['gpe_protp_op/eta_i'], 'nodes': ['gpe']},
         'delta_e_pd': {'vars': ['stn_op/delta_e'], 'nodes': ['stn']},
-        'delta_i_pd': {'vars': ['gpe_proto_op/delta_i'], 'nodes': ['gpe']}
+        'delta_i_pd': {'vars': ['gpe_proto_op/delta_i'], 'nodes': ['gpe']},
+        'tau_ee_v_pd': {'vars': ['spread'], 'edges': [('stn', 'stn')]},
+        'tau_ei_v_pd': {'vars': ['spread'], 'edges': [('gpe', 'stn')]},
+        'tau_ie_v_pd': {'vars': ['spread'], 'edges': [('stn', 'gpe')]},
+        'tau_ii_v_pd': {'vars': ['spread'], 'edges': [('gpe', 'gpe')]},
     }
 
     T = 2000.
     dt = 1e-2
     dts = 1e-1
-    compute_dir = f"{os.getcwd()}/stn_gpe_combined_opt2"
+    compute_dir = f"{os.getcwd()}/stn_gpe_combined_opt"
 
     # perform genetic optimization
     ga = CustomGOA(fitness_measure=fitness,
@@ -205,11 +235,36 @@ if __name__ == "__main__":
                                          'animals',
                                          'kongo',
                                          'tschad',
-                                         #'uganda'
+                                         'uganda',
+                                         #'tiber',
+                                         'giraffe',
+                                         'lech',
+                                         'rilke',
+                                         'dinkel',
+                                         'rosmarin',
+                                         'mosambik',
+                                         #'comps06h01',
+                                         #'comps06h02',
+                                         #'comps06h03',
+                                         #'comps06h04',
+                                         #'comps06h05',
+                                         #'comps06h06',
+                                         #'comps06h07',
+                                         #'comps06h08',
+                                         #'comps06h09',
+                                         #'comps06h10',
+                                         #'comps06h11',
+                                         #'comps06h12',
+                                         #'comps06h13',
+                                         #'comps06h14',
+                                         #'scorpions',
+                                         #'spliff',
+                                         #'supertramp',
+                                         #'ufo'
                                          ],
                                'compute_dir': compute_dir,
                                'worker_file': f'{os.getcwd()}/stn_gpe_combined_worker.py',
-                               'worker_env': "/nobackup/spanien1/rgast/anaconda3/envs/pyrates_test/bin/python3",
+                               'worker_env': "/data/u_rgast_software/anaconda3/envs/pyrates/bin/python3",
                                })
 
     drop_save_dir = f'{compute_dir}/PopulationDrops/'
@@ -234,10 +289,10 @@ if __name__ == "__main__":
         max_iter=100,
         enforce_max_iter=True,
         min_fit=1.0,
-        n_winners=8,
+        n_winners=7,
         n_parent_pairs=200,
-        n_new=116,
-        sigma_adapt=0.1,
+        n_new=217,
+        sigma_adapt=0.05,
         candidate_save=f'{compute_dir}/GeneticCGSCandidatestn.h5',
         drop_save=drop_save_dir,
         new_pop_on_drop=True,

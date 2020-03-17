@@ -18,72 +18,33 @@ reg_dur = 3500
 dur = 50.0
 ramp = 15.0
 
-# population numbers
-N = 250
-N_c = 50
-N_b = N - N_c
-
-# connection probabilities
-p_ee_cc = 0.1
-p_ee_bb = 0.1
-p_ee_bc = 0.05
-p_ie_cc = 0.2
-p_ie_bb = 0.2
-
-# connection strengths
-k_e = 10.0
-k_i = 1.0
+# network parameters
+N = 100
+p_e = 0.1
+p_i = 0.1
+k_e = 25.0
+k_i = 10.0
 
 # connectivity matrices
-C_ee_cc = np.random.randn(N_c, N_c)
-C_ee_cc[np.eye(N_c, dtype=np.int32)] = 0
-c_sorted = np.sort(C_ee_cc.flatten())
-threshold = c_sorted[int(p_ee_cc*len(c_sorted))]
-C_ee_cc[C_ee_cc < threshold] = 0.0
-C_ee_cc[C_ee_cc >= threshold] = 1.0
-
-C_ie_cc = np.random.randn(N_c, N_c)
-C_ie_cc[np.eye(N_c, dtype=np.int32)] = 0
-c_sorted = np.sort(C_ie_cc.flatten())
-threshold = c_sorted[int(p_ie_cc*len(c_sorted))]
-C_ie_cc[C_ie_cc < threshold] = 0.0
-C_ie_cc[C_ie_cc >= threshold] = 1.0
-
-C_ee_bb = np.random.randn(N_b, N_b)
-C_ee_bb[np.eye(N_b, dtype=np.int32)] = 0
-c_sorted = np.sort(C_ee_bb.flatten())
-threshold = c_sorted[int(p_ee_bb*len(c_sorted))]
-C_ee_bb[C_ee_bb < threshold] = 0.0
-C_ee_bb[C_ee_bb >= threshold] = 1.0
-
-C_ie_bb = np.random.randn(N_b, N_b)
-C_ie_bb[np.eye(N_b, dtype=np.int32)] = 0
-c_sorted = np.sort(C_ie_bb.flatten())
-threshold = c_sorted[int(p_ie_bb*len(c_sorted))]
-C_ie_bb[C_ie_bb < threshold] = 0.0
-C_ie_bb[C_ie_bb >= threshold] = 1.0
-
-C_ee_bc = np.random.randn(N, N)
-C_ee_bc[0:N_c, 0:N_c] = 0.0
-C_ee_bc[N_c:, N_c:] = 0.0
-C_ee_bc[np.eye(N, dtype=np.int32)] = 0
-c_sorted = np.sort(C_ee_bc.flatten())
-threshold = c_sorted[int(p_ee_bc*len(c_sorted))]
-C_ee_bc[C_ee_bc < threshold] = 0.0
-C_ee_bc[C_ee_bc >= threshold] = 1.0
-C_ee_bc[0:N_c, 0:N_c] = C_ee_cc
-C_ee_bc[N_c:, N_c:] = C_ee_bb
-
-C_ie_bc = np.zeros((N, N))
-C_ie_bc[0:N_c, 0:N_c] = C_ie_cc
-C_ie_bc[N_c:, N_c:] = C_ie_bb
-
+C_ee = np.ones((N, N))
+C_ie = np.ones_like(C_ee)
+n_e = int(np.ceil(p_e*N))
+n_i = int(np.ceil(p_i*N))
 for i in range(N):
-    for C, c_scale in zip([C_ee_bc, C_ie_bc], [k_e, k_i]):
-        c_max = np.max(C[i, :])
-        if c_max > 0:
-            C[i, :] /= np.sum(C[i, :])
-            C[i, :] *= c_scale
+    idx_e = np.random.randint(low=0, high=N, size=n_e)
+    idx_i = np.random.randint(low=0, high=N, size=n_i)
+    C_ee[i, idx_e] = k_e/n_e
+    C_ie[i, idx_i] = k_i/n_i
+
+# delay matrices
+D_ee = np.zeros_like(C_ee)
+indices_e = np.argwhere(C_ee > 0)
+for idx in indices_e:
+    D_ee[idx[0], idx[1]] = np.random.uniform(1.0, 5.0)
+D_ie = np.zeros_like(C_ie)
+indices_i = np.argwhere(C_ie > 0)
+for idx in indices_i:
+    D_ie[idx[0], idx[1]] = D_ee[idx[0], idx[1]] if idx in indices_e else np.random.uniform(1.0, 5.0)
 
 ms = [5]
 results = []
@@ -93,7 +54,7 @@ for m in ms:
     inp = np.zeros((int(T/dt), N), dtype='float32')
 
     i = 0
-    inp_nodes = np.random.randint(0, N_c, m)
+    inp_nodes = np.random.randint(0, N, m)
     while (i+1)*dur < T:
         if i*dur > delay:
             sequential = i*dur < delay+reg_dur
@@ -109,14 +70,14 @@ for m in ms:
     for idx in range(N):
         circuit.add_circuit(f'wc_{idx}', CircuitIR.from_yaml("../config/wc_templates/WC"))
     circuit.add_edges_from_matrix(source_var="E/E_op/m", target_var="E/E_op/I_e", template=edge1,
-                                  nodes=[f'wc_{idx}' for idx in range(N)], weight=C_ee_bc)
+                                  nodes=[f'wc_{idx}' for idx in range(N)], weight=C_ee, delay=D_ee)
     circuit.add_edges_from_matrix(source_var="E/E_op/m", target_var="I/I_op/I_e", template=edge2,
-                                  nodes=[f'wc_{idx}' for idx in range(N)], weight=C_ie_bc)
+                                  nodes=[f'wc_{idx}' for idx in range(N)], weight=C_ie, delay=D_ie)
 
     # circuit compilation and simulation
     compute_graph = circuit.compile(vectorization=True, backend='numpy', name='wc_net', step_size=dt, solver='euler')
     r, t = compute_graph.run(T,
-                             inputs={"all/E/E_op/I_ext": inp},
+                             #inputs={"all/E/E_op/I_ext": inp},
                              outputs={"meg": "all/E/E_op/meg"},
                              sampling_step_size=dts,
                              profile=True,
@@ -125,6 +86,7 @@ for m in ms:
     results.append(r)
 
 # visualization
+results[0].plot()
 plt.figure()
 for r in results:
     r.mean(axis=1).plot()
