@@ -14,6 +14,7 @@ class CustomGOA(CGSGeneticAlgorithm):
         worker_file = self.cgs_config['worker_file'] if 'worker_file' in self.cgs_config else None
         param_grid = self.pop.drop(['fitness', 'sigma', 'results'], axis=1)
         result_vars = ['r_e', 'r_p', 'r_a', 'r_s']
+        freq_targets = [0.0, np.nan, np.nan, np.nan, np.nan]
         param_grid, invalid_params = eval_params(param_grid)
         conditions = [{},  # healthy control
                       {'k_pe': 0.2, 'k_ae': 0.2},  # AMPA blockade in GPe
@@ -22,7 +23,7 @@ class CustomGOA(CGSGeneticAlgorithm):
                       {'k_pp': 0.2, 'k_pa': 0.2, 'k_ps': 0.2, 'k_aa': 0.2, 'k_ap': 0.2,
                        'k_as': 0.2},  # GABAA blockade in GPe
                       {'k_pe': 0.0, 'k_ae': 0.0},  # STN blockade
-                      {'k_ep': 0.2},  # GABAA blocker in ST
+                      {'k_ep': 0.2},  # GABAA blocker in STN
                       ]
         chunk_size = [
             50,  # carpenters
@@ -75,7 +76,7 @@ class CustomGOA(CGSGeneticAlgorithm):
                 worker_file=worker_file,
                 worker_env=self.cgs_config['worker_env'],
                 gs_kwargs={'init_kwargs': self.gs_config['init_kwargs'], 'conditions': conditions},
-                worker_kwargs={'targets': target, 'time_lim': 2000.0},
+                worker_kwargs={'targets': target, 'time_lim': 2000.0, 'freq_targets': freq_targets},
                 result_concat_axis=0)
             results_tmp = read_hdf(res_file, key=f'Results/results')
 
@@ -111,18 +112,18 @@ def eval_params(params):
             valid = False
         if params.loc[gene_id, 'k_pe'] > 5.0 * params.loc[gene_id, 'k_ep']:
             valid = False
-        if params.loc[gene_id, 'k_pe'] < 0.2 * params.loc[gene_id, 'k_ep']:
+        if params.loc[gene_id, 'k_ep'] > 5.0 * params.loc[gene_id, 'k_pe']:
             valid = False
         if params.loc[gene_id, 'k_pp'] > 0.8 * params.loc[gene_id, 'k_ep']:
             valid = False
-        if params.loc[gene_id, 'k_as'] < 0.5 * params.loc[gene_id, 'k_ps']:
+        if params.loc[gene_id, 'k_ps'] > 0.5 * params.loc[gene_id, 'k_as']:
             valid = False
         if params.loc[gene_id, 'delta_p'] > params.loc[gene_id, 'delta_a']:
             valid = False
-        if params.loc[gene_id, 'tau_a'] > params.loc[gene_id, 'tau_p']:
-            valid = False
-        if params.loc[gene_id, 'tau_e'] > params.loc[gene_id, 'tau_a']:
-            valid = False
+        #if params.loc[gene_id, 'tau_a'] > params.loc[gene_id, 'tau_p']:
+        #    valid = False
+        #if params.loc[gene_id, 'tau_e'] > params.loc[gene_id, 'tau_a']:
+        #    valid = False
 
         # add parametrization to valid or invalid parameter sets
         if valid:
@@ -142,31 +143,32 @@ def eval_params(params):
 if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
+    pop_size = 2048
     pop_genes = {
-        'k_ee': {'min': 0, 'max': 15, 'size': 1, 'sigma': 0.5, 'loc': 5.0, 'scale': 1.0},
-        'k_ae': {'min': 0, 'max': 150, 'size': 1, 'sigma': 2.0, 'loc': 75.0, 'scale': 20.0},
-        'k_pe': {'min': 0, 'max': 150, 'size': 1, 'sigma': 2.0, 'loc': 75.0, 'scale': 20.0},
-        'k_pp': {'min': 0, 'max': 100, 'size': 1, 'sigma': 1.0, 'loc': 20.0, 'scale': 5.0},
-        'k_ep': {'min': 0, 'max': 150, 'size': 1, 'sigma': 0.5, 'loc': 50.0, 'scale': 5.0},
-        'k_ap': {'min': 0, 'max': 150, 'size': 1, 'sigma': 2.0, 'loc': 20.0, 'scale': 5.0},
-        'k_aa': {'min': 0, 'max': 150, 'size': 1, 'sigma': 2.0, 'loc': 20.0, 'scale': 5.0},
-        'k_pa': {'min': 0, 'max': 100, 'size': 1, 'sigma': 1.0, 'loc': 20.0, 'scale': 5.0},
-        'k_sa': {'min': 0, 'max': 150, 'size': 1, 'sigma': 4.0, 'loc': 50.0, 'scale': 10.0},
-        'k_ss': {'min': 0, 'max': 200, 'size': 1, 'sigma': 4.0, 'loc': 100.0, 'scale': 20.0},
-        'k_as': {'min': 0, 'max': 400, 'size': 1, 'sigma': 4.0, 'loc': 200.0, 'scale': 20.0},
-        'k_ps': {'min': 0, 'max': 200, 'size': 1, 'sigma': 4.0, 'loc': 100.0, 'scale': 20.0},
-        'eta_e': {'min': -20, 'max': 20, 'size': 2, 'sigma': 2.0, 'loc': 0.0, 'scale': 5.0},
-        'eta_p': {'min': 0, 'max': 40, 'size': 2, 'sigma': 2.0, 'loc': 20.0, 'scale': 5.0},
-        'eta_a': {'min': -10, 'max': 30, 'size': 2, 'sigma': 2.0, 'loc': 10.0, 'scale': 5.0},
-        'eta_s': {'min': -40, 'max': 0, 'size': 2, 'sigma': 2.0, 'loc': -20.0, 'scale': 5.0},
-        'delta_e': {'min': 1.0, 'max': 20.0, 'size': 2, 'sigma': 0.5, 'loc': 4.0, 'scale': 2.0},
-        'delta_p': {'min': 1.0, 'max': 20.0, 'size': 2, 'sigma': 0.5, 'loc': 4.0, 'scale': 2.0},
-        'delta_a': {'min': 1.0, 'max': 20.0, 'size': 2, 'sigma': 0.5, 'loc': 8.0, 'scale': 2.0},
-        'delta_s': {'min': 1.0, 'max': 20.0, 'size': 2, 'sigma': 0.5, 'loc': 8.0, 'scale': 2.0},
-        'tau_e': {'min': 5, 'max': 15, 'size': 2, 'sigma': 0.5, 'loc': 10.0, 'scale': 2.0},
-        'tau_p': {'min': 12, 'max': 32, 'size': 2, 'sigma': 0.5, 'loc': 24.0, 'scale': 2.0},
-        'tau_a': {'min': 10, 'max': 30, 'size': 2, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
-        'tau_s': {'min': 15, 'max': 35, 'size': 2, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
+        'k_ee': {'min': 0, 'max': 15, 'size': pop_size, 'sigma': 0.5, 'loc': 5.0, 'scale': 1.0},
+        'k_ae': {'min': 0, 'max': 150, 'size': pop_size, 'sigma': 2.0, 'loc': 75.0, 'scale': 10.0},
+        'k_pe': {'min': 0, 'max': 150, 'size': pop_size, 'sigma': 2.0, 'loc': 75.0, 'scale': 10.0},
+        'k_pp': {'min': 0, 'max': 100, 'size': pop_size, 'sigma': 2.0, 'loc': 20.0, 'scale': 2.0},
+        'k_ep': {'min': 0, 'max': 150, 'size': pop_size, 'sigma': 2.0, 'loc': 50.0, 'scale': 5.0},
+        'k_ap': {'min': 0, 'max': 100, 'size': pop_size, 'sigma': 2.0, 'loc': 20.0, 'scale': 2.0},
+        'k_aa': {'min': 0, 'max': 100, 'size': pop_size, 'sigma': 2.0, 'loc': 20.0, 'scale': 2.0},
+        'k_pa': {'min': 0, 'max': 100, 'size': pop_size, 'sigma': 2.0, 'loc': 20.0, 'scale': 2.0},
+        'k_sa': {'min': 0, 'max': 150, 'size': pop_size, 'sigma': 2.0, 'loc': 50.0, 'scale': 5.0},
+        'k_ss': {'min': 0, 'max': 200, 'size': pop_size, 'sigma': 2.0, 'loc': 100.0, 'scale': 10.0},
+        'k_as': {'min': 0, 'max': 400, 'size': pop_size, 'sigma': 2.0, 'loc': 200.0, 'scale': 10.0},
+        'k_ps': {'min': 0, 'max': 200, 'size': pop_size, 'sigma': 2.0, 'loc': 100.0, 'scale': 10.0},
+        'eta_e': {'min': -30, 'max': 30, 'size': pop_size, 'sigma': 1.0, 'loc': -5.0, 'scale': 5.0},
+        'eta_p': {'min': 0, 'max': 60, 'size': pop_size, 'sigma': 1.0, 'loc': 20.0, 'scale': 5.0},
+        'eta_a': {'min': -20, 'max': 40, 'size': pop_size, 'sigma': 1.0, 'loc': 10.0, 'scale': 5.0},
+        'eta_s': {'min': -100, 'max': 0, 'size': pop_size, 'sigma': 1.0, 'loc': -40.0, 'scale': 5.0},
+        'delta_e': {'min': 0.5, 'max': 20.0, 'size': pop_size, 'sigma': 0.5, 'loc': 4.0, 'scale': 1.0},
+        'delta_p': {'min': 1.0, 'max': 20.0, 'size': pop_size, 'sigma': 0.5, 'loc': 6.0, 'scale': 1.0},
+        'delta_a': {'min': 1.0, 'max': 20.0, 'size': pop_size, 'sigma': 0.5, 'loc': 8.0, 'scale': 1.0},
+        'delta_s': {'min': 0.5, 'max': 20.0, 'size': pop_size, 'sigma': 0.2, 'loc': 2.0, 'scale': 0.5},
+        #'tau_e': {'min': 5, 'max': 15, 'size': pop_size, 'sigma': 0.5, 'loc': 10.0, 'scale': 2.0},
+        #'tau_p': {'min': 15, 'max': 30, 'size': pop_size, 'sigma': 0.5, 'loc': 24.0, 'scale': 2.0},
+        #'tau_a': {'min': 10, 'max': 25, 'size': pop_size, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
+        #'tau_s': {'min': 10, 'max': 30, 'size': pop_size, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
         #'tau_ee_v': {'min': 0.5, 'max': 1.0, 'size': 2, 'sigma': 0.1, 'loc': 0.5, 'scale': 0.1},
         # 'tau_ei': {'min': 3.0, 'max': 5.0, 'size': 1, 'sigma': 0.1, 'loc': 4.0, 'scale': 0.1},
         #'tau_ei_v': {'min': 0.5, 'max': 1.0, 'size': 2, 'sigma': 0.1, 'loc': 1.0, 'scale': 0.2},
@@ -266,25 +268,26 @@ if __name__ == "__main__":
     winner = ga.run(
         initial_gene_pool=pop_genes,
         gene_sampling_func=np.random.normal,
-        new_member_sampling_func=np.random.uniform,
-        target=[[20, 60, 40, 2],  # healthy control
-                [np.nan, 2/3, 2/3, np.nan],  # ampa blockade in GPe
-                [np.nan, 1, 1, np.nan],  # ampa and gabaa blockade in GPe
-                [np.nan, 5/3, 5/3, np.nan],  # GABAA blockade in GPe
-                [np.nan, 1/2, 1/2, np.nan],  # STN blockade
-                [2, 5/3, np.nan, np.nan],  # GABAA blockade in STN
+        new_member_sampling_func=np.random.normal,
+        target=[[20, 60, 20, 2],  # healthy control
+                [np.nan, 2/3, np.nan, np.nan],  # ampa blockade in GPe
+                [np.nan, 1, np.nan, np.nan],  # ampa and gabaa blockade in GPe
+                [np.nan, 5/3, np.nan, np.nan],  # GABAA blockade in GPe
+                [np.nan, 1/2, np.nan, np.nan],  # STN blockade
+                [5/3, 5/3, np.nan, np.nan],  # GABAA blockade in STN
                 ],
         max_iter=100,
         enforce_max_iter=True,
         min_fit=1.0,
-        n_winners=15,
-        n_parent_pairs=800,
-        n_new=400,
+        n_winners=10,
+        n_parent_pairs=300,
+        n_new=200,
         sigma_adapt=0.05,
         candidate_save=f'{compute_dir}/GeneticCGSCandidatestn.h5',
         drop_save=drop_save_dir,
         new_pop_on_drop=True,
-        pop_save=f'{drop_save_dir}/pop_summary'
+        pop_save=f'{drop_save_dir}/pop_summary',
+        permute=False
     )
 
     # winner.to_hdf(f'{drop_save_dir}/winner.h5', key='data')

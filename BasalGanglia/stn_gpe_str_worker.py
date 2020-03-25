@@ -43,6 +43,7 @@ class ExtendedWorker(MinimalWorker):
     def worker_postprocessing(self, **kwargs):
         kwargs_tmp = kwargs.copy()
         param_grid = kwargs_tmp.pop('param_grid')
+        freq_targets = kwargs_tmp.pop('freq_targets')
         targets = kwargs_tmp.pop('targets')
         self.processed_results = DataFrame(data=None, columns=['fitness', 'r_e', 'r_p', 'r_a', 'r_s'])
 
@@ -52,7 +53,7 @@ class ExtendedWorker(MinimalWorker):
             for i, r in enumerate(self.results):
                 r = r * 1e3
                 r.index = r.index * 1e-3
-                cutoff = r.index[-1]*0.6
+                cutoff = r.index[-1]*0.8
                 mean_re = np.mean(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])
                 mean_rp = np.mean(r['r_p'][f'circuit_{gene_id}'].loc[cutoff:])
                 mean_ra = np.mean(r['r_a'][f'circuit_{gene_id}'].loc[cutoff:])
@@ -69,7 +70,7 @@ class ExtendedWorker(MinimalWorker):
                     if targets[m][n] != np.nan:
                         targets[m][n] = outputs[0][n] * targets[m][n]
             dist1 = fitness(outputs, targets)
-            dist2 = fitness(vars, np.zeros_like(vars))
+            dist2 = fitness(vars, freq_targets)
             self.processed_results.loc[gene_id, 'fitness'] = dist1+dist2
             self.processed_results.loc[gene_id, 'r_e'] = [rates[0] for rates in outputs]
             self.processed_results.loc[gene_id, 'r_p'] = [rates[1] for rates in outputs]

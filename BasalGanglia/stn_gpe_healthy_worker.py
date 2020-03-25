@@ -20,13 +20,16 @@ class ExtendedWorker(MinimalWorker):
         kwargs_tmp = deepcopy(kwargs)
         conditions = kwargs_tmp.pop('conditions')
         param_grid = kwargs_tmp.pop('param_grid')
+        param_scalings = kwargs_tmp.pop('param_scalings')
         results, gene_ids = [], param_grid.index
-        for c_dict in conditions:
+        for c_dict in deepcopy(conditions):
             for key in param_grid:
                 if key in c_dict:
-                    c_dict[key] = param_grid[key] * c_dict[key]
+                    c_dict[key] = deepcopy(param_grid[key]) * c_dict[key]
                 elif key in param_grid:
-                    c_dict[key] = param_grid[key]
+                    c_dict[key] = deepcopy(param_grid[key])
+            for key, key_tmp, power in param_scalings:
+                c_dict[key] = c_dict[key] * c_dict[key_tmp]**power
             param_grid_tmp = DataFrame.from_dict(c_dict)
             r, self.result_map, sim_time = grid_search(*args, param_grid=param_grid_tmp, **deepcopy(kwargs_tmp))
             r = r.droplevel(2, axis=1)
@@ -47,9 +50,13 @@ class ExtendedWorker(MinimalWorker):
             for i, r in enumerate(self.results):
                 r = r * 1e3
                 r.index = r.index * 1e-3
-                cutoff = r.index[-1]*0.6
-                mean_re = np.mean(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])
-                mean_ri = np.mean(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:])
+                cutoff = r.index[-1]*0.7
+                if i < 4:
+                    mean_re = np.mean(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])
+                    mean_ri = np.mean(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:])
+                else:
+                    mean_re = np.max(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])
+                    mean_ri = np.max(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:])
                 outputs.append([mean_re, mean_ri])
                 vars.append(np.var(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:]))
 
@@ -78,8 +85,8 @@ if __name__ == "__main__":
     cgs_worker = ExtendedWorker()
     cgs_worker.worker_init()
     #cgs_worker.worker_init(
-    #    config_file="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_healthy_opt1/Config/DefaultConfig_0.yaml",
-    #    subgrid="/nobackup/spanien1/rgast/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_healthy_opt1/Grids/Subgrids/DefaultGrid_3/spanien/spanien_Subgrid_0.h5",
+    #    config_file="/data/u_rgast_software/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_healthy_opt/Config/DefaultConfig_0.yaml",
+    #    subgrid="/data/u_rgast_software/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_healthy_opt/Grids/Subgrids/DefaultGrid_38/spanien/spanien_Subgrid_0.h5",
     #    result_file="~/my_result.h5",
     #    build_dir=os.getcwd()
     #)

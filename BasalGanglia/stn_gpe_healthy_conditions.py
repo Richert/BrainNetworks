@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gs
 import numpy as np
 import scipy.io as scio
+from pandas import read_hdf
 
 conditions = [{'k_ie': 0.2},  # AMPA blockade in GPe
               {'k_ie': 0.2, 'k_ii': 0.2, 'k_str': 0.2},  # AMPA blockade and GABAA blockade in GPe
@@ -33,17 +34,8 @@ param_map = {
         'delta_i': {'vars': ['gpe_proto_op/delta_i'], 'nodes': ['gpe']}
     }
 
-param_grid_orig = {
-        'k_ee': [1.3],
-        'k_ei': [70.3],
-        'k_ie': [81.3],
-        'k_ii': [33.7],
-        'k_str': [93.2],
-        'eta_e': [0.1],
-        'eta_i': [11.0],
-        'delta_e': [10.6],
-        'delta_i': [14.7]
-    }
+path = "/data/u_rgast_software/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_healthy_opt/PopulationDrops/pop_summary_64.h5"
+param_grid_orig = read_hdf(path).to_dict()
 
 param_grid = param_grid_orig.copy()
 for c in conditions:

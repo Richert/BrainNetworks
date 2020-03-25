@@ -9,30 +9,37 @@ import matplotlib.pyplot as plt
 from scipy.ndimage.filters import gaussian_filter1d
 
 # general parameters
-dt = 1e-1                                   # integration step size in s
+dt = 5e-3                                   # integration step size in s
 dts = 1.0                                     # variable storage sub-sampling step size in s
 sub = int(dts/dt)                              # sub-sampling rate
-T = 8000                                        # total simulation time in ms
+T = 6000                                        # total simulation time in ms
 delay = 1000
-reg_dur = 3500
+reg_dur = 2000
 dur = 50.0
 ramp = 15.0
 
 # network parameters
-N = 100
+N = 20
 p_e = 0.1
-p_i = 0.1
-k_e = 25.0
-k_i = 10.0
+p_i = 0.2
+k_e = 2.0
+k_i = 2.0
 
 # connectivity matrices
-C_ee = np.ones((N, N))
-C_ie = np.ones_like(C_ee)
+C_ee = np.zeros((N, N))
+C_ie = np.zeros_like(C_ee)
 n_e = int(np.ceil(p_e*N))
 n_i = int(np.ceil(p_i*N))
 for i in range(N):
-    idx_e = np.random.randint(low=0, high=N, size=n_e)
-    idx_i = np.random.randint(low=0, high=N, size=n_i)
+    idx_e, idx_i = [], []
+    while len(idx_e) < n_e:
+        idx = np.random.randint(low=0, high=N)
+        if idx != i and idx not in idx_e:
+            idx_e.append(idx)
+    while len(idx_i) < n_i:
+        idx = np.random.randint(low=0, high=N)
+        if idx != i and idx not in idx_i:
+            idx_i.append(idx)
     C_ee[i, idx_e] = k_e/n_e
     C_ie[i, idx_i] = k_i/n_i
 
@@ -55,7 +62,7 @@ for m in ms:
 
     i = 0
     inp_nodes = np.random.randint(0, N, m)
-    while (i+1)*dur < T:
+    while (i+1)*dur < T - delay:
         if i*dur > delay:
             sequential = i*dur < delay+reg_dur
             i_tmp = i % m if sequential else int(np.random.uniform(0, m))
@@ -70,14 +77,18 @@ for m in ms:
     for idx in range(N):
         circuit.add_circuit(f'wc_{idx}', CircuitIR.from_yaml("../config/wc_templates/WC"))
     circuit.add_edges_from_matrix(source_var="E/E_op/m", target_var="E/E_op/I_e", template=edge1,
-                                  nodes=[f'wc_{idx}' for idx in range(N)], weight=C_ee, delay=D_ee)
+                                  nodes=[f'wc_{idx}' for idx in range(N)], weight=C_ee,
+                                  delay=D_ee
+                                  )
     circuit.add_edges_from_matrix(source_var="E/E_op/m", target_var="I/I_op/I_e", template=edge2,
-                                  nodes=[f'wc_{idx}' for idx in range(N)], weight=C_ie, delay=D_ie)
+                                  nodes=[f'wc_{idx}' for idx in range(N)], weight=C_ie,
+                                  delay=D_ie
+                                  )
 
     # circuit compilation and simulation
     compute_graph = circuit.compile(vectorization=True, backend='numpy', name='wc_net', step_size=dt, solver='euler')
     r, t = compute_graph.run(T,
-                             #inputs={"all/E/E_op/I_ext": inp},
+                             inputs={"all/E/E_op/I_ext": inp},
                              outputs={"meg": "all/E/E_op/meg"},
                              sampling_step_size=dts,
                              profile=True,

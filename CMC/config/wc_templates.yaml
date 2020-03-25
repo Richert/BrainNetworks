@@ -10,7 +10,7 @@ E_op:
   equations:
     - "m = max(tanh(s*(v-theta)), 0)"
     - "d/dt * v = (I_e - I_i + I_ext + B - v) / tau"
-    - "d/dt * meg = ((I_e+I_i)/(2.0*N)-meg)/0.1"
+    - "d/dt * meg = ((I_e+I_i)/2.0-meg)/0.01"
   variables:
     m:
       default: output
@@ -27,13 +27,13 @@ E_op:
     theta:
       default: 0.0
     tau:
-      default: 20.0
+      default: 10.0
     I_ext:
       default: input
     B:
       default: 0.0
     N:
-      default: 100.0
+      default: 1.0
 
 # inhibitory node operator
 I_op:
@@ -55,7 +55,7 @@ I_op:
     theta:
       default: 0.0
     tau:
-      default: 100.0
+      default: 20.0
     I_ext:
       default: input
     B:
@@ -82,7 +82,7 @@ STP_op:
     tau_f:
       default: 1.0
     k_r:
-      default: 0.1
+      default: 0.2
     k_f:
       default: 0.0
     U:
@@ -95,11 +95,11 @@ STP_op_2:
     tau_r:
       default: 1.0
     tau_f:
-      default: 500.0
+      default: 600.0
     k_r:
       default: 0.0
     k_f:
-      default: 0.4
+      default: 0.6
     U:
       default: 0.05
 
@@ -114,7 +114,7 @@ Obs_op:
     I_syn:
       default: input
     N:
-      default: 15.0
+      default: 1.0
 
 # nodes and edges
 #################
