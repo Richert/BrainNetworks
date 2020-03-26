@@ -912,18 +912,20 @@ stn_op:
   base: OperatorTemplate
   equations:
     - "d/dt * R_e = delta_e/(PI*tau_e^2) + 2.*R_e*V_e/tau_e"
-    - "d/dt * V_e = (V_e^2 + eta_e)/tau_e + I_e - I_i + ctx - tau_e*(PI*R_e)^2"
+    - "d/dt * V_e = (V_e^2 + eta_e)/tau_e + (I_e - I_i + ctx)*(1+dd) - tau_e*(PI*R_e)^2"
   variables:
     R_e:
       default: output
     V_e:
       default: variable
     eta_e:
-      default: -17.4
+      default: 4.0
     tau_e:
       default: 12.0
     delta_e:
-      default: 2.0
+      default: 6.0
+    dd:
+      default: 0.5
     I_e:
       default: input
     I_i:
@@ -935,24 +937,26 @@ gpe_proto_op:
   base: OperatorTemplate
   equations:
     - "d/dt * R_i = delta_i/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
-    - "d/dt * V_i = (V_i^2 + eta_i - k_str*str)/tau_i + I_e - I_i - tau_i*(PI*R_i)^2"
+    - "d/dt * V_i = (V_i^2 + eta_i - k_str*str)/tau_i + (I_e - I_i)*(1+dd) - tau_i*(PI*R_i)^2"
   variables:
     R_i:
       default: output
     V_i:
       default: variable
     eta_i:
-      default: 6.4
+      default: 10.0
     k_str:
       default: 234.2
     tau_i:
       default: 24.0
     delta_i:
-      default: 6.0
+      default: 12.0
+    dd:
+      default: 0.5
     I_e:
       default: input
     str:
-      default: 0.002
+      default: 0.0
     I_i:
       default: input
 
@@ -960,18 +964,20 @@ gpe_arky_op:
   base: OperatorTemplate
   equations:
     - "d/dt * R_a = delta_a/(PI*tau_a^2) + 2.*R_a*V_a/tau_a"
-    - "d/dt * V_a = (V_a^2 + eta_a)/tau_a + I_e - I_i - tau_a*(PI*R_a)^2"
+    - "d/dt * V_a = (V_a^2 + eta_a)/tau_a + (I_e - I_i)*(1+dd) - tau_a*(PI*R_a)^2"
   variables:
     R_a:
       default: output
     V_a:
       default: variable
     eta_a:
-      default: 9.7
+      default: 4.0
     tau_a:
       default: 20.0
     delta_a:
-      default: 12.4
+      default: 16.0
+    dd:
+      default: 0.5
     I_e:
       default: input
     I_i:
@@ -981,18 +987,20 @@ str_msn_op:
   base: OperatorTemplate
   equations:
     - "d/dt * R_s = delta_s/(PI*tau_s^2) + 2.*R_s*V_s/tau_s"
-    - "d/dt * V_s = (V_s^2 + eta_s)/tau_s + I_e - I_i + ctx - tau_s*(PI*R_s)^2"
+    - "d/dt * V_s = (V_s^2 + eta_s)/tau_s + (I_e - I_i + ctx)*(1+dd) - tau_s*(PI*R_s)^2"
   variables:
     R_s:
       default: output
     V_s:
       default: variable
     eta_s:
-      default: -33.8
+      default: -20.0
     tau_s:
       default: 20.0
     delta_s:
-      default: 2.8
+      default: 4.0
+    dd:
+      default: 1.0
     ctx:
       default: input
     I_e:
@@ -1005,18 +1013,20 @@ str_fsi_op:
   base: OperatorTemplate
   equations:
     - "d/dt * R_f = delta_f/(PI*tau_f^2) + 2.*R_f*V_f/tau_f"
-    - "d/dt * V_f = (V_f^2 + eta_f)/tau_f + I_e - I_i + ctx - tau_f*(PI*R_f)^2"
+    - "d/dt * V_f = (V_f^2 + eta_f)/tau_f + (I_e - I_i + ctx)*(1+dd) - tau_f*(PI*R_f)^2"
   variables:
     R_f:
       default: output
     V_f:
       default: variable
     eta_f:
-      default: -33.8
-    tau_f:
       default: 20.0
+    tau_f:
+      default: 18.0
     delta_f:
-      default: 2.8
+      default: 8.0
+    dd:
+      default: 1.0
     ctx:
       default: input
     I_e:
@@ -1154,10 +1164,10 @@ stn_gpe_basic:
     stn: stn
     gpe: gpe_proto
   edges:
-    - [stn/stn_op/R_e, stn/stn_op/I_e, null, {weight: 15.5, delay: 2.0, spread: 0.5}]
+    - [stn/stn_op/R_e, stn/stn_op/I_e, null, {weight: 15.5, delay: 1.6, spread: 0.4}]
     - [stn/stn_op/R_e, gpe/gpe_proto_op/I_e, null, {weight: 117.3, delay: 4.0, spread: 1.0}]
-    - [gpe/gpe_proto_op/R_i, stn/stn_op/I_i, null, {weight: 96.3, delay: 3.0, spread: 1.0}]
-    - [gpe/gpe_proto_op/R_i, gpe/gpe_proto_op/I_i, null, {weight: 33.7, delay: 2.0, spread: 0.5}]
+    - [gpe/gpe_proto_op/R_i, stn/stn_op/I_i, null, {weight: 96.3, delay: 3.2, spread: 0.8}]
+    - [gpe/gpe_proto_op/R_i, gpe/gpe_proto_op/I_i, null, {weight: 33.7, delay: 1.6, spread: 0.4}]
 
 stn_gpe_str:
   base: CircuitTemplate
@@ -1168,19 +1178,20 @@ stn_gpe_str:
     msn: str_msn
     fsi: str_fsi
   edges:
-    - [stn/stn_op/R_e, stn/stn_op/I_e, null, {weight: 3.2, delay: 2.0, spread: 0.5}]
-    - [stn/stn_op/R_e, gpe_a/gpe_arky_op/I_e, null, {weight: 74.3, delay: 4.0, spread: 1.0}]
-    - [stn/stn_op/R_e, gpe_p/gpe_proto_op/I_e, null, {weight: 92.1, delay: 4.0, spread: 1.0}]
-    - [gpe_p/gpe_proto_op/R_i, gpe_p/gpe_proto_op/I_i, null, {weight: 20.5, delay: 2.0, spread: 0.5}]
-    - [gpe_p/gpe_proto_op/R_i, stn/stn_op/I_i, null, {weight: 109.6, delay: 3.0, spread: 1.0}]
-    - [gpe_p/gpe_proto_op/R_i, gpe_a/gpe_arky_op/I_i, null, {weight: 39.0, delay: 2.0, spread: 0.5}]
-    - [gpe_a/gpe_arky_op/R_a, gpe_a/gpe_arky_op/I_i, null, {weight: 33.9, delay: 2.0, spread: 0.5}]
-    - [gpe_a/gpe_arky_op/R_a, gpe_p/gpe_proto_op/I_i, null, {weight: 10.7, delay: 2.0, spread: 0.5}]
-    - [gpe_a/gpe_arky_op/R_a, fsi/str_fsi_op/I_i, null, {weight: 51.4, delay: 3.0, spread: 1.0}]
-    - [msn/str_msn_op/R_s, msn/str_msn_op/I_i, null, {weight: 85.3, delay: 3.0, spread: 1.0}]
-    - [msn/str_msn_op/R_s, gpe_a/gpe_arky_op/I_i, null, {weight: 199.6, delay: 8.0, spread: 1.5}]
-    - [msn/str_msn_op/R_s, gpe_p/gpe_proto_op/I_i, null, {weight: 56.0, delay: 8.0, spread: 1.5}]
-    - [fsi/str_fsi_op/R_f, msn/str_msn_op/I_i, null, {weight: 56.0, delay: 2.0, spread: 0.5}]
+    - [stn/stn_op/R_e, stn/stn_op/I_e, null, {weight: 4.0, delay: 1.6, spread: 0.4}]
+    - [stn/stn_op/R_e, gpe_a/gpe_arky_op/I_e, null, {weight: 50.0, delay: 4.0, spread: 1.0}]
+    - [stn/stn_op/R_e, gpe_p/gpe_proto_op/I_e, null, {weight: 100.0, delay: 4.0, spread: 1.0}]
+    - [gpe_p/gpe_proto_op/R_i, gpe_p/gpe_proto_op/I_i, null, {weight: 20.0, delay: 1.6, spread: 0.4}]
+    - [gpe_p/gpe_proto_op/R_i, stn/stn_op/I_i, null, {weight: 40.0, delay: 3.2, spread: 0.8}]
+    - [gpe_p/gpe_proto_op/R_i, gpe_a/gpe_arky_op/I_i, null, {weight: 40.0, delay: 1.6, spread: 0.4}]
+    - [gpe_a/gpe_arky_op/R_a, gpe_a/gpe_arky_op/I_i, null, {weight: 40.0, delay: 1.6, spread: 0.4}]
+    - [gpe_a/gpe_arky_op/R_a, gpe_p/gpe_proto_op/I_i, null, {weight: 10.0, delay: 1.6, spread: 0.4}]
+    - [gpe_a/gpe_arky_op/R_a, fsi/str_fsi_op/I_i, null, {weight: 40.0, delay: 3.2, spread: 0.8}]
+    - [msn/str_msn_op/R_s, msn/str_msn_op/I_i, null, {weight: 40.0, delay: 3.2, spread: 0.8}]
+    - [msn/str_msn_op/R_s, gpe_a/gpe_arky_op/I_i, null, {weight: 150.0, delay: 8.0, spread: 1.4}]
+    - [msn/str_msn_op/R_s, gpe_p/gpe_proto_op/I_i, null, {weight: 15.0, delay: 8.0, spread: 1.4}]
+    - [fsi/str_fsi_op/R_f, msn/str_msn_op/I_i, null, {weight: 100.0, delay: 1.6, spread: 0.4}]
+    - [fsi/str_fsi_op/R_f, fsi/str_fsi_op/I_i, null, {weight: 60.0, delay: 0.4, spread: 0.2}]
 
 gpe_str:
   base: CircuitTemplate
@@ -1190,10 +1201,11 @@ gpe_str:
     fsi: str_fsi
   edges:
     - [gpe/gpe_arky_op/R_a, gpe/gpe_arky_op/I_i, null, {weight: 20.0, delay: 2.0, spread: 0.5}]
-    - [gpe/gpe_arky_op/R_a, fsi/str_fsi_op/I_i, null, {weight: 60.0, delay: 3.0, spread: 1.0}]
-    - [msn/str_msn_op/R_s, gpe/gpe_arky_op/I_i, null, {weight: 100.0, delay: 10.0, spread: 1.5}]
-    - [msn/str_msn_op/R_s, msn/str_msn_op/I_i, null, {weight: 200.0, delay: 2.0, spread: 0.5}]
-    - [fsi/str_fsi_op/R_f, msn/str_msn_op/I_i, null, {weight: 100.0, delay: 2.0, spread: 0.5}]
+    - [gpe/gpe_arky_op/R_a, fsi/str_fsi_op/I_i, null, {weight: 40.0, delay: 3.0, spread: 1.0}]
+    - [msn/str_msn_op/R_s, gpe/gpe_arky_op/I_i, null, {weight: 120.0, delay: 10.0, spread: 1.5}]
+    - [msn/str_msn_op/R_s, msn/str_msn_op/I_i, null, {weight: 60.0, delay: 2.0, spread: 0.5}]
+    - [fsi/str_fsi_op/R_f, msn/str_msn_op/I_i, null, {weight: 80.0, delay: 2.0, spread: 0.5}]
+    - [fsi/str_fsi_op/R_f, fsi/str_fsi_op/I_i, null, {weight: 40.0, delay: 2.0, spread: 0.5}]
 
 net_stn_gpe:
   base: CircuitTemplate
