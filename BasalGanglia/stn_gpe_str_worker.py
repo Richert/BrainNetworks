@@ -20,18 +20,16 @@ class ExtendedWorker(MinimalWorker):
         kwargs_tmp = deepcopy(kwargs)
         conditions = kwargs_tmp.pop('conditions')
         param_grid = kwargs_tmp.pop('param_grid')
+        param_scalings = kwargs_tmp.pop('param_scalings')
         results, gene_ids = [], param_grid.index
-        for i, c_dict in enumerate(conditions):
+        for i, c_dict in enumerate(deepcopy(conditions)):
             for key in param_grid:
-                if '_pd' not in key:
-                    if i < 6 or f"{key}_pd" not in param_grid:
-                        param = param_grid[key]
-                    else:
-                        param = param_grid[key] + param_grid[f"{key}_pd"]
-                    if key in c_dict:
-                        c_dict[key] = param * c_dict[key]
-                    else:
-                        c_dict[key] = param
+                if key in c_dict:
+                    c_dict[key] = deepcopy(param_grid[key]) * c_dict[key]
+                elif key in param_grid:
+                    c_dict[key] = deepcopy(param_grid[key])
+            for key, key_tmp, power in param_scalings:
+                c_dict[key] = c_dict[key] * c_dict[key_tmp] ** power
             param_grid_tmp = DataFrame.from_dict(c_dict)
             kwargs_gs = deepcopy(kwargs_tmp)
             r, self.result_map, sim_time = grid_search(*args, param_grid=param_grid_tmp, **kwargs_gs)
@@ -45,7 +43,7 @@ class ExtendedWorker(MinimalWorker):
         param_grid = kwargs_tmp.pop('param_grid')
         freq_targets = kwargs_tmp.pop('freq_targets')
         targets = kwargs_tmp.pop('targets')
-        self.processed_results = DataFrame(data=None, columns=['fitness', 'r_e', 'r_p', 'r_a', 'r_s'])
+        self.processed_results = DataFrame(data=None, columns=['fitness', 'r_e', 'r_p', 'r_a', 'r_m', 'r_f'])
 
         # calculate fitness
         for gene_id in param_grid.index:
@@ -53,17 +51,19 @@ class ExtendedWorker(MinimalWorker):
             for i, r in enumerate(self.results):
                 r = r * 1e3
                 r.index = r.index * 1e-3
-                cutoff = r.index[-1]*0.8
+                cutoff = r.index[-1]*0.9
                 mean_re = np.mean(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])
                 mean_rp = np.mean(r['r_p'][f'circuit_{gene_id}'].loc[cutoff:])
                 mean_ra = np.mean(r['r_a'][f'circuit_{gene_id}'].loc[cutoff:])
-                mean_rs = np.mean(r['r_s'][f'circuit_{gene_id}'].loc[cutoff:])
+                mean_rm = np.mean(r['r_m'][f'circuit_{gene_id}'].loc[cutoff:])
+                mean_rf = np.mean(r['r_f'][f'circuit_{gene_id}'].loc[cutoff:])
                 var_re = np.var(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])
                 var_rp = np.var(r['r_p'][f'circuit_{gene_id}'].loc[cutoff:])
                 var_ra = np.var(r['r_a'][f'circuit_{gene_id}'].loc[cutoff:])
-                var_rs = np.var(r['r_s'][f'circuit_{gene_id}'].loc[cutoff:])
-                outputs.append([mean_re, mean_rp, mean_ra, mean_rs])
-                vars.append(np.mean([var_re, var_rp, var_ra, var_rs]))
+                var_rm = np.var(r['r_m'][f'circuit_{gene_id}'].loc[cutoff:])
+                var_rf = np.var(r['r_f'][f'circuit_{gene_id}'].loc[cutoff:])
+                outputs.append([mean_re, mean_rp, mean_ra, mean_rm, mean_rf])
+                vars.append(np.mean([var_re, var_rp, var_ra, var_rm, var_rf]))
 
             for m in range(1, len(targets)):
                 for n in range(len(targets[m])):
@@ -75,7 +75,8 @@ class ExtendedWorker(MinimalWorker):
             self.processed_results.loc[gene_id, 'r_e'] = [rates[0] for rates in outputs]
             self.processed_results.loc[gene_id, 'r_p'] = [rates[1] for rates in outputs]
             self.processed_results.loc[gene_id, 'r_a'] = [rates[2] for rates in outputs]
-            self.processed_results.loc[gene_id, 'r_s'] = [rates[3] for rates in outputs]
+            self.processed_results.loc[gene_id, 'r_m'] = [rates[3] for rates in outputs]
+            self.processed_results.loc[gene_id, 'r_f'] = [rates[4] for rates in outputs]
 
 
 def fitness(y, t):

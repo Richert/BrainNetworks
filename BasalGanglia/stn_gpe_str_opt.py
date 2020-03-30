@@ -17,27 +17,53 @@ class CustomGOA(CGSGeneticAlgorithm):
         freq_targets = [0.0, np.nan, np.nan, np.nan, np.nan]
         #param_grid, invalid_params = eval_params(param_grid)
         conditions = [{},  # healthy control
-                      {'k_pe': 0.1, 'k_ae': 0.1},  # AMPA blockade in GPe
-                      {'k_pe': 0.1, 'k_ae': 0.1, 'k_pp': 0.1, 'k_pa': 0.1, 'k_pm': 0.1, 'k_aa': 0.1, 'k_ap': 0.1,
-                       'k_am': 0.1},  # AMPA blockade and GABAA blockade in GPe
+                      {'k_pe': 0.2, 'k_ae': 0.2},  # AMPA blockade in GPe
+                      {'k_pe': 0.2, 'k_ae': 0.2, 'k_pp': 0.2, 'k_pa': 0.2, 'k_pm': 0.2, 'k_aa': 0.2, 'k_ap': 0.2,
+                       'k_am': 0.2},  # AMPA blockade and GABAA blockade in GPe
                       {'k_pp': 0.2, 'k_pa': 0.2, 'k_pm': 0.2, 'k_aa': 0.2, 'k_ap': 0.2,
                        'k_am': 0.2},  # GABAA blockade in GPe
                       {'k_pe': 0.0, 'k_ae': 0.0},  # STN blockade
-                      {'k_ep': 0.1},  # GABAA blocker in STN
+                      {'k_ep': 0.2},  # GABAA blocker in STN
                       ]
+        param_scalings = [
+            ('delta_e', 'tau_e', 2.0),
+            ('delta_p', 'tau_p', 2.0),
+            ('delta_a', 'tau_a', 2.0),
+            ('delta_m', 'tau_m', 2.0),
+            ('delta_f', 'tau_f', 2.0),
+            ('k_ee', 'delta_e', 0.5),
+            ('k_ep', 'delta_e', 0.5),
+            ('k_pe', 'delta_p', 0.5),
+            ('k_pp', 'delta_p', 0.5),
+            ('k_pa', 'tau_p', 0.5),
+            ('k_pm', 'tau_p', 0.5),
+            ('k_ae', 'tau_a', 0.5),
+            ('k_ap', 'tau_a', 0.5),
+            ('k_aa', 'tau_a', 0.5),
+            ('k_am', 'tau_a', 0.5),
+            ('k_mf', 'delta_m', 0.5),
+            ('k_mm', 'delta_m', 0.5),
+            ('k_fa', 'delta_f', 0.5),
+            ('k_ff', 'delta_f', 0.5),
+            ('eta_e', 'delta_e', 1.0),
+            ('eta_p', 'delta_p', 1.0),
+            ('eta_a', 'delta_a', 1.0),
+            ('eta_m', 'delta_m', 1.0),
+            ('eta_f', 'delta_f', 1.0),
+        ]
         chunk_size = [
-            50,  # carpenters
+            60,  # carpenters
             100,  # osttimor
-            50,  # spanien
+            60,  # spanien
             100,  # animals
-            50,  # kongo
-            50,  # tschad
+            60,  # kongo
+            60,  # tschad
             #100,  # uganda
             # 50,  # tiber
             #50,  # giraffe
-            20,  # lech
-            10,  # rilke
-            10,  # dinkel
+            40,  # lech
+            20,  # rilke
+            12,  # dinkel
             #10,  # rosmarin
             #10,  # mosambik
             # 50,  # compute servers
@@ -75,8 +101,9 @@ class CustomGOA(CGSGeneticAlgorithm):
                 chunk_size=chunk_size,
                 worker_file=worker_file,
                 worker_env=self.cgs_config['worker_env'],
-                gs_kwargs={'init_kwargs': self.gs_config['init_kwargs'], 'conditions': conditions},
-                worker_kwargs={'targets': target, 'time_lim': 2000.0, 'freq_targets': freq_targets},
+                gs_kwargs={'init_kwargs': self.gs_config['init_kwargs'], 'conditions': conditions,
+                           'param_scalings': param_scalings},
+                worker_kwargs={'targets': target, 'time_lim': 7200.0, 'freq_targets': freq_targets},
                 result_concat_axis=0)
             results_tmp = read_hdf(res_file, key=f'Results/results')
 
@@ -101,78 +128,40 @@ def fitness(y, t):
     return weights @ np.abs(diff)
 
 
-def eval_params(params):
-    valid_params = []
-    invalid_params = []
-    for i, gene_id in enumerate(params.index):
-
-        # check validity conditions
-        valid = True
-        if params.loc[gene_id, 'k_ee'] > 0.2 * params.loc[gene_id, 'k_pe']:
-            valid = False
-        if params.loc[gene_id, 'k_pe'] > 5.0 * params.loc[gene_id, 'k_ep']:
-            valid = False
-        if params.loc[gene_id, 'k_ep'] > 5.0 * params.loc[gene_id, 'k_pe']:
-            valid = False
-        if params.loc[gene_id, 'k_pp'] > 0.8 * params.loc[gene_id, 'k_ep']:
-            valid = False
-        if params.loc[gene_id, 'k_ps'] > 0.5 * params.loc[gene_id, 'k_as']:
-            valid = False
-        if params.loc[gene_id, 'delta_p'] > params.loc[gene_id, 'delta_a']:
-            valid = False
-        #if params.loc[gene_id, 'tau_a'] > params.loc[gene_id, 'tau_p']:
-        #    valid = False
-        #if params.loc[gene_id, 'tau_e'] > params.loc[gene_id, 'tau_a']:
-        #    valid = False
-
-        # add parametrization to valid or invalid parameter sets
-        if valid:
-            valid_params.append(i)
-        else:
-            invalid_params.append(i)
-
-    valid_df = params.iloc[valid_params, :]
-    valid_df.index = valid_params
-
-    invalid_df = params.iloc[invalid_params, :]
-    invalid_df.index = invalid_params
-
-    return valid_df, invalid_df
-
-
 if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
-    pop_size = 2048
+    pop_size = 512
     pop_genes = {
-        'k_ee': {'min': 0, 'max': 15, 'size': pop_size, 'sigma': 0.5, 'loc': 5.0, 'scale': 1.0},
-        'k_ae': {'min': 0, 'max': 150, 'size': pop_size, 'sigma': 2.0, 'loc': 75.0, 'scale': 10.0},
-        'k_pe': {'min': 0, 'max': 150, 'size': pop_size, 'sigma': 2.0, 'loc': 75.0, 'scale': 10.0},
-        'k_pp': {'min': 0, 'max': 100, 'size': pop_size, 'sigma': 2.0, 'loc': 20.0, 'scale': 2.0},
-        'k_ep': {'min': 0, 'max': 150, 'size': pop_size, 'sigma': 2.0, 'loc': 50.0, 'scale': 5.0},
-        'k_ap': {'min': 0, 'max': 100, 'size': pop_size, 'sigma': 2.0, 'loc': 20.0, 'scale': 2.0},
-        'k_aa': {'min': 0, 'max': 100, 'size': pop_size, 'sigma': 2.0, 'loc': 20.0, 'scale': 2.0},
-        'k_pa': {'min': 0, 'max': 100, 'size': pop_size, 'sigma': 2.0, 'loc': 20.0, 'scale': 2.0},
-        'k_fa': {'min': 0, 'max': 150, 'size': pop_size, 'sigma': 2.0, 'loc': 50.0, 'scale': 5.0},
-        'k_mm': {'min': 0, 'max': 200, 'size': pop_size, 'sigma': 2.0, 'loc': 100.0, 'scale': 10.0},
-        'k_am': {'min': 0, 'max': 400, 'size': pop_size, 'sigma': 2.0, 'loc': 200.0, 'scale': 10.0},
-        'k_pm': {'min': 0, 'max': 200, 'size': pop_size, 'sigma': 2.0, 'loc': 100.0, 'scale': 10.0},
-        'k_mf': {'min': 0, 'max': 200, 'size': pop_size, 'sigma': 2.0, 'loc': 100.0, 'scale': 10.0},
-        'k_ff': {'min': 0, 'max': 200, 'size': pop_size, 'sigma': 2.0, 'loc': 100.0, 'scale': 10.0},
-        'eta_e': {'min': -30, 'max': 30, 'size': pop_size, 'sigma': 1.0, 'loc': -5.0, 'scale': 5.0},
-        'eta_p': {'min': 0, 'max': 60, 'size': pop_size, 'sigma': 1.0, 'loc': 20.0, 'scale': 5.0},
-        'eta_a': {'min': -20, 'max': 40, 'size': pop_size, 'sigma': 1.0, 'loc': 10.0, 'scale': 5.0},
-        'eta_m': {'min': -100, 'max': 0, 'size': pop_size, 'sigma': 1.0, 'loc': -40.0, 'scale': 5.0},
-        'eta_f': {'min': -20, 'max': 20, 'size': pop_size, 'sigma': 1.0, 'loc': 0.0, 'scale': 5.0},
-        'delta_e': {'min': 0.5, 'max': 20.0, 'size': pop_size, 'sigma': 0.5, 'loc': 4.0, 'scale': 1.0},
-        'delta_p': {'min': 1.0, 'max': 20.0, 'size': pop_size, 'sigma': 0.5, 'loc': 6.0, 'scale': 1.0},
-        'delta_a': {'min': 1.0, 'max': 20.0, 'size': pop_size, 'sigma': 0.5, 'loc': 8.0, 'scale': 1.0},
-        'delta_m': {'min': 0.5, 'max': 20.0, 'size': pop_size, 'sigma': 0.2, 'loc': 2.0, 'scale': 0.5},
-        'delta_f': {'min': 0.5, 'max': 20.0, 'size': pop_size, 'sigma': 0.2, 'loc': 6.0, 'scale': 0.5},
-        #'tau_e': {'min': 5, 'max': 15, 'size': pop_size, 'sigma': 0.5, 'loc': 10.0, 'scale': 2.0},
-        #'tau_p': {'min': 15, 'max': 30, 'size': pop_size, 'sigma': 0.5, 'loc': 24.0, 'scale': 2.0},
-        #'tau_a': {'min': 10, 'max': 25, 'size': pop_size, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
-        #'tau_s': {'min': 10, 'max': 30, 'size': pop_size, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
+        'k_ee': {'min': 0, 'max': 15, 'size': pop_size, 'sigma': 0.1, 'loc': 1.0, 'scale': 0.5},
+        'k_ae': {'min': 0, 'max': 150, 'size': pop_size, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
+        'k_pe': {'min': 0, 'max': 150, 'size': pop_size, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
+        'k_pp': {'min': 0, 'max': 100, 'size': pop_size, 'sigma': 0.5, 'loc': 10.0, 'scale': 1.0},
+        'k_ep': {'min': 0, 'max': 150, 'size': pop_size, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
+        'k_ap': {'min': 0, 'max': 100, 'size': pop_size, 'sigma': 0.5, 'loc': 10.0, 'scale': 1.0},
+        'k_aa': {'min': 0, 'max': 50, 'size': pop_size, 'sigma': 0.5, 'loc': 10.0, 'scale': 1.0},
+        'k_pa': {'min': 0, 'max': 50, 'size': pop_size, 'sigma': 0.5, 'loc': 10.0, 'scale': 1.0},
+        'k_fa': {'min': 0, 'max': 100, 'size': pop_size, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
+        'k_mm': {'min': 0, 'max': 50, 'size': pop_size, 'sigma': 0.5, 'loc': 10.0, 'scale': 1.0},
+        'k_am': {'min': 0, 'max': 200, 'size': pop_size, 'sigma': 0.8, 'loc': 40.0, 'scale': 4.0},
+        'k_pm': {'min': 0, 'max': 200, 'size': pop_size, 'sigma': 0.5, 'loc': 5.0, 'scale': 1.0},
+        'k_mf': {'min': 0, 'max': 150, 'size': pop_size, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
+        'k_ff': {'min': 0, 'max': 100, 'size': pop_size, 'sigma': 0.5, 'loc': 10.0, 'scale': 1.0},
+        'eta_e': {'min': -5, 'max': 5, 'size': pop_size, 'sigma': 0.2, 'loc': 0.0, 'scale': 0.5},
+        'eta_p': {'min': -5, 'max': 5, 'size': pop_size, 'sigma': 0.2, 'loc': 0.0, 'scale': 0.5},
+        'eta_a': {'min': -5, 'max': 5, 'size': pop_size, 'sigma': 0.2, 'loc': 0.0, 'scale': 0.5},
+        'eta_m': {'min': -10, 'max': 0, 'size': pop_size, 'sigma': 0.2, 'loc': -3.0, 'scale': 0.5},
+        'eta_f': {'min': -5, 'max': 5, 'size': pop_size, 'sigma': 0.2, 'loc': 0.0, 'scale': 0.5},
+        'delta_e': {'min': 0.01, 'max': 1.0, 'size': pop_size, 'sigma': 0.05, 'loc': 0.1, 'scale': 0.1},
+        'delta_p': {'min': 0.01, 'max': 1.0, 'size': pop_size, 'sigma': 0.05, 'loc': 0.2, 'scale': 0.1},
+        'delta_a': {'min': 0.01, 'max': 1.5, 'size': pop_size, 'sigma': 0.05, 'loc': 0.4, 'scale': 0.1},
+        'delta_m': {'min': 0.01, 'max': 1.5, 'size': pop_size, 'sigma': 0.05, 'loc': 0.2, 'scale': 0.1},
+        'delta_f': {'min': 0.01, 'max': 1.5, 'size': pop_size, 'sigma': 0.05, 'loc': 0.2, 'scale': 0.1},
+        'tau_e': {'min': 12, 'max': 12, 'size': pop_size, 'sigma': 0.0, 'loc': 12.0, 'scale': 0.0},
+        'tau_p': {'min': 24, 'max': 24, 'size': pop_size, 'sigma': 0.0, 'loc': 24.0, 'scale': 0.0},
+        'tau_a': {'min': 20, 'max': 20, 'size': pop_size, 'sigma': 0.0, 'loc': 20.0, 'scale': 0.0},
+        'tau_m': {'min': 20, 'max': 20, 'size': pop_size, 'sigma': 0.0, 'loc': 20.0, 'scale': 0.0},
+        'tau_f': {'min': 20, 'max': 20, 'size': pop_size, 'sigma': 0.0, 'loc': 20.0, 'scale': 0.0},
         #'tau_ee_v': {'min': 0.5, 'max': 1.0, 'size': 2, 'sigma': 0.1, 'loc': 0.5, 'scale': 0.1},
         # 'tau_ei': {'min': 3.0, 'max': 5.0, 'size': 1, 'sigma': 0.1, 'loc': 4.0, 'scale': 0.1},
         #'tau_ei_v': {'min': 0.5, 'max': 1.0, 'size': 2, 'sigma': 0.1, 'loc': 1.0, 'scale': 0.2},
@@ -209,7 +198,8 @@ if __name__ == "__main__":
         'tau_e': {'vars': ['stn_op/tau_e'], 'nodes': ['stn']},
         'tau_p': {'vars': ['gpe_proto_op/tau_i'], 'nodes': ['gpe_p']},
         'tau_a': {'vars': ['gpe_arky_op/tau_a'], 'nodes': ['gpe_a']},
-        'tau_s': {'vars': ['str_op/tau_s'], 'nodes': ['str']},
+        'tau_m': {'vars': ['str_msn_op/tau_s'], 'nodes': ['msn']},
+        'tau_f': {'vars': ['str_fsi_op/tau_f'], 'nodes': ['fsi']},
     }
 
     T = 2000.
@@ -281,16 +271,16 @@ if __name__ == "__main__":
         target=[[20, 60, 20, 2, 20],  # healthy control
                 [np.nan, 2/3, np.nan, np.nan, np.nan],  # ampa blockade in GPe
                 [np.nan, 1, np.nan, np.nan, np.nan],  # ampa and gabaa blockade in GPe
-                [np.nan, 5/3, np.nan, np.nan, np.nan],  # GABAA blockade in GPe
+                [np.nan, 2, np.nan, np.nan, np.nan],  # GABAA blockade in GPe
                 [np.nan, 1/2, np.nan, np.nan, np.nan],  # STN blockade
-                [5/3, 5/3, np.nan, np.nan, np.nan],  # GABAA blockade in STN
+                [2, 2, np.nan, np.nan, np.nan],  # GABAA blockade in STN
                 ],
         max_iter=100,
         enforce_max_iter=True,
         min_fit=1.0,
-        n_winners=50,
-        n_parent_pairs=150,
-        n_new=300,
+        n_winners=10,
+        n_parent_pairs=40,
+        n_new=62,
         sigma_adapt=0.05,
         candidate_save=f'{compute_dir}/GeneticCGSCandidatestn.h5',
         drop_save=drop_save_dir,

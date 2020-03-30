@@ -17,11 +17,11 @@ class CustomGOA(CGSGeneticAlgorithm):
         freq_targets = [0.0, np.nan, np.nan, np.nan, np.nan]
         #param_grid, invalid_params = eval_params(param_grid)
         conditions = [{},  # healthy control
-                      {'k_ie': 0.2},  # AMPA blockade in GPe
-                      {'k_ie': 0.2, 'k_ii': 0.2, 'k_str': 0.2},  # AMPA blockade and GABAA blockade in GPe
-                      {'k_ii': 0.2, 'k_str': 0.2},  # GABAA blockade in GPe
+                      {'k_ie': 0.1},  # AMPA blockade in GPe
+                      {'k_ie': 0.1, 'k_ii': 0.1, 'k_str': 0.1},  # AMPA blockade and GABAA blockade in GPe
+                      {'k_ii': 0.1, 'k_str': 0.1},  # GABAA blockade in GPe
                       {'k_ie': 0.0},  # STN blockade
-                      {'k_ei': 0.2}  # GABAA blocker in STN
+                      {'k_ei': 0.1}  # GABAA blocker in STN
                       ]
         param_scalings = [
             ('delta_e', 'tau_e', 2.0),
@@ -42,13 +42,13 @@ class CustomGOA(CGSGeneticAlgorithm):
             50,  # kongo
             50,  # tschad
             #100,  # uganda
-            # 50,  # tiber
+            #50,  # tiber
             #50,  # giraffe
             20,  # lech
             10,  # rilke
             10,  # dinkel
             #10,  # rosmarin
-            10,  # mosambik
+            #10,  # mosambik
         ]
 
         # perform simulations
@@ -69,7 +69,7 @@ class CustomGOA(CGSGeneticAlgorithm):
                 worker_env=self.cgs_config['worker_env'],
                 gs_kwargs={'init_kwargs': self.gs_config['init_kwargs'], 'conditions': conditions,
                            'param_scalings': param_scalings},
-                worker_kwargs={'freq_targets': freq_targets, 'targets': target, 'time_lim': 1000.0},
+                worker_kwargs={'freq_targets': freq_targets, 'targets': target, 'time_lim': 1800.0},
                 result_concat_axis=0)
             results_tmp = read_hdf(res_file, key=f'Results/results')
 
@@ -134,11 +134,11 @@ if __name__ == "__main__":
 
     pop_size = 2048
     pop_genes = {
-        'k_ee': {'min': 0, 'max': 10, 'size': pop_size, 'sigma': 0.2, 'loc': 2.0, 'scale': 0.5},
-        'k_ei': {'min': 10, 'max': 150, 'size': pop_size, 'sigma': 1.0, 'loc': 80.0, 'scale': 5.0},
-        'k_ie': {'min': 10, 'max': 150, 'size': pop_size, 'sigma': 1.0, 'loc': 40.0, 'scale': 5.0},
-        'k_ii': {'min': 5, 'max': 120, 'size': pop_size, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
-        'k_str': {'min': 20, 'max': 200, 'size': pop_size, 'sigma': 1.0, 'loc': 100.0, 'scale': 5.0},
+        'k_ee': {'min': 0, 'max': 20, 'size': pop_size, 'sigma': 0.2, 'loc': 2.0, 'scale': 0.5},
+        'k_ei': {'min': 10, 'max': 200, 'size': pop_size, 'sigma': 1.0, 'loc': 80.0, 'scale': 5.0},
+        'k_ie': {'min': 10, 'max': 200, 'size': pop_size, 'sigma': 1.0, 'loc': 40.0, 'scale': 5.0},
+        'k_ii': {'min': 5, 'max': 150, 'size': pop_size, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
+        'k_str': {'min': 20, 'max': 300, 'size': pop_size, 'sigma': 1.0, 'loc': 100.0, 'scale': 5.0},
         'eta_e': {'min': -5, 'max': 3, 'size': pop_size, 'sigma': 0.2, 'loc': -1.0, 'scale': 0.5},
         'eta_i': {'min': -6, 'max': 2, 'size': pop_size, 'sigma': 0.2, 'loc': -1.0, 'scale': 0.5},
         'tau_e': {'min': 12.0, 'max': 12.0, 'size': pop_size, 'sigma': 0.0, 'loc': 12.0, 'scale': 0.0},
@@ -188,13 +188,13 @@ if __name__ == "__main__":
                                            'kongo',
                                            'tschad',
                                            #'uganda',
-                                           # 'tiber',
+                                           #'tiber',
                                            #'giraffe',
                                            'lech',
                                            'rilke',
                                            'dinkel',
                                            #'rosmarin',
-                                           'mosambik',
+                                           #'mosambik',
                                          ],
                                'compute_dir': compute_dir,
                                'worker_file': f'{os.getcwd()}/stn_gpe_healthy_worker.py',
@@ -226,7 +226,8 @@ if __name__ == "__main__":
         drop_save=drop_save_dir,
         new_pop_on_drop=True,
         pop_save=f'{drop_save_dir}/pop_summary',
-        permute=False
+        permute=False,
+        max_stagnation_steps=10
     )
 
     #winner.to_hdf(f'{drop_save_dir}/winner.h5', key='data')
