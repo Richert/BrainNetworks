@@ -13,26 +13,26 @@ class CustomGOA(CGSGeneticAlgorithm):
         # define simulation conditions
         worker_file = self.cgs_config['worker_file'] if 'worker_file' in self.cgs_config else None
         param_grid = self.pop.drop(['fitness', 'sigma', 'results'], axis=1)
-        result_vars = ['r_e', 'r_i']
+        result_vars = ['r_e', 'r_i', 'r_a']
         freq_targets = [0.0, np.nan, np.nan, np.nan, np.nan]
         #param_grid, invalid_params = eval_params(param_grid)
         conditions = [{},  # healthy control
-                      {'k_ie': 0.1},  # AMPA blockade in GPe
-                      {'k_ie': 0.1, 'k_ii': 0.1, 'k_str': 0.1},  # AMPA blockade and GABAA blockade in GPe
-                      {'k_ii': 0.1, 'k_str': 0.1},  # GABAA blockade in GPe
-                      {'k_ie': 0.0},  # STN blockade
-                      {'k_ei': 0.1}  # GABAA blocker in STN
+                      {'k_pe': 0.2, 'k_ae': 0.2, 'eta_tha': 0.2},  # AMPA blockade in GPe
+                      {'k_pe': 0.2, 'k_pp': 0.2, 'k_pa': 0.2, 'k_ae': 0.2, 'k_aa': 0.2, 'k_ap': 0.2,
+                       'eta_str': 0.2, 'eta_tha': 0.2},  # AMPA blockade and GABAA blockade in GPe
+                      {'k_pp': 0.2, 'k_pa': 0.2, 'k_aa': 0.2, 'k_ap': 0.2, 'eta_str': 0.2},  # GABAA blockade in GPe
+                      {'k_pe': 0.0, 'k_ae': 0.2},  # STN blockade
+                      {'k_ep': 0.2}  # GABAA blocker in STN
                       ]
         param_scalings = [
-            ('delta_e', 'tau_e', 2.0),
-            ('delta_i', 'tau_i', 2.0),
-            ('k_ee', 'delta_e', 0.5),
-            ('k_ei', 'delta_e', 0.5),
-            ('k_ie', 'delta_i', 0.5),
-            ('k_ii', 'delta_i', 0.5),
-            ('k_str', 'delta_i', 1.0),
-            ('eta_e', 'delta_e', 1.0),
-            ('eta_i', 'delta_i', 1.0),
+            #('delta_e', 'tau_e', 2.0),
+            #('delta_i', 'tau_i', 2.0),
+            #('k_ee', 'delta_e', 0.5),
+            #('k_ei', 'delta_e', 0.5),
+            #('k_ie', 'delta_i', 0.5),
+            #('k_ii', 'delta_i', 0.5),
+            #('eta_e', 'delta_e', 1.0),
+            #('eta_i', 'delta_i', 1.0),
             ]
         chunk_size = [
             50,  # carpenters
@@ -132,52 +132,70 @@ def eval_params(params):
 if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
-    pop_size = 2048
+    pop_size = 512
     pop_genes = {
-        'k_ee': {'min': 0, 'max': 20, 'size': pop_size, 'sigma': 0.2, 'loc': 2.0, 'scale': 0.5},
-        'k_ei': {'min': 10, 'max': 200, 'size': pop_size, 'sigma': 1.0, 'loc': 80.0, 'scale': 5.0},
-        'k_ie': {'min': 10, 'max': 200, 'size': pop_size, 'sigma': 1.0, 'loc': 40.0, 'scale': 5.0},
-        'k_ii': {'min': 5, 'max': 150, 'size': pop_size, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
-        'k_str': {'min': 20, 'max': 300, 'size': pop_size, 'sigma': 1.0, 'loc': 100.0, 'scale': 5.0},
-        'eta_e': {'min': -5, 'max': 3, 'size': pop_size, 'sigma': 0.2, 'loc': -1.0, 'scale': 0.5},
-        'eta_i': {'min': -6, 'max': 2, 'size': pop_size, 'sigma': 0.2, 'loc': -1.0, 'scale': 0.5},
-        'tau_e': {'min': 12.0, 'max': 12.0, 'size': pop_size, 'sigma': 0.0, 'loc': 12.0, 'scale': 0.0},
-        'tau_i': {'min': 24.0, 'max': 24.0, 'size': pop_size, 'sigma': 0.0, 'loc': 24.0, 'scale': 0.0},
-        'delta_e': {'min': 0.001, 'max': 1.0, 'size': pop_size, 'sigma': 0.05, 'loc': 0.2, 'scale': 0.05},
-        'delta_i': {'min': 0.001, 'max': 1.5, 'size': pop_size, 'sigma': 0.05, 'loc': 0.4, 'scale': 0.05},
+        'k_ee': {'min': 0, 'max': 50, 'size': pop_size, 'sigma': 0.1, 'loc': 1.0, 'scale': 0.5},
+        'k_ae': {'min': 10, 'max': 400, 'size': pop_size, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
+        'k_pe': {'min': 10, 'max': 400, 'size': pop_size, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
+        'k_pp': {'min': 5, 'max': 200, 'size': pop_size, 'sigma': 0.5, 'loc': 10.0, 'scale': 1.0},
+        'k_ep': {'min': 5, 'max': 200, 'size': pop_size, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},
+        'k_ap': {'min': 5, 'max': 200, 'size': pop_size, 'sigma': 0.5, 'loc': 10.0, 'scale': 1.0},
+        'k_aa': {'min': 2, 'max': 100, 'size': pop_size, 'sigma': 0.5, 'loc': 10.0, 'scale': 1.0},
+        'k_pa': {'min': 2, 'max': 100, 'size': pop_size, 'sigma': 0.5, 'loc': 10.0, 'scale': 1.0},
+        'eta_e': {'min': -50, 'max': 50, 'size': pop_size, 'sigma': 0.5, 'loc': 0.5, 'scale': 1.0},
+        'eta_p': {'min': -50, 'max': 50, 'size': pop_size, 'sigma': 0.5, 'loc': 0.5, 'scale': 1.0},
+        'eta_a': {'min': -50, 'max': 50, 'size': pop_size, 'sigma': 0.5, 'loc': 0.5, 'scale': 1.0},
+        'eta_tha': {'min': 0, 'max': 100, 'size': pop_size, 'sigma': 0.5, 'loc': 5.0, 'scale': 1.0},
+        'eta_str': {'min': -100, 'max': 0, 'size': pop_size, 'sigma': 0.5, 'loc': -20.0, 'scale': 1.0},
+        'delta_e': {'min': 0.5, 'max': 20.0, 'size': pop_size, 'sigma': 0.5, 'loc': 2.0, 'scale': 0.5},
+        'delta_p': {'min': 0.5, 'max': 40, 'size': pop_size, 'sigma': 0.5, 'loc': 4.0, 'scale': 1.0},
+        'delta_a': {'min': 1.0, 'max': 80, 'size': pop_size, 'sigma': 0.5, 'loc': 8.0, 'scale': 1.0},
+        'tau_e': {'min': 12, 'max': 12, 'size': pop_size, 'sigma': 0.0, 'loc': 12.0, 'scale': 0.0},
+        'tau_p': {'min': 24, 'max': 24, 'size': pop_size, 'sigma': 0.0, 'loc': 24.0, 'scale': 0.0},
+        'tau_a': {'min': 20, 'max': 20, 'size': pop_size, 'sigma': 0.0, 'loc': 20.0, 'scale': 0.0},
     }
 
     param_map = {
         'k_ee': {'vars': ['weight'], 'edges': [('stn', 'stn')]},
-        'k_ei': {'vars': ['weight'], 'edges': [('gpe', 'stn')]},
-        'k_ie': {'vars': ['weight'], 'edges': [('stn', 'gpe')]},
-        'k_ii': {'vars': ['weight'], 'edges': [('gpe', 'gpe')]},
-        'k_str': {'vars': ['gpe_proto_op/k_str'], 'nodes': ['gpe']},
+        'k_ae': {'vars': ['weight'], 'edges': [('stn', 'gpe_a')]},
+        'k_pe': {'vars': ['weight'], 'edges': [('stn', 'gpe_p')]},
+        'k_pp': {'vars': ['weight'], 'edges': [('gpe_p', 'gpe_p')]},
+        'k_ep': {'vars': ['weight'], 'edges': [('gpe_p', 'stn')]},
+        'k_ap': {'vars': ['weight'], 'edges': [('gpe_p', 'gpe_a')]},
+        'k_aa': {'vars': ['weight'], 'edges': [('gpe_a', 'gpe_a')]},
+        'k_pa': {'vars': ['weight'], 'edges': [('gpe_a', 'gpe_p')]},
         'eta_e': {'vars': ['stn_op/eta_e'], 'nodes': ['stn']},
-        'eta_i': {'vars': ['gpe_proto_op/eta_i'], 'nodes': ['gpe']},
-        'tau_e': {'vars': ['stn_op/tau_e'], 'nodes': ['stn']},
-        'tau_i': {'vars': ['gpe_proto_op/tau_i'], 'nodes': ['gpe']},
+        'eta_p': {'vars': ['gpe_proto_op/eta_i'], 'nodes': ['gpe_p']},
+        'eta_a': {'vars': ['gpe_arky_op/eta_a'], 'nodes': ['gpe_a']},
+        'eta_tha': {'vars': ['gpe_proto_op/eta_tha', 'gpe_arky_op/eta_tha'], 'nodes': ['gpe_p', 'gpe_a']},
+        'eta_str': {'vars': ['gpe_proto_op/eta_str', 'gpe_arky_op/eta_str'], 'nodes': ['gpe_p', 'gpe_a']},
         'delta_e': {'vars': ['stn_op/delta_e'], 'nodes': ['stn']},
-        'delta_i': {'vars': ['gpe_proto_op/delta_i'], 'nodes': ['gpe']}
+        'delta_p': {'vars': ['gpe_proto_op/delta_i'], 'nodes': ['gpe_p']},
+        'delta_a': {'vars': ['gpe_arky_op/delta_a'], 'nodes': ['gpe_a']},
+        'tau_e': {'vars': ['stn_op/tau_e'], 'nodes': ['stn']},
+        'tau_p': {'vars': ['gpe_proto_op/tau_i'], 'nodes': ['gpe_p']},
+        'tau_a': {'vars': ['gpe_arky_op/tau_a'], 'nodes': ['gpe_a']},
     }
 
-    T = 3000.
+    T = 2000.
     dt = 1e-2
     dts = 1e-1
 
     # perform genetic optimization
-    compute_dir = f"{os.getcwd()}/stn_gpe_healthy_opt1"
+    compute_dir = f"{os.getcwd()}/stn_gpe_healthy_opt"
 
     ga = CustomGOA(fitness_measure=fitness,
                    gs_config={
-                       'circuit_template': f"{os.getcwd()}/config/stn_gpe/stn_gpe_basic",
+                       'circuit_template': f"{os.getcwd()}/config/stn_gpe/stn_gpe",
                        'permute_grid': True,
                        'param_map': param_map,
                        'simulation_time': T,
                        'step_size': dt,
                        'sampling_step_size': dts,
                        'inputs': {},
-                       'outputs': {'r_e': "stn/stn_op/R_e", 'r_i': 'gpe/gpe_proto_op/R_i'},
+                       'outputs': {'r_e': "stn/stn_op/R_e",
+                                   'r_i': 'gpe_p/gpe_proto_op/R_i',
+                                   'r_a': 'gpe_a/gpe_arky_op/R_a'},
                        'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
                    },
                    cgs_config={'nodes': [
@@ -207,13 +225,13 @@ if __name__ == "__main__":
     winner = ga.run(
         initial_gene_pool=pop_genes,
         gene_sampling_func=np.random.normal,
-        new_member_sampling_func=np.random.normal,
-        target=[[20, 60],   # healthy control
-                [np.nan, 2/3],  # ampa blockade in GPe
-                [np.nan, 1],  # ampa and gabaa blockade in GPe
-                [np.nan, 2],  # GABAA blockade in GPe
-                [np.nan, 1/2],  # STN blockade
-                [2, 2]  # GABAA blockade in STN
+        new_member_sampling_func=np.random.uniform,
+        target=[[20, 60, 20],   # healthy control
+                [np.nan, 2/3, np.nan],  # ampa blockade in GPe
+                [np.nan, 1, np.nan],  # ampa and gabaa blockade in GPe
+                [np.nan, 5/3, np.nan],  # GABAA blockade in GPe
+                [np.nan, 1/2, np.nan],  # STN blockade
+                [2, 5/3, np.nan]  # GABAA blockade in STN
                 ],
         max_iter=500,
         enforce_max_iter=True,

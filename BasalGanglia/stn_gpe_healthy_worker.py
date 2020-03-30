@@ -42,7 +42,7 @@ class ExtendedWorker(MinimalWorker):
         param_grid = kwargs_tmp.pop('param_grid')
         freq_targets = kwargs_tmp.pop('freq_targets')
         targets = kwargs_tmp.pop('targets')
-        self.processed_results = DataFrame(data=None, columns=['fitness', 'r_e', 'r_i'])
+        self.processed_results = DataFrame(data=None, columns=['fitness', 'r_e', 'r_i', 'r_a'])
 
         # calculate fitness
         for gene_id in param_grid.index:
@@ -51,13 +51,10 @@ class ExtendedWorker(MinimalWorker):
                 r = r * 1e3
                 r.index = r.index * 1e-3
                 cutoff = r.index[-1]*0.7
-                if i < 4:
-                    mean_re = np.mean(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])
-                    mean_ri = np.mean(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:])
-                else:
-                    mean_re = np.max(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])
-                    mean_ri = np.max(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:])
-                outputs.append([mean_re, mean_ri])
+                mean_re = np.mean(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])
+                mean_ri = np.mean(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:])
+                mean_ra = np.mean(r['r_a'][f'circuit_{gene_id}'].loc[cutoff:])
+                outputs.append([mean_re, mean_ri, mean_ra])
                 vars.append(np.var(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:]))
 
             for m in range(1, len(targets)):
@@ -69,6 +66,7 @@ class ExtendedWorker(MinimalWorker):
             self.processed_results.loc[gene_id, 'fitness'] = dist1+dist2
             self.processed_results.loc[gene_id, 'r_e'] = [rates[0] for rates in outputs]
             self.processed_results.loc[gene_id, 'r_i'] = [rates[1] for rates in outputs]
+            self.processed_results.loc[gene_id, 'r_a'] = [rates[2] for rates in outputs]
 
 
 def fitness(y, t):
