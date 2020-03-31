@@ -131,7 +131,7 @@ def fitness(y, t):
 if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
-    pop_size = 512
+    pop_size = 1024
     pop_genes = {
         'k_ee': {'min': 0, 'max': 15, 'size': pop_size, 'sigma': 0.1, 'loc': 1.0, 'scale': 0.5},
         'k_ae': {'min': 0, 'max': 150, 'size': pop_size, 'sigma': 0.5, 'loc': 20.0, 'scale': 2.0},

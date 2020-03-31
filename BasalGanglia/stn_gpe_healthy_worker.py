@@ -50,17 +50,17 @@ class ExtendedWorker(MinimalWorker):
             for i, r in enumerate(self.results):
                 r = r * 1e3
                 r.index = r.index * 1e-3
-                cutoff = r.index[-1]*0.7
+                cutoff = r.index[-1]*0.9
                 mean_re = np.mean(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])
                 mean_ri = np.mean(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:])
                 mean_ra = np.mean(r['r_a'][f'circuit_{gene_id}'].loc[cutoff:])
                 outputs.append([mean_re, mean_ri, mean_ra])
                 vars.append(np.var(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:]))
 
-            for m in range(1, len(targets)):
-                for n in range(len(targets[m])):
-                    if targets[m][n] != np.nan:
-                        targets[m][n] = outputs[0][n] * targets[m][n]
+            #for m in range(1, len(targets)):
+            #    for n in range(len(targets[m])):
+            #        if targets[m][n] != np.nan:
+            #            targets[m][n] = outputs[0][n] * targets[m][n]
             dist1 = fitness(outputs, targets)
             dist2 = fitness(vars, freq_targets)
             self.processed_results.loc[gene_id, 'fitness'] = dist1+dist2
