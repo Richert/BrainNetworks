@@ -22,41 +22,31 @@ mpl.rcParams['legend.fontsize'] = 12
 # simulation parameters
 dt = 1e-3
 dts = 1e-1
-T = 1000.0
-sim_steps = int(np.round(T/dt))
-stim_offset = int(np.round(T*0.5/dt))
-stim_delayed = int(np.round((T*0.5 + 14.0)/dt))
-stim_amplitude = 500.0
-stim_var = 100.0
-ctx = np.zeros((sim_steps, 1))
-ctx[stim_offset, 0] = stim_amplitude
-ctx = gaussian_filter1d(ctx, stim_var, axis=0)
-stria = np.zeros((sim_steps, 1))
-stria[stim_delayed, 0] = stim_amplitude
-stria = gaussian_filter1d(stria, stim_var*2.0, axis=0)
+T = 500.0
 
 # model parameters
-k = 1.0
+etas = np.linspace(-10.0, 10.0, num=50)
 param_grid = {
-        'k_ee': [26.2],
-        'k_ae': [82.2],
-        'k_pe': [352.7],
-        'k_pp': [54.2],
-        'k_ep': [355.6],
-        'k_ap': [107.4*k],
-        'k_aa': [128.8],
-        'k_pa': [154.2],
-        'k_ps': [234.1],
-        'k_as': [232.4],
-        'eta_e': [-1.79],
-        'eta_p': [-4.78],
-        'eta_a': [-10.50],
-        'delta_e': [0.463],
-        'delta_p': [0.757/k],
-        'delta_a': [0.768/k],
+        'k_ee': [43.4],
+        'k_ae': [182.2],
+        'k_pe': [550.6],
+        'k_pp': [75.5],
+        'k_ep': [588.4],
+        'k_ap': [202.1],
+        'k_aa': [252.8],
+        'k_pa': [346.7],
+        'k_ps': [797.4],
+        'k_as': [805.0],
+        'eta_e': np.asarray([1.25]),
+        'eta_p': np.asarray([-6.65]) + etas,
+        'eta_a': np.asarray([-13.74]),
+        'delta_e': [0.646],
+        'delta_p': [1.417],
+        'delta_a': [1.068],
         'tau_e': [13],
         'tau_p': [25],
         'tau_a': [20],
+
     }
 
 param_map = {
@@ -105,39 +95,41 @@ param_scalings = [
 
 for key, key_tmp, power in param_scalings:
     param_grid[key] = np.asarray(param_grid[key]) * np.asarray(param_grid[key_tmp]) ** power
+
+for key, val in param_grid.items():
+    if len(val) == 1:
+        param_grid[key] = np.asarray(list(val)*len(etas))
+
 results, result_map = grid_search(
     circuit_template="config/stn_gpe/stn_gpe",
     param_grid=param_grid,
     param_map=param_map,
     simulation_time=T,
     step_size=dt,
-    permute=True,
+    permute=False,
     sampling_step_size=dts,
-    inputs={'stn/stn_op/ctx': ctx, 'str/str_dummy_op/I': stria},
-    outputs={'r_i': 'gpe_p/gpe_proto_op/R_i', 'r_e': 'stn/stn_op/R_e'},
+    inputs={},
+    outputs={
+        'r_i': 'gpe_p/gpe_proto_op/R_i',
+        #'r_e': 'stn/stn_op/R_e'
+    },
     init_kwargs={'backend': 'numpy', 'solver': 'scipy', 'step_size': dt}
 )
 results = results * 1e3
-results = results.loc[0.5*T:, :]
-results.plot()
-plt.show()
 
 # post-processing
 #################
-ac = []
+inputs, outputs = [], []
+cutoff = 400.0
 
-for d, k in zip(param_grid['delta_p'], param_grid['k_ae']):
+for i in range(len(etas)):
 
-    # get index of simulation with parameters d and k
-    idx = result_map.loc[(result_map.loc[:, ('delta_p', 'k_ae')] == (d, k)).all(1), :].index
+    idx = result_map.index[i]
+    inputs.append(result_map.loc[idx, 'eta_p'])
 
-    # add white noise to timeseries
-    ts = results.loc[:, ('r_i', idx)].values
-    ts = (ts - np.mean(ts)) / np.var(ts)
+    ts = results.loc[cutoff:, ('r_i', idx)].values
+    outputs.append(np.mean(ts))
 
-    # calculate the autocorrelation at globus pallidus after cortical stimulation
-    ac.append(correlate(ts, ts, mode='same'))
-
-plt.plot(np.squeeze(ac))
+plt.plot(np.asarray(inputs), np.asarray(outputs))
 plt.tight_layout()
 plt.show()
