@@ -33,22 +33,22 @@ from pyrates.utility import plot_timeseries, create_cmap
 
 k = 1.0
 param_grid = {
-        'k_ee': [2.0],
-        'k_ae': [6.0],
-        'k_pe': [200.0],
-        'k_pp': [7.0],
-        'k_ep': [50.0],
-        'k_ap': [10.0*k],
-        'k_aa': [5.0],
-        'k_pa': [10.0],
-        'k_ps': [8.0],
-        'k_as': [24.0],
-        'eta_e': [10.0],
-        'eta_p': [-6.0],
-        'eta_a': [-4.0],
-        'delta_e': [0.05],
-        'delta_p': [0.6/k],
-        'delta_a': [0.3/k],
+        'k_ee': [3.0],
+        'k_ae': [30.0],
+        'k_pe': [80.0],
+        'k_pp': [6.0],
+        'k_ep': [30.0],
+        'k_ap': [30.0*k],
+        'k_aa': [4.0],
+        'k_pa': [60.0*k],
+        'k_ps': [80.0],
+        'k_as': [160.0],
+        'eta_e': [0.0],
+        'eta_p': [0.0],
+        'eta_a': [0.0],
+        'delta_e': [0.1],
+        'delta_p': [0.3/k],
+        'delta_a': [0.2/k],
         'tau_e': [13],
         'tau_p': [25],
         'tau_a': [20],
@@ -104,6 +104,7 @@ param_scalings = [
 
 conditions = [{},  # healthy control -> GPe_p: 60 Hz, STN: 20 Hz, GPe_a: 30 Hz
               {'k_pe': 0.2, 'k_ae': 0.2},  # AMPA blockade in GPe -> GPe_p: 40 Hz
+              {'k_ep': 0.2},  # GABAA blocker in STN -> STN: 40 Hz, GPe_p: 100 Hz
               {'k_pe': 0.2, 'k_pp': 0.2, 'k_pa': 0.2, 'k_ae': 0.2, 'k_aa': 0.2, 'k_ap': 0.2,
                'k_ps': 0.2, 'k_as': 0.2},  # AMPA blockade and GABAA blockade in GPe -> GPe_p: 70 Hz
               {'k_pp': 0.2, 'k_pa': 0.2, 'k_aa': 0.2, 'k_ap': 0.2, 'k_ps': 0.2,
@@ -111,21 +112,28 @@ conditions = [{},  # healthy control -> GPe_p: 60 Hz, STN: 20 Hz, GPe_a: 30 Hz
               #{'k_pe': 0.0, 'k_ae': 0.0},  # STN blockade -> GPe_p: 20 HZ
               #{'k_pe': 0.0, 'k_ae': 0.0, 'k_pp': 0.2, 'k_pa': 0.2, 'k_aa': 0.2, 'k_ap': 0.2,
               # 'k_ps': 0.2, 'k_as': 0.2},  # STN blockade + GABAA blockade in GPe -> GPe_p: 60 Hz
-              {'k_ep': 0.2}  # GABAA blocker in STN -> STN: 40 Hz, GPe_p: 100 Hz
               ]
 
-T = 200.
-dt = 1e-2
+# simulation paramters
+dt = 1e-5
 dts = 1e-1
-
-# sim_steps = int(np.round(T/dt, decimals=0))
-# ctx = np.zeros((sim_steps, 1))
-# ctx[int(1000/dt), 0] = 20000.0
-# ctx = gaussian_filter1d(ctx, 100, axis=0)
-# stria = np.zeros((sim_steps, 1))
-# stria[int((1000+20.0)/dt), 0] = 400.0
-# stria = gaussian_filter1d(stria, 100, axis=0)
-
+T = 600.0
+sim_steps = int(np.round(T/dt))
+# stim_offset = int(np.round(T*0.5/dt))
+# stim_delayed = int(np.round((T*0.5 + 14.0)/dt))
+# stim_amp = 0.0
+# stim_var = 100.0
+# stim_freq = 14.0
+# # ctx = np.zeros((sim_steps, 1))
+# # ctx[stim_offset, 0] = stim_amplitude
+# # ctx = gaussian_filter1d(ctx, stim_var, axis=0)
+# # stria = np.zeros((sim_steps, 1))
+# # stria[stim_delayed, 0] = stim_amplitude
+# # stria = gaussian_filter1d(stria, stim_var*2.0, axis=0)
+# time = np.linspace(0., T, sim_steps)
+# ctx = np.sin(2.0*np.pi*stim_freq*time*1e-3)*stim_amp + stim_amp
+# stria = ctx*0.5
+#
 # plt.figure()
 # plt.plot(ctx)
 # plt.plot(stria)
@@ -181,12 +189,13 @@ for c_dict in deepcopy(conditions):
         permute=True,
         sampling_step_size=dts,
         inputs={
-            #'stn/stn_op/ctx': ctx, 'str/str_dummy_op/I': stria
+            #'stn/stn_op/ctx': ctx,
+            #'str/str_dummy_op/I': stria
             },
         outputs={'r_e': 'stn/stn_op/R_e', 'r_i': 'gpe_p/gpe_proto_op/R_i', 'r_a': 'gpe_a/gpe_arky_op/R_a'},
         init_kwargs={
             'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
-        method='RK45'
+        method='DOP853'
     )
 
     results = results*1e3

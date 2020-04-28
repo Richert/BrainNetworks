@@ -26,14 +26,18 @@ T = 1000.0
 sim_steps = int(np.round(T/dt))
 stim_offset = int(np.round(T*0.5/dt))
 stim_delayed = int(np.round((T*0.5 + 14.0)/dt))
-stim_amplitude = 500.0
+stim_amp = 1.0
 stim_var = 100.0
-ctx = np.zeros((sim_steps, 1))
-ctx[stim_offset, 0] = stim_amplitude
-ctx = gaussian_filter1d(ctx, stim_var, axis=0)
-stria = np.zeros((sim_steps, 1))
-stria[stim_delayed, 0] = stim_amplitude
-stria = gaussian_filter1d(stria, stim_var*2.0, axis=0)
+stim_freq = 14.0
+# ctx = np.zeros((sim_steps, 1))
+# ctx[stim_offset, 0] = stim_amplitude
+# ctx = gaussian_filter1d(ctx, stim_var, axis=0)
+# stria = np.zeros((sim_steps, 1))
+# stria[stim_delayed, 0] = stim_amplitude
+# stria = gaussian_filter1d(stria, stim_var*2.0, axis=0)
+time = np.linspace(0., T, sim_steps)
+ctx = np.sin(2.0*np.pi*stim_freq*time*1e-3)*stim_amp + stim_amp
+stria = ctx*0.5
 
 # model parameters
 k = 1.0

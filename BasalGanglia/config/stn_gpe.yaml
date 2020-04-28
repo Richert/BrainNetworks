@@ -855,8 +855,8 @@ gpe_proto_syns_op:
 stn_op:
   base: OperatorTemplate
   equations:
-    - "d/dt * R_e = delta_e/(PI*tau_e^2) + ctx + 2.*R_e*V_e/tau_e"
-    - "d/dt * V_e = (V_e^2 + eta_e)/tau_e + stn - gpe_p - tau_e*(PI*R_e)^2"
+    - "d/dt * R_e = delta_e/(PI*tau_e^2) + 2.*R_e*V_e/tau_e"
+    - "d/dt * V_e = (V_e^2 + eta_e)/tau_e + stn + ctx - gpe_p - tau_e*(PI*R_e)^2"
   variables:
     R_e:
       default: output(0.002)
@@ -894,11 +894,11 @@ gpe_proto_op:
     delta_i:
       default: 150.0
     stn:
-      default: input(0.002)
+      default: input
     gpe_p:
-      default: input(0.006)
+      default: input
     gpe_a:
-      default: input(0.003)
+      default: input
     str:
       default: input
 
