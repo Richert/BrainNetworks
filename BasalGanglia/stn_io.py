@@ -26,12 +26,13 @@ dts = 1e-1
 T = 500.0
 
 # model parameters
-etas = np.linspace(-10.0, 20.0, num=50)
+etas = np.linspace(-6.0, 10.0, num=20)
+ks = np.linspace(0.8, 1.2, num=10)
 param_grid = {
-        'k_ee': [2.0],
+        'k_ee': np.asarray([-12])*ks,
         'eta_e': np.asarray([0.0]) + etas,
-        'delta_e': [0.05],
-        'tau_e': [13],
+        'delta_e': np.asarray([0.3]),
+        'tau_e': np.asarray([25]),
     }
 
 param_map = {
@@ -51,11 +52,11 @@ param_scalings = [
 #############
 
 for key, key_tmp, power in param_scalings:
-    param_grid[key] = np.asarray(param_grid[key]) * np.asarray(param_grid[key_tmp]) ** power
+    param_grid[key] = param_grid[key] * param_grid[key_tmp] ** power
 
-for key, val in param_grid.items():
-    if len(val) == 1:
-        param_grid[key] = np.asarray(list(val)*len(etas))
+#for key, val in param_grid.items():
+#    if len(val) == 1:
+#        param_grid[key] = np.asarray(list(val)*len(etas))
 
 results, result_map = grid_search(
     circuit_template="config/stn_gpe/stn_pop",
@@ -63,7 +64,7 @@ results, result_map = grid_search(
     param_map=param_map,
     simulation_time=T,
     step_size=dt,
-    permute=False,
+    permute_grid=True,
     sampling_step_size=dts,
     inputs={},
     outputs={
@@ -81,11 +82,20 @@ cutoff = 400.0
 
 for i in range(len(etas)):
 
-    idx = result_map.index[i]
-    inputs.append(result_map.loc[idx, 'eta_e'])
+    indices_tmp = np.argwhere(np.round(result_map.loc[:, 'eta_e'].values, decimals=2) ==
+                              np.round(param_grid['eta_e'][i], decimals=2)).squeeze()
+    indices = result_map.index[indices_tmp]
+    inputs.append(param_grid['eta_e'][i])
 
-    ts = results.loc[cutoff:, ('r_e', idx)].values
-    outputs.append(np.max(ts))
+    outputs_tmp = []
+    result_map_tmp = result_map.loc[indices, :]
+    for j in range(len(ks)):
+        idx_tmp = np.argwhere(np.round(result_map_tmp.loc[:, 'k_ee'].values, decimals=2) ==
+                              np.round(param_grid['k_ee'][j], decimals=2)).squeeze()
+        idx = result_map_tmp.index[idx_tmp]
+        ts = results.loc[cutoff:, ('r_e', idx)].values
+        outputs_tmp.append(np.max(ts))
+    outputs.append(outputs_tmp)
 
 plt.plot(np.asarray(inputs), np.asarray(outputs))
 plt.tight_layout()
