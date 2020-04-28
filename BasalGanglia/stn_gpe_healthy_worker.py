@@ -50,17 +50,15 @@ class ExtendedWorker(MinimalWorker):
             for i, r in enumerate(self.results):
                 r = r * 1e3
                 r.index = r.index * 1e-3
-                cutoff = r.index[-1]*0.9
-                mean_re = np.mean(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])
-                mean_ri = np.mean(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:])
-                mean_ra = np.mean(r['r_a'][f'circuit_{gene_id}'].loc[cutoff:])
+                cutoff = r.index[-1]*0.8
+                func = np.mean #if i < len(self.results)-1 else np.max
+                mean_re = func(r['r_e'][f'circuit_{gene_id}'].loc[cutoff:])
+                mean_ri = func(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:])
+                mean_ra = func(r['r_a'][f'circuit_{gene_id}'].loc[cutoff:])
                 outputs.append([mean_re, mean_ri, mean_ra])
-                vars.append(np.var(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:]))
-
-            #for m in range(1, len(targets)):
-            #    for n in range(len(targets[m])):
-            #        if targets[m][n] != np.nan:
-            #            targets[m][n] = outputs[0][n] * targets[m][n]
+                vars.append(np.var(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:]) if freq_targets[i] == 0.0 else
+                            1/np.var(r['r_i'][f'circuit_{gene_id}'].loc[200.0:]))
+                freq_targets[i] = 0.0
             dist1 = fitness(outputs, targets)
             dist2 = fitness(vars, freq_targets)
             self.processed_results.loc[gene_id, 'fitness'] = dist1+dist2
@@ -72,7 +70,7 @@ class ExtendedWorker(MinimalWorker):
 def fitness(y, t):
     y = np.asarray(y).flatten()
     t = np.asarray(t).flatten()
-    diff = np.asarray([0.0 if np.isnan(t_tmp) else y_tmp - t_tmp for y_tmp, t_tmp in zip(y, t)]).flatten()
+    diff = np.asarray([0.0 if np.isnan(t_tmp) else y_tmp - t_tmp for y_tmp, t_tmp in zip(y, t)]).flatten()**2
     t[np.isnan(t)] = 1.0
     t[t == 0] = 1.0
     weights = 1/np.abs(t)
