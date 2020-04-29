@@ -5,61 +5,68 @@ from pyrates.utility.grid_search import grid_search
 from copy import deepcopy
 from scipy.ndimage.filters import gaussian_filter1d
 from pyrates.utility import plot_timeseries, create_cmap
+import h5py
 
 # parameter definitions
 #######################
 
+# simulation parameters
+dt = 1e-3
+dts = 1e-1
+T = 600.0
+sim_steps = int(np.round(T/dt))
+stim_offset = int(np.round(T*0.5/dt))
+stim_delayed = int(np.round((T*0.5 + 14.0)/dt))
+stim_amp = 1.0
+stim_var = 100.0
+stim_freq = 14.0
+ctx = np.zeros((sim_steps, 1))
+ctx[stim_offset, 0] = stim_amp
+ctx = gaussian_filter1d(ctx, stim_var, axis=0)
+stria = np.zeros((sim_steps, 1))
+stria[stim_delayed, 0] = stim_amp
+stria = gaussian_filter1d(stria, stim_var*2.0, axis=0)
+# time = np.linspace(0., T, sim_steps)
+# ctx = np.sin(2.0*np.pi*stim_freq*time*1e-3)*stim_amp + stim_amp
+# stria = ctx*0.005
+
+# plt.figure()
+# plt.plot(ctx)
+# plt.plot(stria)
+# plt.show()
+
+# model parameters
+k = 1.0
+
 # param_grid = {
-#         'k_ee': [10.9],
-#         'k_ae': [292.4],
-#         'k_pe': [352.0],
-#         'k_pp': [81.4],
-#         'k_ep': [487.8],
-#         'k_ap': [65.6],
-#         'k_aa': [417.8],
-#         'k_pa': [120.2],
-#         'k_ps': [516.0],
-#         'k_as': [143.6],
-#         'eta_e': [-3.7],
-#         'eta_p': [-4.7],
-#         'eta_a': [-11.6],
-#         'delta_e': [0.75],
-#         'delta_p': [0.89],
-#         'delta_a': [0.72],
+#         'k_ee': [4.9],
+#         'k_ae': [44.5],
+#         'k_pe': [84.2],
+#         'k_pp': [7.9],
+#         'k_ep': [63.0],
+#         'k_ap': [92.1],
+#         'k_aa': [3.9],
+#         'k_pa': [66.6],
+#         'k_ps': [26.1],
+#         'k_as': [181.2],
+#         'eta_e': [-0.23],
+#         'eta_p': [-0.42],
+#         'eta_a': [-1.40],
+#         'delta_e': [0.165],
+#         'delta_p': [0.30],
+#         'delta_a': [0.384],
 #         'tau_e': [13],
 #         'tau_p': [25],
 #         'tau_a': [20],
 #     }
 
-k = 1.0
-param_grid = {
-        'k_ee': [3.0],
-        'k_ae': [30.0],
-        'k_pe': [80.0],
-        'k_pp': [6.0],
-        'k_ep': [30.0],
-        'k_ap': [30.0*k],
-        'k_aa': [4.0],
-        'k_pa': [60.0*k],
-        'k_ps': [80.0],
-        'k_as': [160.0],
-        'eta_e': [0.0],
-        'eta_p': [0.0],
-        'eta_a': [0.0],
-        'delta_e': [0.1],
-        'delta_p': [0.3/k],
-        'delta_a': [0.2/k],
-        'tau_e': [13],
-        'tau_p': [25],
-        'tau_a': [20],
-    }
-
-# fname = "/stn_gpe_healthy_opt1/PopulationDrops/PopulationDrop_0.h5"
-# param_grid_vars = ['k_ee', 'k_ae', 'k_pe', 'k_pp', 'k_ep', 'k_ap', 'k_aa', 'k_pa', 'k_ps', 'k_as', 'eta_e', 'eta_p',
-#                    'eta_a', 'delta_e', 'delta_p', 'delta_a', 'tau_e' 'tau_p', 'tau_a']
-#
-# param_grid = pd.read_hdf(fname)
-# param_grid = param_grid.loc[:, param_grid_vars]
+fname = "/home/rgast/JuliaProjects/JuRates/BasalGanglia/results/stn_gpe_ev_opt_results/stn_gpe_ev_opt_41_params.h5"
+dv = 'p'
+ivs = ['eta_e', 'eta_p', 'eta_a', 'k_ee', 'k_pe', 'k_ae', 'k_ep', 'k_pp', 'k_ap', 'k_pa', 'k_aa', 'k_ps', 'k_as',
+       'delta_e', 'delta_p', 'delta_a', 'tau_e', 'tau_p', 'tau_a']
+f = h5py.File(fname, 'r')
+data = [f[dv][key][()] for key in ivs[:-3]] + [13.0, 25.0, 20.0]
+param_grid = pd.DataFrame(data=np.asarray([data]), columns=ivs)
 
 param_map = {
     'k_ee': {'vars': ['weight'], 'edges': [('stn', 'stn')]},
@@ -83,7 +90,14 @@ param_map = {
     'tau_a': {'vars': ['gpe_arky_op/tau_a'], 'nodes': ['gpe_a']},
 }
 
+# manual changes for bifurcation analysis
+param_grid.loc[0, 'k_ae'] = 190.0
+
 param_scalings = [
+            ('delta_p', None, 1.0/k),
+            ('delta_a', None, 1.0/k),
+            ('k_ap', None, k),
+            ('k_pa', None, k),
             ('delta_e', 'tau_e', 2.0),
             ('delta_p', 'tau_p', 2.0),
             ('delta_a', 'tau_a', 2.0),
@@ -113,31 +127,6 @@ conditions = [{},  # healthy control -> GPe_p: 60 Hz, STN: 20 Hz, GPe_a: 30 Hz
               #{'k_pe': 0.0, 'k_ae': 0.0, 'k_pp': 0.2, 'k_pa': 0.2, 'k_aa': 0.2, 'k_ap': 0.2,
               # 'k_ps': 0.2, 'k_as': 0.2},  # STN blockade + GABAA blockade in GPe -> GPe_p: 60 Hz
               ]
-
-# simulation paramters
-dt = 1e-5
-dts = 1e-1
-T = 600.0
-sim_steps = int(np.round(T/dt))
-# stim_offset = int(np.round(T*0.5/dt))
-# stim_delayed = int(np.round((T*0.5 + 14.0)/dt))
-# stim_amp = 0.0
-# stim_var = 100.0
-# stim_freq = 14.0
-# # ctx = np.zeros((sim_steps, 1))
-# # ctx[stim_offset, 0] = stim_amplitude
-# # ctx = gaussian_filter1d(ctx, stim_var, axis=0)
-# # stria = np.zeros((sim_steps, 1))
-# # stria[stim_delayed, 0] = stim_amplitude
-# # stria = gaussian_filter1d(stria, stim_var*2.0, axis=0)
-# time = np.linspace(0., T, sim_steps)
-# ctx = np.sin(2.0*np.pi*stim_freq*time*1e-3)*stim_amp + stim_amp
-# stria = ctx*0.5
-#
-# plt.figure()
-# plt.plot(ctx)
-# plt.plot(stria)
-# plt.show()
 
 # simulations
 #############
@@ -178,7 +167,7 @@ for c_dict in deepcopy(conditions):
         elif key in param_grid:
             c_dict[key] = np.asarray(param_grid[key])
     for key, key_tmp, power in param_scalings:
-        c_dict[key] = c_dict[key] * c_dict[key_tmp] ** power
+        c_dict[key] = c_dict[key] * c_dict[key_tmp] ** power if key_tmp else c_dict[key] * power
     param_grid_tmp = pd.DataFrame.from_dict(c_dict)
     results, result_map = grid_search(
         circuit_template="config/stn_gpe/stn_gpe",
@@ -195,7 +184,7 @@ for c_dict in deepcopy(conditions):
         outputs={'r_e': 'stn/stn_op/R_e', 'r_i': 'gpe_p/gpe_proto_op/R_i', 'r_a': 'gpe_a/gpe_arky_op/R_a'},
         init_kwargs={
             'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
-        method='DOP853'
+        method='RK45'
     )
 
     results = results*1e3

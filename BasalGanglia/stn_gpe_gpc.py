@@ -3,37 +3,70 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.signal import correlate
+from scipy.ndimage.filters import gaussian_filter1d
+import h5py
 
 # config
 ########
 
 # parameters
 dt = 1e-3
-dts = 1e-1
-T = 1000.0
+dts = 1e-2
+T = 600.0
+sim_steps = int(np.round(T/dt))
+stim_offset = int(np.round(T*0.5/dt))
+stim_dur = int(np.round(T/(dt*21)))
+stim_delayed = int(np.round((T*0.5 + 14.0)/dt))
+stim_amp = 1e4
+stim_var = 1.0
+stim_freq = 14.0
+ctx = np.zeros((sim_steps, 1))
+ctx[stim_offset:stim_offset+stim_dur, 0] = stim_amp*0.004
+ctx = gaussian_filter1d(ctx, stim_var, axis=0)
+stria = np.zeros((sim_steps, 1))
+stria[stim_delayed, 0] = stim_amp*1e1
+stria = gaussian_filter1d(stria, stim_var*10.0, axis=0)
+# time = np.linspace(0., T, sim_steps)
+# ctx = np.sin(2.0*np.pi*stim_freq*time*1e-3)*stim_amp + stim_amp
+# stria = ctx*0.005
 
-# parameter sweeps
-param_grid = {
-        'k_ee': [33.8],
-        'k_ae': [94.7],
-        'k_pe': [397.1],
-        'k_pp': [110.6],
-        'k_ep': [545.6],
-        'k_ap': [287.6],
-        'k_aa': [122.6],
-        'k_pa': [304.0],
-        'k_ps': [441.8],
-        'k_as': [517.7],
-        'eta_e': [1.77],
-        'eta_p': [-3.02],
-        'eta_a': [-12.97],
-        'delta_e': [0.528],
-        'delta_p': [0.979],
-        'delta_a': [0.991],
-        'tau_e': [13],
-        'tau_p': [25],
-        'tau_a': [20],
-    }
+plt.figure()
+plt.plot(ctx)
+plt.plot(stria)
+plt.show()
+
+# model parameters
+k = 1.0
+
+# param_grid = {
+#         'k_ee': [4.9],
+#         'k_ae': [44.5],
+#         'k_pe': [84.2],
+#         'k_pp': [7.9],
+#         'k_ep': [63.0],
+#         'k_ap': [92.1],
+#         'k_aa': [3.9],
+#         'k_pa': [66.6],
+#         'k_ps': [26.1],
+#         'k_as': [181.2],
+#         'eta_e': [-0.23],
+#         'eta_p': [-0.42],
+#         'eta_a': [-1.40],
+#         'delta_e': [0.165],
+#         'delta_p': [0.30],
+#         'delta_a': [0.384],
+#         'tau_e': [13],
+#         'tau_p': [25],
+#         'tau_a': [20],
+#     }
+
+fname = "/home/rgast/JuliaProjects/JuRates/BasalGanglia/results/stn_gpe_ev_opt_results/stn_gpe_ev_opt_41_params.h5"
+dv = 'p'
+ivs = ['eta_e', 'eta_p', 'eta_a', 'k_ee', 'k_pe', 'k_ae', 'k_ep', 'k_pp', 'k_ap', 'k_pa', 'k_aa', 'k_ps', 'k_as',
+       'delta_e', 'delta_p', 'delta_a', 'tau_e', 'tau_p', 'tau_a']
+f = h5py.File(fname, 'r')
+data = [f[dv][key][()] for key in ivs[:-3]] + [13.0, 25.0, 20.0]
+param_grid = pd.DataFrame(data=np.asarray([data]), columns=ivs)
 
 param_map = {
     'k_ee': {'vars': ['weight'], 'edges': [('stn', 'stn')]},
@@ -57,7 +90,22 @@ param_map = {
     'tau_a': {'vars': ['gpe_arky_op/tau_a'], 'nodes': ['gpe_a']},
 }
 
+# manual changes for bifurcation analysis
+k_p = 6.5
+param_grid.loc[0, 'k_pe'] *= k_p
+param_grid.loc[0, 'k_pp'] *= k_p
+param_grid.loc[0, 'k_pa'] *= k_p
+param_grid.loc[0, 'k_ps'] *= k_p
+param_grid.loc[0, 'k_ae'] *= k_p
+param_grid.loc[0, 'k_ap'] *= k_p
+param_grid.loc[0, 'k_aa'] *= k_p
+param_grid.loc[0, 'k_as'] *= k_p
+
 param_scalings = [
+            ('delta_p', None, 1.0/k),
+            ('delta_a', None, 1.0/k),
+            ('k_ap', None, k),
+            ('k_pa', None, k),
             ('delta_e', 'tau_e', 2.0),
             ('delta_p', 'tau_p', 2.0),
             ('delta_a', 'tau_a', 2.0),
@@ -80,77 +128,41 @@ param_scalings = [
 #############
 
 for key, key_tmp, power in param_scalings:
-    param_grid[key] = param_grid[key] * param_grid[key_tmp] ** power
+    param_grid[key] = np.asarray(param_grid[key]) * np.asarray(param_grid[key_tmp]) ** power if key_tmp \
+        else np.asarray(param_grid[key]) * power
 results, result_map = grid_search(
-    circuit_template="config/stn_gpe/stn_gpe",
-    param_grid=param_grid,
-    param_map=param_map,
-    simulation_time=T,
-    step_size=dt,
-    permute=True,
-    sampling_step_size=dts,
-    inputs={},
-    outputs={'r_i': 'gpe_p/gpe_proto_op/R_i'},
-    init_kwargs={'backend': 'numpy', 'solver': 'scipy', 'step_size': dt}
-)
-results = results*1e3
+        circuit_template="config/stn_gpe/stn_gpe",
+        param_grid=param_grid,
+        param_map=param_map,
+        simulation_time=T,
+        step_size=dt,
+        permute=True,
+        sampling_step_size=dts,
+        inputs={
+            #'stn/stn_op/ctx': ctx,
+            #'str/str_dummy_op/I': stria
+            },
+        outputs={'r_e': 'stn/stn_op/R_e', 'r_i': 'gpe_p/gpe_proto_op/R_i', 'r_a': 'gpe_a/gpe_arky_op/R_a'},
+        init_kwargs={
+            'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
+        method='RK45',
+        max_step=0.1
+    )
+results = results * 1e3
+#results = results.loc[0.5 * T:, :]
+results.plot()
 
 # post-processing
 #################
 
-# calculate power-spectral density of firing rate fluctuations and coherence between JRCs
-max_freq = np.zeros((len(grid['alpha']), len(grid['omega'])))
-max_pow = np.zeros_like(max_freq)
-#coh = np.zeros_like(max_freq)
+# add white noise to timeseries
+ts = results.loc[:, 'r_i'].values + np.random.normal(0.0, 1.0, size=results.shape)
+ts = (ts - np.mean(ts)) / np.var(ts)
 
-for key in params.index:
+# calculate the autocorrelation at globus pallidus after cortical stimulation
+ac = correlate(ts, ts, mode='same')
 
-    val = results[('V_e', key)] - results[('V_i', key)] + results[('I', key)]
-    results.insert(loc=results.shape[1], column=('V', key), value=val)
-
-    # calculate PSDs
-    freqs, power = fft(pd.DataFrame(results[('V', key)]), tmin=20.0)
-
-    # calculate coherence
-    f = params.loc[key, 'omega']
-    idx = pd.IndexSlice
-
-    #c = functional_connectivity(results.loc[idx[:], idx[['I', 'V'], key]], 'coh', fmin=f-2, fmax=f+2, faverage=True,
-    #                            indices=([1], [0]), tmin=20.0, verbose=False)
-
-    # store output quantities
-    idx_c = np.argwhere(grid['omega'] == params.loc[key, 'omega'])[0]
-    idx_r = np.argwhere(grid['alpha'] == params.loc[key, 'alpha'])[0]
-    max_idx = np.argmax(power)
-    max_freq[idx_r, idx_c] = freqs[max_idx]
-    max_pow[idx_r, idx_c] = power[max_idx]
-    #coh[idx_r, idx_c] = c
-
-# visualization
-###############
-
-fig, axes = plt.subplots(ncols=2, figsize=(12, 5))
-
-# plot dominating frequency
-plot_connectivity(max_freq, xticklabels=np.round(grid['omega'], decimals=2),
-                  yticklabels=np.round(grid['alpha'], decimals=4), ax=axes[0])
-axes[0].set_xlabel('omega')
-axes[0].set_ylabel('alpha')
-axes[0].set_title('Dominant Frequency')
-
-# plot power density of dominating frequency
-plot_connectivity(max_pow, xticklabels=np.round(grid['omega'], decimals=2),
-                  yticklabels=np.round(grid['alpha'], decimals=4), ax=axes[1])
-axes[1].set_xlabel('omega')
-axes[1].set_ylabel('alpha')
-axes[1].set_title('PSD at Dominant Frequency')
-
-# plot coherence between JRCs
-# plot_connectivity(coh, xticklabels=np.round(grid['omega'], decimals=2),
-#                   yticklabels=np.round(grid['alpha'], decimals=4), ax=axes[2])
-# axes[2].set_xlabel('omega')
-# axes[2].set_ylabel('alpha')
-# axes[2].set_title('Coherence')
-# plt.tight_layout()
-
+plt.figure()
+plt.plot(np.squeeze(ac))
+plt.tight_layout()
 plt.show()

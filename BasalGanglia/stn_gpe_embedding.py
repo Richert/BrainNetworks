@@ -1,35 +1,32 @@
-from pandas import DataFrame, read_hdf
+from pandas import DataFrame
 import numpy as np
-from sklearn.manifold import MDS, Isomap
+import seaborn as sns
+from scipy.spatial.distance import pdist
+from scipy.stats import zscore
 import os
 import matplotlib.pyplot as plt
+import h5py
 
 # parameters
-directories = ["/data/tu_rgast_cloud/owncloud-gwdg/data/stn_gpe_healthy_opt3"]
-fid = "pop_summary"
-dv = 'fitness'
-ivs = ['eta_e', 'eta_i', 'eta_tha', 'k_str', 'k_ee', 'k_ei', 'k_ie', 'k_ii', 'delta_e', 'delta_i']
-n_comps = 2
+directories = ["/home/rgast/JuliaProjects/JuRates/BasalGanglia/results/stn_gpe_ev_opt_results"]
+fid = "stn_gpe_ev_opt"
+dv = 'p'
+ivs = ['eta_e', 'eta_p', 'eta_a', 'k_ee', 'k_pe', 'k_ae', 'k_ep', 'k_pp', 'k_ap', 'k_pa', 'k_aa', 'k_ps', 'k_as',
+       'delta_e', 'delta_p', 'delta_a']
 
 # load data into frame
-df = DataFrame(data=np.zeros((1, 11)), columns=ivs + [dv])
+df = DataFrame(data=np.zeros((1, len(ivs))), columns=ivs)
 for d in directories:
     for fn in os.listdir(d):
         if fn.startswith(fid) and fn.endswith(".h5"):
-            df_tmp = read_hdf(f"{d}/{fn}")
-            df = df.append(df_tmp.loc[:, ivs + [dv]])
+            f = h5py.File(f"{d}/{fn}", 'r')
+            index = int(fn.split('_')[-2])
+            df_tmp = DataFrame(data=np.asarray([[f[dv][key][()] for key in ivs]]), columns=ivs, index=[index])
+            df = df.append(df_tmp)
+
 df = df.iloc[1:, :]
 
-# create feature matrix and target vector
-y = df.pop(dv)
-X = np.asarray([df.pop(iv) for iv in ivs]).T
-
-# perform dimensionality reduction on data
-dim_red = Isomap(n_components=n_comps, n_neighbors=30)
-X_ld = dim_red.fit_transform(X, y)
-
-# visualize dim-reduced data along the two dimension with the greatest coefficients
-fig, ax = plt.subplots()
-plt.scatter(X_ld[:, 0], X_ld[:, 1], c=y, cmap=plt.cm.cividis)
-
+# calculate distance matrix
+# visualize and cluster distance matrix
+sns.clustermap(data=df, method='average', metric='correlation', z_score=1, standard_scale=None)
 plt.show()
