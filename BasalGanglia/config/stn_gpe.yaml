@@ -760,10 +760,9 @@ stn_syns_op:
     - "d/dt * R_e = delta_e/(PI*tau_e^2) + 2.*R_e*V_e/tau_e"
     - "d/dt * V_e = (V_e^2 + eta_e)/tau_e + I_ampa - I_gabaa - tau_e*(PI*R_e)^2"
     - "d/dt * I_ampa = X_ampa"
-    - "d/dt * X_ampa = (I_exc + k_ee*0.0 - X_ampa*(tau_ampa_r+tau_ampa_d) - I_ampa)/(tau_ampa_r*tau_ampa_d)"
+    - "d/dt * X_ampa = (k_ctx*ctx + stn - X_ampa*(tau_ampa_r+tau_ampa_d) - I_ampa)/(tau_ampa_r*tau_ampa_d)"
     - "d/dt * I_gabaa = X_gabaa"
-    - "d/dt * X_gabaa = (I_inh + k_ei*gpe - X_gabaa*(tau_gabaa_r+tau_gabaa_d) - I_gabaa)/(tau_gabaa_r*tau_gabaa_d)"
-    - "d/dt * stn_fb = (stn_in - stn_fb)/0.05"
+    - "d/dt * X_gabaa = (gpe_p - X_gabaa*(tau_gabaa_r+tau_gabaa_d) - I_gabaa)/(tau_gabaa_r*tau_gabaa_d)"
   variables:
     R_e:
       default: output
@@ -779,12 +778,8 @@ stn_syns_op:
       default: variable
     eta_e:
       default: 0.1
-    k_ee:
-      default: 1.3
-    k_ei:
-      default: 70.3
     k_ctx:
-      default: 10.0
+      default: 1.0
     tau_e:
       default: 13.0
     tau_ampa_r:
@@ -797,15 +792,11 @@ stn_syns_op:
       default: 10.0
     delta_e:
       default: 10.6
-    gpe:
+    gpe_p:
       default: input
-    I_exc:
+    ctx:
       default: input
-    I_inh:
-      default: input
-    stn_fb:
-      default: variable
-    stn_in:
+    stn:
       default: input
 
 gpe_proto_syns_op:
@@ -814,9 +805,9 @@ gpe_proto_syns_op:
     - "d/dt * R_i = delta_i/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
     - "d/dt * V_i = (V_i^2 + eta_i)/tau_i + I_ampa - I_gabaa - tau_i*(PI*R_i)^2"
     - "d/dt * I_ampa = X_ampa"
-    - "d/dt * X_ampa = (k_ie*stn - X_ampa*(tau_ampa_r+tau_ampa_d) - I_ampa)/(tau_ampa_r*tau_ampa_d)"
+    - "d/dt * X_ampa = (stn - X_ampa*(tau_ampa_r+tau_ampa_d) - I_ampa)/(tau_ampa_r*tau_ampa_d)"
     - "d/dt * I_gabaa = X_gabaa"
-    - "d/dt * X_gabaa = (k_ii*R_i + k_str*str + k_gpe*gpe - X_gabaa*(tau_gabaa_r+tau_gabaa_d) - I_gabaa)/(tau_gabaa_r*tau_gabaa_d)"
+    - "d/dt * X_gabaa = (gpe_p + str + gpe_a - X_gabaa*(tau_gabaa_r+tau_gabaa_d) - I_gabaa)/(tau_gabaa_r*tau_gabaa_d)"
   variables:
     R_i:
       default: output
@@ -832,14 +823,6 @@ gpe_proto_syns_op:
       default: variable
     eta_i:
       default: 11.0
-    k_ie:
-      default: 81.3
-    k_ii:
-      default: 33.7
-    k_str:
-      default: 298.57
-    k_gpe:
-      default: 20.0
     tau_i:
       default: 14.0
     tau_ampa_r:
@@ -855,8 +838,55 @@ gpe_proto_syns_op:
     stn:
       default: input
     str:
-      default: 0.002
-    gpe:
+      default: input
+    gpe_p:
+      default: input
+    gpe_a:
+      default: input
+
+gpe_arky_syns_op:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * R_a = delta_a/(PI*tau_a^2) + 2.*R_a*V_a/tau_a"
+    - "d/dt * V_a = (V_a^2 + eta_a)/tau_a + I_ampa - I_gabaa - tau_a*(PI*R_a)^2"
+    - "d/dt * I_ampa = X_ampa"
+    - "d/dt * X_ampa = (stn - X_ampa*(tau_ampa_r+tau_ampa_d) - I_ampa)/(tau_ampa_r*tau_ampa_d)"
+    - "d/dt * I_gabaa = X_gabaa"
+    - "d/dt * X_gabaa = (gpe_a + str + gpe_p - X_gabaa*(tau_gabaa_r+tau_gabaa_d) - I_gabaa)/(tau_gabaa_r*tau_gabaa_d)"
+  variables:
+    R_a:
+      default: output
+    V_a:
+      default: variable
+    I_ampa:
+      default: variable
+    I_gabaa:
+      default: variable
+    X_ampa:
+      default: variable
+    X_gabaa:
+      default: variable
+    eta_a:
+      default: 11.0
+    tau_a:
+      default: 14.0
+    tau_ampa_r:
+      default: 0.8
+    tau_ampa_d:
+      default: 3.7
+    tau_gabaa_r:
+      default: 0.5
+    tau_gabaa_d:
+      default: 5.0
+    delta_a:
+      default: 10.0
+    stn:
+      default: input
+    str:
+      default: input
+    gpe_p:
+      default: input
+    gpe_a:
       default: input
 
 stn_op:
@@ -1065,10 +1095,20 @@ gpe_proto:
   operators:
     - gpe_proto_op
 
+gpe_proto_syns:
+  base: NodeTemplate
+  operators:
+    - gpe_proto_syns_op
+
 gpe_arky:
   base: NodeTemplate
   operators:
     - gpe_arky_op
+
+gpe_arky_syns:
+  base: NodeTemplate
+  operators:
+    - gpe_arky_syns_op
 
 str_msn:
   base: NodeTemplate
@@ -1128,14 +1168,14 @@ stn_pop:
   nodes:
     stn: stn
   edges:
-    - [stn/stn_op/R_e, stn/stn_op/stn, null, {weight: 22.0, delay: 2.0, spread: 1.0}]
+    - [stn/stn_op/R_e, stn/stn_op/stn, null, {weight: 22.0, delay: 4.0, spread: 2.8}]
 
 stn_syns_pop:
   base: CircuitTemplate
   nodes:
     stn: stn_syns
   edges:
-    - [stn/stn_syns_op/I_exc, stn/stn_syns_op/stn_in, null, {weight: 1.0, delay: 8.0, spread: 5.0}]
+    - [stn/stn_syns_op/R_e, stn/stn_syns_op/stn, null, {weight: 1.0, delay: 0.8, spread: 0.4}]
 
 gpe_pop:
   base: CircuitTemplate
@@ -1160,6 +1200,25 @@ stn_gpe:
     - [gpe_a/gpe_arky_op/R_a, gpe_p/gpe_proto_op/gpe_a, null, {weight: 303.6, delay: 4.0, spread: 2.8}]
     - [str/str_dummy_op/R_s, gpe_a/gpe_arky_op/str, null, {weight: 2262.7}]
     - [str/str_dummy_op/R_s, gpe_p/gpe_proto_op/str, null, {weight: 1517.9}]
+
+stn_gpe_syns:
+  base: CircuitTemplate
+  nodes:
+    stn: stn_syns
+    gpe_p: gpe_proto_syns
+    gpe_a: gpe_arky_syns
+    str: str_dummy
+  edges:
+    - [stn/stn_syns_op/R_e, stn/stn_syns_op/stn, null, {weight: 22.0, delay: 0.8, spread: 0.4}]
+    - [stn/stn_syns_op/R_e, gpe_p/gpe_proto_syns_op/stn, null, {weight: 1200.0, delay: 3.2, spread: 0.8}]
+    - [stn/stn_syns_op/R_e, gpe_a/gpe_arky_syns_op/stn, null, {weight: 565.7, delay: 3.2, spread: 0.8}]
+    - [gpe_p/gpe_proto_syns_op/R_i, gpe_p/gpe_proto_syns_op/gpe_p, null, {weight: 607.2}]
+    - [gpe_p/gpe_proto_syns_op/R_i, stn/stn_syns_op/gpe_p, null, {weight: 303.6, delay: 2.0, spread: 0.5}]
+    - [gpe_p/gpe_proto_syns_op/R_i, gpe_a/gpe_arky_syns_op/gpe_p, null, {weight: 565.7, delay: 0.8, spread: 0.4}]
+    - [gpe_a/gpe_arky_syns_op/R_a, gpe_a/gpe_arky_syns_op/gpe_a, null, {weight: 282.8, delay: 0.8, spread: 0.4}]
+    - [gpe_a/gpe_arky_syns_op/R_a, gpe_p/gpe_proto_syns_op/gpe_a, null, {weight: 303.6, delay: 0.8, spread: 0.4}]
+    - [str/str_dummy_op/R_s, gpe_a/gpe_arky_syns_op/str, null, {weight: 2262.7}]
+    - [str/str_dummy_op/R_s, gpe_p/gpe_proto_syns_op/str, null, {weight: 1517.9}]
 
 stn_gpe_no_delays:
   base: CircuitTemplate

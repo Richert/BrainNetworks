@@ -28,19 +28,19 @@ T = 200.0
 # model parameters
 etas = np.linspace(-8.0, 8.0, num=40)
 ks = np.asarray([0.2, 0.6, 1.0, 1.4, 1.8])
-k_0 = 0.0
+k_0 = 4.0
 param_grid = {
-        'k_ee': np.asarray([-k_0])*ks,
+        'k_ee': np.asarray([k_0])*ks,
         'eta_e': np.asarray([0.0]) + etas,
-        'delta_e': np.asarray([0.1]),
-        'tau_e': np.asarray([20]),
+        'delta_e': np.asarray([0.04]),
+        'tau_e': np.asarray([13]),
     }
 
 param_map = {
     'k_ee': {'vars': ['weight'], 'edges': [('stn', 'stn')]},
-    'eta_e': {'vars': ['stn_op/eta_e'], 'nodes': ['stn']},
-    'delta_e': {'vars': ['stn_op/delta_e'], 'nodes': ['stn']},
-    'tau_e': {'vars': ['stn_op/tau_e'], 'nodes': ['stn']},
+    'eta_e': {'vars': ['stn_syns_op/eta_e'], 'nodes': ['stn']},
+    'delta_e': {'vars': ['stn_syns_op/delta_e'], 'nodes': ['stn']},
+    'tau_e': {'vars': ['stn_syns_op/tau_e'], 'nodes': ['stn']},
 }
 
 param_scalings = [
@@ -60,7 +60,7 @@ for key, key_tmp, power in param_scalings:
 #        param_grid[key] = np.asarray(list(val)*len(etas))
 
 results, result_map = grid_search(
-    circuit_template="config/stn_gpe/stn_pop",
+    circuit_template="config/stn_gpe/stn_syns_pop",
     param_grid=param_grid,
     param_map=param_map,
     simulation_time=T,
@@ -69,7 +69,7 @@ results, result_map = grid_search(
     sampling_step_size=dts,
     inputs={},
     outputs={
-        'r_e': 'stn/stn_op/R_e'
+        'r_e': 'stn/stn_syns_op/R_e'
     },
     init_kwargs={'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
     method='RK45'
