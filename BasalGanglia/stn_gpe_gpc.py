@@ -15,17 +15,17 @@ dts = 1e-2
 T = 600.0
 sim_steps = int(np.round(T/dt))
 stim_offset = int(np.round(T*0.5/dt))
-stim_dur = int(np.round(T/(dt*21)))
-stim_delayed = int(np.round((T*0.5 + 14.0)/dt))
-stim_amp = 1e4
-stim_var = 1.0
+stim_dur = int(np.round(4.0/dt))
+stim_delayed = int(np.round((T*0.5 + 10.0)/dt))
+stim_amp = 4.0
+stim_var = int(np.round(0.5/dt))
 stim_freq = 14.0
 ctx = np.zeros((sim_steps, 1))
-ctx[stim_offset:stim_offset+stim_dur, 0] = stim_amp*0.004
+ctx[stim_offset:stim_offset+stim_dur, 0] = stim_amp
 ctx = gaussian_filter1d(ctx, stim_var, axis=0)
 stria = np.zeros((sim_steps, 1))
-stria[stim_delayed, 0] = stim_amp*1e1
-stria = gaussian_filter1d(stria, stim_var*10.0, axis=0)
+stria[stim_delayed:stim_delayed+stim_dur, 0] = stim_amp
+stria = gaussian_filter1d(stria, stim_var*2.0, axis=0)
 # time = np.linspace(0., T, sim_steps)
 # ctx = np.sin(2.0*np.pi*stim_freq*time*1e-3)*stim_amp + stim_amp
 # stria = ctx*0.005
@@ -38,35 +38,37 @@ plt.show()
 # model parameters
 k = 1.0
 
-# param_grid = {
-#         'k_ee': [4.9],
-#         'k_ae': [44.5],
-#         'k_pe': [84.2],
-#         'k_pp': [7.9],
-#         'k_ep': [63.0],
-#         'k_ap': [92.1],
-#         'k_aa': [3.9],
-#         'k_pa': [66.6],
-#         'k_ps': [26.1],
-#         'k_as': [181.2],
-#         'eta_e': [-0.23],
-#         'eta_p': [-0.42],
-#         'eta_a': [-1.40],
-#         'delta_e': [0.165],
-#         'delta_p': [0.30],
-#         'delta_a': [0.384],
-#         'tau_e': [13],
-#         'tau_p': [25],
-#         'tau_a': [20],
-#     }
+param_grid = {
+        'k_ee': [3.2],
+        'k_ae': [80.5],
+        'k_pe': [68.2],
+        'k_pp': [4.3],
+        'k_ep': [10.8],
+        'k_ap': [17.0],
+        'k_aa': [0.8],
+        'k_pa': [29.3],
+        'k_ps': [169.5],
+        'k_as': [219.3],
+        'eta_e': [-0.12],
+        'eta_p': [-0.19],
+        'eta_a': [-3.02],
+        'delta_e': [0.045],
+        'delta_p': [0.152],
+        'delta_a': [0.126],
+        'tau_e': [13],
+        'tau_p': [25],
+        'tau_a': [20],
+    }
+param_grid = pd.DataFrame.from_dict(param_grid)
 
-fname = "/home/rgast/JuliaProjects/JuRates/BasalGanglia/results/stn_gpe_ev_opt_results/stn_gpe_ev_opt_41_params.h5"
-dv = 'p'
-ivs = ['eta_e', 'eta_p', 'eta_a', 'k_ee', 'k_pe', 'k_ae', 'k_ep', 'k_pp', 'k_ap', 'k_pa', 'k_aa', 'k_ps', 'k_as',
-       'delta_e', 'delta_p', 'delta_a', 'tau_e', 'tau_p', 'tau_a']
-f = h5py.File(fname, 'r')
-data = [f[dv][key][()] for key in ivs[:-3]] + [13.0, 25.0, 20.0]
-param_grid = pd.DataFrame(data=np.asarray([data]), columns=ivs)
+# directory = "/home/rgast/JuliaProjects/JuRates/BasalGanglia/results/stn_gpe_ev_opt_results_final"
+# fname = "stn_gpe_ev_opt_79_params.h5"
+# dv = 'p'
+# ivs = ['eta_e', 'eta_p', 'eta_a', 'k_ee', 'k_pe', 'k_ae', 'k_ep', 'k_pp', 'k_ap', 'k_pa', 'k_aa', 'k_ps', 'k_as',
+#        'delta_e', 'delta_p', 'delta_a', 'tau_e', 'tau_p', 'tau_a']
+# f = h5py.File(f"{directory}/{fname}", 'r')
+# data = [f[dv][key][()] for key in ivs[:-3]] + [13.0, 25.0, 20.0]
+# param_grid = pd.DataFrame(data=np.asarray([data]), columns=ivs)
 
 param_map = {
     'k_ee': {'vars': ['weight'], 'edges': [('stn', 'stn')]},
@@ -91,21 +93,13 @@ param_map = {
 }
 
 # manual changes for bifurcation analysis
-k_p = 6.5
-param_grid.loc[0, 'k_pe'] *= k_p
-param_grid.loc[0, 'k_pp'] *= k_p
-param_grid.loc[0, 'k_pa'] *= k_p
-param_grid.loc[0, 'k_ps'] *= k_p
-param_grid.loc[0, 'k_ae'] *= k_p
-param_grid.loc[0, 'k_ap'] *= k_p
-param_grid.loc[0, 'k_aa'] *= k_p
-param_grid.loc[0, 'k_as'] *= k_p
+#param_grid.loc[0, 'eta_e'] = 3.5
 
 param_scalings = [
-            ('delta_p', None, 1.0/k),
-            ('delta_a', None, 1.0/k),
-            ('k_ap', None, k),
-            ('k_pa', None, k),
+            #('delta_p', None, 1.0/k),
+            #('delta_a', None, 1.0/k),
+            #('k_ap', None, k),
+            #('k_pa', None, k),
             ('delta_e', 'tau_e', 2.0),
             ('delta_p', 'tau_p', 2.0),
             ('delta_a', 'tau_a', 2.0),
@@ -139,8 +133,8 @@ results, result_map = grid_search(
         permute=True,
         sampling_step_size=dts,
         inputs={
-            #'stn/stn_op/ctx': ctx,
-            #'str/str_dummy_op/I': stria
+            'stn/stn_op/ctx': ctx,
+            'str/str_dummy_op/I': stria
             },
         outputs={'r_e': 'stn/stn_op/R_e', 'r_i': 'gpe_p/gpe_proto_op/R_i', 'r_a': 'gpe_a/gpe_arky_op/R_a'},
         init_kwargs={

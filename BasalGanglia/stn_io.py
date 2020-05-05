@@ -23,15 +23,16 @@ mpl.rcParams['legend.fontsize'] = 12
 # simulation parameters
 dt = 1e-3
 dts = 1e-1
-T = 500.0
+T = 200.0
 
 # model parameters
-etas = np.linspace(-6.0, 10.0, num=20)
-ks = np.asarray([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
+etas = np.linspace(-8.0, 8.0, num=40)
+ks = np.asarray([0.2, 0.6, 1.0, 1.4, 1.8])
+k_0 = 4.0
 param_grid = {
-        'k_ee': np.asarray([1.0])*ks,
+        'k_ee': np.asarray([k_0])*ks,
         'eta_e': np.asarray([0.0]) + etas,
-        'delta_e': np.asarray([0.16]),
+        'delta_e': np.asarray([0.04]),
         'tau_e': np.asarray([13]),
     }
 
@@ -78,7 +79,7 @@ results = results * 1e3
 # post-processing
 #################
 inputs, outputs = [], []
-cutoff = 400.0
+cutoff = 50.0
 
 for i in range(len(etas)):
 
@@ -98,5 +99,8 @@ for i in range(len(etas)):
     outputs.append(outputs_tmp)
 
 plt.plot(np.asarray(inputs), np.asarray(outputs))
+plt.legend([f"J = {np.round(k_0*k, decimals=1)}" for k in ks])
+plt.ylabel(r'firing rate (r)')
+plt.xlabel(r'background current $\mathbf{\eta}$')
 plt.tight_layout()
 plt.show()
