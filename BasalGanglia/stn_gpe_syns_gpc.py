@@ -17,7 +17,7 @@ sim_steps = int(np.round(T/dt))
 stim_offset = int(np.round(T*0.5/dt))
 stim_dur = int(np.round(3.0/dt))
 stim_delayed = int(np.round((T*0.5 + 10.0)/dt))
-stim_amp = 5.0
+stim_amp = 10.0
 stim_var = int(np.round(0.5/dt))
 stim_freq = 14.0
 ctx = np.zeros((sim_steps, 1))
@@ -39,34 +39,33 @@ plt.show()
 k = 1.0
 
 param_grid = {
-        'k_ee': [1.6],
-        'k_ae': [93.7],
-        'k_pe': [63.6],
-        'k_pp': [3.1],
-        'k_ep': [7.1],
-        'k_ap': [32.7],
-        'k_aa': [2.7],
-        'k_pa': [32.6],
-        'k_ps': [148.2],
-        'k_as': [69.1],
-        'eta_e': [-0.43],
-        'eta_p': [-0.28],
-        'eta_a': [-2.8],
-        'delta_e': [0.042],
-        'delta_p': [0.154],
-        'delta_a': [0.138],
+        'k_ee': [3.0],
+        'k_ae': [80.0],
+        'k_pe': [80.0],
+        'k_pp': [6.0],
+        'k_ep': [15.0],
+        'k_ap': [15.0],
+        'k_aa': [0.0],
+        'k_pa': [30.0],
+        'k_ps': [80.0],
+        'k_as': [120.0],
+        'eta_e': [0.5],
+        'eta_p': [-0.5],
+        'eta_a': [-2.0],
+        'delta_e': [0.05],
+        'delta_p': [0.25],
+        'delta_a': [0.1],
         'tau_e': [13],
         'tau_p': [25],
         'tau_a': [20],
     }
 param_grid = pd.DataFrame.from_dict(param_grid)
 
-# directory = "/home/rgast/JuliaProjects/JuRates/BasalGanglia/results/stn_gpe_ev_opt_results_final"
-# fname = "stn_gpe_ev_opt_79_params.h5"
+# fname = "/home/rgast/JuliaProjects/JuRates/BasalGanglia/results/stn_gpe_ev_opt_results_final/stn_gpe_ev_opt2_41_params.h5"
 # dv = 'p'
 # ivs = ['eta_e', 'eta_p', 'eta_a', 'k_ee', 'k_pe', 'k_ae', 'k_ep', 'k_pp', 'k_ap', 'k_pa', 'k_aa', 'k_ps', 'k_as',
 #        'delta_e', 'delta_p', 'delta_a', 'tau_e', 'tau_p', 'tau_a']
-# f = h5py.File(f"{directory}/{fname}", 'r')
+# f = h5py.File(fname, 'r')
 # data = [f[dv][key][()] for key in ivs[:-3]] + [13.0, 25.0, 20.0]
 # param_grid = pd.DataFrame(data=np.asarray([data]), columns=ivs)
 
@@ -81,15 +80,15 @@ param_map = {
     'k_pa': {'vars': ['weight'], 'edges': [('gpe_a', 'gpe_p')]},
     'k_ps': {'vars': ['weight'], 'edges': [('str', 'gpe_p')]},
     'k_as': {'vars': ['weight'], 'edges': [('str', 'gpe_a')]},
-    'eta_e': {'vars': ['stn_op/eta_e'], 'nodes': ['stn']},
-    'eta_p': {'vars': ['gpe_proto_op/eta_i'], 'nodes': ['gpe_p']},
-    'eta_a': {'vars': ['gpe_arky_op/eta_a'], 'nodes': ['gpe_a']},
-    'delta_e': {'vars': ['stn_op/delta_e'], 'nodes': ['stn']},
-    'delta_p': {'vars': ['gpe_proto_op/delta_i'], 'nodes': ['gpe_p']},
-    'delta_a': {'vars': ['gpe_arky_op/delta_a'], 'nodes': ['gpe_a']},
-    'tau_e': {'vars': ['stn_op/tau_e'], 'nodes': ['stn']},
-    'tau_p': {'vars': ['gpe_proto_op/tau_i'], 'nodes': ['gpe_p']},
-    'tau_a': {'vars': ['gpe_arky_op/tau_a'], 'nodes': ['gpe_a']},
+    'eta_e': {'vars': ['stn__synsop/eta_e'], 'nodes': ['stn']},
+    'eta_p': {'vars': ['gpe_proto_syns_op/eta_i'], 'nodes': ['gpe_p']},
+    'eta_a': {'vars': ['gpe_arky_syns_op/eta_a'], 'nodes': ['gpe_a']},
+    'delta_e': {'vars': ['stn_syns_op/delta_e'], 'nodes': ['stn']},
+    'delta_p': {'vars': ['gpe_proto_syns_op/delta_i'], 'nodes': ['gpe_p']},
+    'delta_a': {'vars': ['gpe_arky_syns_op/delta_a'], 'nodes': ['gpe_a']},
+    'tau_e': {'vars': ['stn_syns_op/tau_e'], 'nodes': ['stn']},
+    'tau_p': {'vars': ['gpe_proto_syns_op/tau_i'], 'nodes': ['gpe_p']},
+    'tau_a': {'vars': ['gpe_arky_syns_op/tau_a'], 'nodes': ['gpe_a']},
 }
 
 # manual changes for bifurcation analysis
@@ -125,7 +124,7 @@ for key, key_tmp, power in param_scalings:
     param_grid[key] = np.asarray(param_grid[key]) * np.asarray(param_grid[key_tmp]) ** power if key_tmp \
         else np.asarray(param_grid[key]) * power
 results, result_map = grid_search(
-        circuit_template="config/stn_gpe/stn_gpe",
+        circuit_template="config/stn_gpe/stn_gpe_syns",
         param_grid=param_grid,
         param_map=param_map,
         simulation_time=T,
@@ -133,10 +132,11 @@ results, result_map = grid_search(
         permute=True,
         sampling_step_size=dts,
         inputs={
-            'stn/stn_op/ctx': ctx,
+            'stn/stn_syns_op/ctx': ctx,
             'str/str_dummy_op/I': stria
             },
-        outputs={'r_e': 'stn/stn_op/R_e', 'r_i': 'gpe_p/gpe_proto_op/R_i', 'r_a': 'gpe_a/gpe_arky_op/R_a'},
+        outputs={'r_e': 'stn/stn_syns_op/R_e', 'r_i': 'gpe_p/gpe_proto_syns_op/R_i',
+                 'r_a': 'gpe_a/gpe_arky_syns_op/R_a'},
         init_kwargs={
             'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
         method='RK45',
