@@ -6,9 +6,45 @@ from copy import deepcopy
 from scipy.ndimage.filters import gaussian_filter1d
 from pyrates.utility import plot_timeseries, create_cmap
 import h5py
+import os
 
-# parameter definitions
-#######################
+# find fittest candidate among fitting results
+##############################################
+
+directory = "/home/rgast/JuliaProjects/JuRates/BasalGanglia/results/stn_gpe_ev_opt_results_final"
+fid = "stn_gpe_ev_opt"
+dv = 'f'
+
+# load data into frame
+df = pd.DataFrame(data=np.zeros((1, 1)), columns=["fitness"])
+for fn in os.listdir(directory):
+    if fn.startswith(fid) and fn.endswith("fitness.h5"):
+        f = h5py.File(f"{directory}/{fn}", 'r')
+        index = int(fn.split('_')[-2])
+        df_tmp = pd.DataFrame(data=np.asarray([1/f["f"][()]]), columns=["fitness"], index=[index])
+        df = df.append(df_tmp)
+df = df.iloc[1:, :]
+df = df.sort_values("fitness")
+
+n_fittest = 1  # increase to get the second fittest candidate and so on
+fidx = df.index[-n_fittest]
+
+# load parameter set of fittest candidate
+#########################################
+
+fname = f"{directory}/{fid}_{fidx}_params.h5"
+dv = 'p'
+ivs = ['eta_e', 'eta_p', 'eta_a', 'k_ee', 'k_pe', 'k_ae', 'k_ep', 'k_pp', 'k_ap', 'k_pa', 'k_aa', 'k_ps', 'k_as',
+       'delta_e', 'delta_p', 'delta_a', 'tau_e', 'tau_p', 'tau_a']
+f = h5py.File(fname, 'r')
+data = [f[dv][key][()] for key in ivs[:-3]] + [13.0, 25.0, 20.0]
+param_grid = pd.DataFrame(data=np.asarray([data]), columns=ivs)
+
+print(f"Winning parameter set: {fidx}, fitness = {df.loc[fidx, 'fitness']}")
+print(param_grid.iloc[0, :])
+
+# simulation parameter definitions
+##################################
 
 # simulation parameters
 dt = 1e-3
@@ -36,39 +72,6 @@ stria = gaussian_filter1d(stria, stim_var*2.0, axis=0)
 # plt.show()
 
 # model parameters
-k = 1.0
-
-param_grid = {
-        'k_ee': [1.4],
-        'k_ae': [68.5],
-        'k_pe': [83.8],
-        'k_pp': [2.7],
-        'k_ep': [9.9],
-        'k_ap': [9.7],
-        'k_aa': [3.3],
-        'k_pa': [57.5],
-        'k_ps': [61.7],
-        'k_as': [62.4],
-        'eta_e': [0.4],
-        'eta_p': [-0.5],
-        'eta_a': [-5.3],
-        'delta_e': [0.04],
-        'delta_p': [0.19],
-        'delta_a': [0.12],
-        'tau_e': [13],
-        'tau_p': [25],
-        'tau_a': [20],
-    }
-param_grid = pd.DataFrame.from_dict(param_grid)
-
-# fname = "/home/rgast/JuliaProjects/JuRates/BasalGanglia/results/stn_gpe_ev_opt_results_final/stn_gpe_ev_opt2_41_params.h5"
-# dv = 'p'
-# ivs = ['eta_e', 'eta_p', 'eta_a', 'k_ee', 'k_pe', 'k_ae', 'k_ep', 'k_pp', 'k_ap', 'k_pa', 'k_aa', 'k_ps', 'k_as',
-#        'delta_e', 'delta_p', 'delta_a', 'tau_e', 'tau_p', 'tau_a']
-# f = h5py.File(fname, 'r')
-# data = [f[dv][key][()] for key in ivs[:-3]] + [13.0, 25.0, 20.0]
-# param_grid = pd.DataFrame(data=np.asarray([data]), columns=ivs)
-
 param_map = {
     'k_ee': {'vars': ['weight'], 'edges': [('stn', 'stn')]},
     'k_ae': {'vars': ['weight'], 'edges': [('stn', 'gpe_a')]},
@@ -92,8 +95,8 @@ param_map = {
 }
 
 # manual changes for bifurcation analysis
+k = 1.0
 #param_grid.loc[0, 'k_ae'] = 190.0
-
 param_scalings = [
             ('delta_p', None, 1.0/k),
             ('delta_a', None, 1.0/k),
@@ -132,35 +135,6 @@ conditions = [{},  # healthy control -> GPe_p: 60 Hz, STN: 20 Hz, GPe_a: 30 Hz
 # simulations
 #############
 
-# param_grid_final = pd.DataFrame()
-# for c_dict in deepcopy(conditions):
-#     for key in param_grid:
-#         if key in c_dict:
-#             c_dict[key] = np.asarray(param_grid[key]) * c_dict[key]
-#         elif key in param_grid:
-#             c_dict[key] = np.asarray(param_grid[key])
-#     for key, key_tmp, power in param_scalings:
-#         c_dict[key] = c_dict[key] * c_dict[key_tmp] ** power
-#     param_grid_tmp = pd.DataFrame.from_dict(c_dict)
-#     param_grid_final = param_grid_final.append(param_grid_tmp)
-# param_grid_final.index = np.arange(0, param_grid_final.shape[0])
-# results, result_map = grid_search(
-#         circuit_template="config/stn_gpe/stn_gpe",
-#         param_grid=param_grid_final,
-#         param_map=param_map,
-#         simulation_time=T,
-#         step_size=dt,
-#         permute=False,
-#         sampling_step_size=dts,
-#         inputs={},
-#         outputs={'r_i': 'gpe_p/gpe_proto_op/R_i'},
-#         init_kwargs={
-#             'backend': 'numpy', 'solver': 'scipy', 'step_size': dt}
-#     )
-# results = results*1e3
-# results.plot()
-# plt.show()
-
 for c_dict in deepcopy(conditions):
     for key in param_grid:
         if key in c_dict:
@@ -192,4 +166,5 @@ for c_dict in deepcopy(conditions):
     results.plot()
     #plt.xlim(0, 100)
     #plt.ylim(0, 200)
+    plt.title(f"File-ID = {fidx}, Fitness = {df.loc[fidx, 'fitness']}")
     plt.show()

@@ -1116,7 +1116,7 @@ stn_pop:
   nodes:
     stn: stn
   edges:
-    - [stn/stn_op/R_e, stn/stn_op/stn, null, {weight: 22.0, delay: 1.0, spread: 0.5}]
+    - [stn/stn_op/R_e, stn/stn_op/stn, null, {weight: 22.0, delay: 2.0, spread: 1.0}]
 
 
 gpe_pop:
@@ -1132,14 +1132,14 @@ stn_gpe:
     gpe_a: gpe_arky
     str: str_dummy
   edges:
-    - [stn/stn_op/R_e, stn/stn_op/stn, null, {weight: 22.0, delay: 1.0, spread: 0.5}]
+    - [stn/stn_op/R_e, stn/stn_op/stn, null, {weight: 22.0, delay: 1.0, spread: 0.7}]
     - [stn/stn_op/R_e, gpe_p/gpe_proto_op/stn, null, {weight: 1200.0, delay: 4.0, spread: 1.0}]
-    - [stn/stn_op/R_e, gpe_a/gpe_arky_op/stn, null, {weight: 565.7, delay: 4.0, spread: 1.0}]
-    - [gpe_p/gpe_proto_op/R_i, gpe_p/gpe_proto_op/gpe_p, null, {weight: 607.2, delay: 1.0, spread: 0.5}]
-    - [gpe_p/gpe_proto_op/R_i, stn/stn_op/gpe_p, null, {weight: 303.6, delay: 3.2, spread: 0.8}]
-    - [gpe_p/gpe_proto_op/R_i, gpe_a/gpe_arky_op/gpe_p, null, {weight: 565.7, delay: 1.0, spread: 0.5}]
-    - [gpe_a/gpe_arky_op/R_a, gpe_a/gpe_arky_op/gpe_a, null, {weight: 282.8, delay: 1.0, spread: 0.5}]
-    - [gpe_a/gpe_arky_op/R_a, gpe_p/gpe_proto_op/gpe_a, null, {weight: 303.6, delay: 1.0, spread: 0.5}]
+    - [stn/stn_op/R_e, gpe_a/gpe_arky_op/stn, null, {weight: 565.7, delay: 3.2, spread: 0.8}]
+    - [gpe_p/gpe_proto_op/R_i, gpe_p/gpe_proto_op/gpe_p, null, {weight: 607.2, delay: 0.8, spread: 0.6}]
+    - [gpe_p/gpe_proto_op/R_i, stn/stn_op/gpe_p, null, {weight: 303.6, delay: 3.0, spread: 0.9}]
+    - [gpe_p/gpe_proto_op/R_i, gpe_a/gpe_arky_op/gpe_p, null, {weight: 565.7, delay: 1.6, spread: 0.8}]
+    - [gpe_a/gpe_arky_op/R_a, gpe_a/gpe_arky_op/gpe_a, null, {weight: 282.8, delay: 0.8, spread: 0.6}]
+    - [gpe_a/gpe_arky_op/R_a, gpe_p/gpe_proto_op/gpe_a, null, {weight: 303.6, delay: 1.6, spread: 0.8}]
     - [str/str_dummy_op/R_s, gpe_a/gpe_arky_op/str, null, {weight: 2262.7}]
     - [str/str_dummy_op/R_s, gpe_p/gpe_proto_op/str, null, {weight: 1517.9}]
 
