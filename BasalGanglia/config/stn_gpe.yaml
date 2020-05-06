@@ -4,6 +4,89 @@
 # Operator templates
 ####################
 
+biexp_simple:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * r = (I + r_0 - r) / tau"
+    - "d/dt * r2 = (I_ext - r2) / tau2"
+    - "d/dt * I = x"
+    - "d/dt * x = (r_in - x*(tau_r+tau_d) - I)/(tau_r*tau_d)"
+  variables:
+    r:
+      default: output
+    r2:
+      default: variable
+    I:
+      default: variable
+    x:
+      default: variable
+    r_0:
+      default: 0.0
+    tau:
+      default: 1.0
+    tau2:
+      default: 0.5
+    tau_r:
+      default: 0.8
+    tau_d:
+      default: 3.7
+    I_ext:
+      default: input
+    r_in:
+      default: input
+
+biexp_rate:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * r = (I + r_0 - r) / tau"
+    - "d/dt * r2 = (I_ext - r2) / tau2"
+    - "d/dt * I = x"
+    - "d/dt * x = (r_in - x*(tau_r+tau_d) - I)/(tau_r*tau_d)"
+  variables:
+    r:
+      default: variable
+    r2:
+      default: output
+    I:
+      default: variable
+    x:
+      default: variable
+    r_0:
+      default: 0.0
+    tau:
+      default: 1.0
+    tau2:
+      default: 0.5
+    tau_r:
+      default: 0.8
+    tau_d:
+      default: 3.7
+    I_ext:
+      default: input
+    r_in:
+      default: input
+
+rate_simple:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * r = (I + r_0 - r) / tau"
+    - "d/dt * r2 = (I_ext - r2) / tau2"
+  variables:
+    r:
+      default: output
+    r2:
+      default: variable
+    I:
+      default: input
+    I_ext:
+      default: input
+    r_0:
+      default: 0.0
+    tau:
+      default: 1.0
+    tau2:
+      default: 0.5
+
 qif_simple:
   base: OperatorTemplate
   equations:
@@ -1032,6 +1115,21 @@ str_dummy_op:
 # population templates
 ######################
 
+biexp_pop:
+  base: NodeTemplate
+  operators:
+    - biexp_simple
+
+biexp_rate_pop:
+  base: NodeTemplate
+  operators:
+    - biexp_rate
+
+rate_pop:
+  base: NodeTemplate
+  operators:
+    - rate_simple
+
 pop_qif:
   base: NodeTemplate
   operators:
@@ -1158,6 +1256,27 @@ qif_alpha_net:
   nodes:
     pop: qif_alpha_pop
 
+biexp:
+  base: CircuitTemplate
+  nodes:
+    n1: biexp_pop
+  edges:
+    - [n1/biexp_simple/r2, n1/biexp_simple/r_in, null, {weight: 1.0, delay: 3.0}]
+
+biexp_gamma:
+  base: CircuitTemplate
+  nodes:
+    n1: biexp_rate_pop
+  edges:
+    - [n1/biexp_rate/r2, n1/biexp_rate/r_in, null, {weight: 1.0, delay: 2.0, spread: 1.0}]
+
+rate:
+  base: CircuitTemplate
+  nodes:
+    n1: rate_pop
+  edges:
+    - [n1/rate_simple/r2, n1/rate_simple/I, null, {weight: 1.0, delay: 1.0, spread: 0.5}]
+
 synapse:
   base: CircuitTemplate
   nodes:
@@ -1209,14 +1328,14 @@ stn_gpe_syns:
     gpe_a: gpe_arky_syns
     str: str_dummy
   edges:
-    - [stn/stn_syns_op/R_e, stn/stn_syns_op/stn, null, {weight: 22.0, delay: 0.8, spread: 0.4}]
-    - [stn/stn_syns_op/R_e, gpe_p/gpe_proto_syns_op/stn, null, {weight: 1200.0, delay: 3.2, spread: 0.8}]
-    - [stn/stn_syns_op/R_e, gpe_a/gpe_arky_syns_op/stn, null, {weight: 565.7, delay: 3.2, spread: 0.8}]
-    - [gpe_p/gpe_proto_syns_op/R_i, gpe_p/gpe_proto_syns_op/gpe_p, null, {weight: 607.2}]
-    - [gpe_p/gpe_proto_syns_op/R_i, stn/stn_syns_op/gpe_p, null, {weight: 303.6, delay: 2.0, spread: 0.5}]
-    - [gpe_p/gpe_proto_syns_op/R_i, gpe_a/gpe_arky_syns_op/gpe_p, null, {weight: 565.7, delay: 0.8, spread: 0.4}]
-    - [gpe_a/gpe_arky_syns_op/R_a, gpe_a/gpe_arky_syns_op/gpe_a, null, {weight: 282.8, delay: 0.8, spread: 0.4}]
-    - [gpe_a/gpe_arky_syns_op/R_a, gpe_p/gpe_proto_syns_op/gpe_a, null, {weight: 303.6, delay: 0.8, spread: 0.4}]
+    - [stn/stn_syns_op/R_e, stn/stn_syns_op/stn, null, {weight: 22.0, delay: 1.75, spread: 1.25}]
+    - [stn/stn_syns_op/R_e, gpe_p/gpe_proto_syns_op/stn, null, {weight: 1200.0, delay: 3.0, spread: 1.0}]
+    - [stn/stn_syns_op/R_e, gpe_a/gpe_arky_syns_op/stn, null, {weight: 565.7, delay: 3.0, spread: 1.0}]
+    - [gpe_p/gpe_proto_syns_op/R_i, gpe_p/gpe_proto_syns_op/gpe_p, null, {weight: 607.2, delay: 1.5, spread: 1.0}]
+    - [gpe_p/gpe_proto_syns_op/R_i, stn/stn_syns_op/gpe_p, null, {weight: 303.6, delay: 2.0, spread: 1.0}]
+    - [gpe_p/gpe_proto_syns_op/R_i, gpe_a/gpe_arky_syns_op/gpe_p, null, {weight: 565.7, delay: 1.5, spread: 1.0}]
+    - [gpe_a/gpe_arky_syns_op/R_a, gpe_a/gpe_arky_syns_op/gpe_a, null, {weight: 282.8, delay: 1.5, spread: 1.0}]
+    - [gpe_a/gpe_arky_syns_op/R_a, gpe_p/gpe_proto_syns_op/gpe_a, null, {weight: 303.6, delay: 1.5, spread: 1.0}]
     - [str/str_dummy_op/R_s, gpe_a/gpe_arky_syns_op/str, null, {weight: 2262.7}]
     - [str/str_dummy_op/R_s, gpe_p/gpe_proto_syns_op/str, null, {weight: 1517.9}]
 
