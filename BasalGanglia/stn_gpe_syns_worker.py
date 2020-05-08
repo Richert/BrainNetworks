@@ -24,8 +24,6 @@ class ExtendedWorker(MinimalWorker):
         conditions = kwargs_tmp.pop('conditions')
         param_grid = kwargs_tmp.pop('param_grid')
         param_scalings = kwargs_tmp.pop('param_scalings')
-        T = kwargs_tmp['simulation_time']
-        dt = kwargs_tmp['step_size']
 
         # simulate autonomous behavior in different conditions
         results, gene_ids = [], param_grid.index
@@ -42,27 +40,6 @@ class ExtendedWorker(MinimalWorker):
             r = r.droplevel(2, axis=1)
             results.append(r)
 
-        # simulate behavior under extrinsic forcing
-        sim_steps = int(np.round(T / dt))
-        stim_offset = int(np.round(T * 0.5 / dt))
-        stim_dur = int(np.round(1.0 / dt))
-        stim_delayed = int(np.round((T * 0.5 + 14.0) / dt))
-        stim_amp = 9.0
-        stim_var = 100.0
-        ctx = np.zeros((sim_steps, 1))
-        ctx[stim_offset:stim_offset + stim_dur, 0] = stim_amp
-        ctx = gaussian_filter1d(ctx, stim_var, axis=0)
-        stria = np.zeros((sim_steps, 1))
-        stria[stim_delayed:stim_delayed + stim_dur, 0] = stim_amp
-        stria = gaussian_filter1d(stria, stim_var * 10.0, axis=0)
-        for key, key_tmp, power in param_scalings:
-            param_grid[key] = np.asarray(param_grid[key]) * np.asarray(param_grid[key_tmp]) ** power
-        kwargs_tmp.pop('inputs')
-        r, self.result_map, sim_time = grid_search(*args, param_grid=param_grid,
-                                                   inputs={'stn/stn_op/ctx': ctx, 'str/str_dummy_op/I': stria},
-                                                   **kwargs_tmp)
-        results.append(r)
-
         self.results = results
         return sim_time
 
@@ -71,13 +48,12 @@ class ExtendedWorker(MinimalWorker):
         param_grid = kwargs_tmp.pop('param_grid')
         freq_targets = kwargs_tmp.pop('freq_targets')
         targets = kwargs_tmp.pop('targets')
-        T = kwargs_tmp['T']
         self.processed_results = DataFrame(data=None, columns=['fitness', 'r_e', 'r_i', 'r_a'])
 
         # calculate fitness
         for gene_id in param_grid.index:
             outputs, vars = [], []
-            for i, r in enumerate(self.results[:-1]):
+            for i, r in enumerate(self.results):
                 r = r * 1e3
                 r.index = r.index * 1e-3
                 cutoff = r.index[-1]*0.5
@@ -90,31 +66,11 @@ class ExtendedWorker(MinimalWorker):
                 vars.append(np.var(r['r_i'][f'circuit_{gene_id}'].loc[cutoff:]) if freq_targets[i] == 0.0 else
                             1/np.var(r['r_i'][f'circuit_{gene_id}'].loc[cutoff2:]))
                 freq_targets[i] = 0.0
+
             dist1 = fitness(outputs, targets)
             dist2 = fitness(vars, freq_targets)
 
-            stim_t = T * 0.5
-            times = [stim_t,
-                     stim_t + 5.0,
-                     stim_t + 8.0,
-                     stim_t + 20.0,
-                     stim_t + 25.0,
-                     stim_t + 35.0,
-                     stim_t + 60.0
-                     ]
-            targets_t = [
-                [20.0, 60.0],  # steady-state (t = stim_t)
-                [150.0, 60.0],  # first peak stn (t = stim_t + 5.0)
-                [np.nan, 400.0],  # first peak gpe (t = stim_t + 8.0))
-                [200.0, 2.0],  # second stn peak (t = sim_t + 20.0)
-                [np.nan, 400.0],  # second gpe peak (t = sim_t + 25.0)
-                [10.0, 200.0],  # fall of of second gpe peak (t = sim_t + 35.0)
-                [20.0, 60.0],  # steady-sate (t = stim_t + 60.0)
-            ]
-            r = self.results[-1]
-            results_t = [[r.loc[t, 'r_e'], r.loc[t, 'r_i']] for t in times]
-            dist3 = fitness(results_t, targets_t, squared=False)
-            self.processed_results.loc[gene_id, 'fitness'] = dist1+dist2+dist3
+            self.processed_results.loc[gene_id, 'fitness'] = 1/(dist1+dist2)
             self.processed_results.loc[gene_id, 'r_e'] = [rates[0] for rates in outputs]
             self.processed_results.loc[gene_id, 'r_i'] = [rates[1] for rates in outputs]
             self.processed_results.loc[gene_id, 'r_a'] = [rates[2] for rates in outputs]
@@ -139,4 +95,4 @@ if __name__ == "__main__":
     #    subgrid="/data/u_rgast_software/PycharmProjects/BrainNetworks/BasalGanglia/stn_gpe_healthy_opt/Grids/Subgrids/DefaultGrid_38/spanien/spanien_Subgrid_0.h5",
     #    result_file="~/my_result.h5",
     #    build_dir=os.getcwd()
-    #)
+    #
