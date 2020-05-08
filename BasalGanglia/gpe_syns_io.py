@@ -24,31 +24,31 @@ dts = 1e-1
 T = 200.0
 
 # model parameters
-etas = np.linspace(-6.0, 6.0, num=40)
+etas = np.linspace(-10.0, 10.0, num=40)
 ks = np.asarray([0.5, 0.75, 1.0, 1.25, 1.5])
-k_0 = 9.0
+k_0 = 60.0
 param_grid = {
-        'k_ee': np.asarray([k_0])*ks,
-        'eta_e': np.asarray([0.0]) + etas,
-        'delta_e': np.asarray([0.15]),
-        'tau_e': np.asarray([13]),
-        'd': np.asarray([1.75]),
-        's': np.asarray([1.25])
+        'k_ii': np.asarray([k_0])*ks,
+        'eta_i': np.asarray([0.0]) + etas,
+        'delta_i': np.asarray([0.15]),
+        'tau_i': np.asarray([20]),
+        'd': np.asarray([1.5]),
+        's': np.asarray([1.0])
     }
 
 param_map = {
-    'k_ee': {'vars': ['weight'], 'edges': [('stn', 'stn')]},
-    'd': {'vars': ['delay'], 'edges': [('stn', 'stn')]},
-    's': {'vars': ['spread'], 'edges': [('stn', 'stn')]},
-    'eta_e': {'vars': ['stn_syns_op/eta_e'], 'nodes': ['stn']},
-    'delta_e': {'vars': ['stn_syns_op/delta_e'], 'nodes': ['stn']},
-    'tau_e': {'vars': ['stn_syns_op/tau_e'], 'nodes': ['stn']},
+    'k_ii': {'vars': ['weight'], 'edges': [('gpe', 'gpe')]},
+    'd': {'vars': ['delay'], 'edges': [('gpe', 'gpe')]},
+    's': {'vars': ['spread'], 'edges': [('gpe', 'gpe')]},
+    'eta_i': {'vars': ['gpe_proto_syns_op/eta_i'], 'nodes': ['gpe']},
+    'delta_i': {'vars': ['gpe_proto_syns_op/delta_i'], 'nodes': ['gpe']},
+    'tau_i': {'vars': ['gpe_proto_syns_op/tau_i'], 'nodes': ['gpe']},
 }
 
 param_scalings = [
-    ('delta_e', 'tau_e', 2.0),
-    ('k_ee', 'delta_e', 0.5),
-    ('eta_e', 'delta_e', 1.0)
+    ('delta_i', 'tau_i', 2.0),
+    ('k_ii', 'delta_i', 0.5),
+    ('eta_i', 'delta_i', 1.0)
 ]
 
 # grid-search
@@ -62,7 +62,7 @@ for key, key_tmp, power in param_scalings:
 #        param_grid[key] = np.asarray(list(val)*len(etas))
 
 results, result_map = grid_search(
-    circuit_template="config/stn_gpe/stn_syns_pop",
+    circuit_template="config/stn_gpe/gpe_syns_pop",
     param_grid=param_grid,
     param_map=param_map,
     simulation_time=T,
@@ -71,7 +71,7 @@ results, result_map = grid_search(
     sampling_step_size=dts,
     inputs={},
     outputs={
-        'r_e': 'stn/stn_syns_op/R_e'
+        'r_i': 'gpe/gpe_proto_syns_op/R_i'
     },
     init_kwargs={'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
     method='RK45'
@@ -85,18 +85,18 @@ cutoff = 100.0
 
 for i in range(len(etas)):
 
-    indices_tmp = np.argwhere(np.round(result_map.loc[:, 'eta_e'].values, decimals=2) ==
-                              np.round(param_grid['eta_e'][i], decimals=2)).squeeze()
+    indices_tmp = np.argwhere(np.round(result_map.loc[:, 'eta_i'].values, decimals=2) ==
+                              np.round(param_grid['eta_i'][i], decimals=2)).squeeze()
     indices = result_map.index[indices_tmp]
-    inputs.append(param_grid['eta_e'][i])
+    inputs.append(param_grid['eta_i'][i])
 
     outputs_tmp = []
     result_map_tmp = result_map.loc[indices, :]
     for j in range(len(ks)):
-        idx_tmp = np.argwhere(np.round(result_map_tmp.loc[:, 'k_ee'].values, decimals=2) ==
-                              np.round(param_grid['k_ee'][j], decimals=2)).squeeze()
+        idx_tmp = np.argwhere(np.round(result_map_tmp.loc[:, 'k_ii'].values, decimals=2) ==
+                              np.round(param_grid['k_ii'][j], decimals=2)).squeeze()
         idx = result_map_tmp.index[idx_tmp]
-        ts = results.loc[cutoff:, ('r_e', idx)].values
+        ts = results.loc[cutoff:, ('r_i', idx)].values
         outputs_tmp.append(np.max(ts))
     outputs.append(outputs_tmp)
 

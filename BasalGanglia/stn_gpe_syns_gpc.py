@@ -15,10 +15,10 @@ dts = 1e-2
 T = 600.0
 sim_steps = int(np.round(T/dt))
 stim_offset = int(np.round(T*0.5/dt))
-stim_dur = int(np.round(3.0/dt))
-stim_delayed = int(np.round((T*0.5 + 10.0)/dt))
-stim_amp = 10.0
-stim_var = int(np.round(0.5/dt))
+stim_dur = int(np.round(2.0/dt))
+stim_delayed = int(np.round((T*0.5 + 11.0)/dt))
+stim_amp = 120.0
+stim_var = int(np.round(1.0/dt))
 stim_freq = 14.0
 ctx = np.zeros((sim_steps, 1))
 ctx[stim_offset:stim_offset+stim_dur, 0] = stim_amp
@@ -30,31 +30,31 @@ stria = gaussian_filter1d(stria, 2*stim_var, axis=0)
 # ctx = np.sin(2.0*np.pi*stim_freq*time*1e-3)*stim_amp + stim_amp
 # stria = ctx*0.005
 
-plt.figure()
-plt.plot(ctx)
-plt.plot(stria)
-plt.show()
+# plt.figure()
+# plt.plot(ctx)
+# plt.plot(stria)
+# plt.show()
 
 # model parameters
 k = 1.0
 
 param_grid = {
         'k_ee': [3.0],
-        'k_ae': [80.0],
-        'k_pe': [80.0],
-        'k_pp': [6.0],
-        'k_ep': [15.0],
-        'k_ap': [15.0],
-        'k_aa': [0.0],
-        'k_pa': [30.0],
-        'k_ps': [80.0],
-        'k_as': [120.0],
-        'eta_e': [0.5],
+        'k_ae': [180.0],
+        'k_pe': [180.0],
+        'k_pp': [20.0],
+        'k_ep': [100.0],
+        'k_ap': [10.0],
+        'k_aa': [60.0],
+        'k_pa': [70.0],
+        'k_ps': [100.0],
+        'k_as': [400.0],
+        'eta_e': [-1.5],
         'eta_p': [-0.5],
         'eta_a': [-2.0],
-        'delta_e': [0.05],
+        'delta_e': [0.2],
         'delta_p': [0.25],
-        'delta_a': [0.1],
+        'delta_a': [0.15],
         'tau_e': [13],
         'tau_p': [25],
         'tau_a': [20],
@@ -133,7 +133,7 @@ results, result_map = grid_search(
         sampling_step_size=dts,
         inputs={
             'stn/stn_syns_op/ctx': ctx,
-            'str/str_dummy_op/I': stria
+            #'str/str_dummy_op/I': stria
             },
         outputs={'r_e': 'stn/stn_syns_op/R_e', 'r_i': 'gpe_p/gpe_proto_syns_op/R_i',
                  'r_a': 'gpe_a/gpe_arky_syns_op/R_a'},

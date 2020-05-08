@@ -1101,14 +1101,28 @@ str_fsi_op:
 str_dummy_op:
   base: OperatorTemplate
   equations:
-    - "d/dt * R_s = (mu - R_s + I) / tau_s"
+    - "d/dt * R_s = (eta_s - R_s + I) / tau_s"
   variables:
     R_s:
       default: output
-    mu:
+    eta_s:
       default: 0.002
     tau_s:
-      default: 1.0
+      default: 20.0
+    I:
+      default: input
+
+stn_dummy_op:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * R_e = (eta_e - R_e + I) / tau_e"
+  variables:
+    R_e:
+      default: output
+    eta_e:
+      default: 0.02
+    tau_e:
+      default: 13.0
     I:
       default: input
 
@@ -1248,6 +1262,11 @@ str_dummy:
   operators:
     - str_dummy_op
 
+stn_dummy:
+  base: NodeTemplate
+  operators:
+    - stn_dummy_op
+
 # circuit templates
 ###################
 
@@ -1294,12 +1313,36 @@ stn_syns_pop:
   nodes:
     stn: stn_syns
   edges:
-    - [stn/stn_syns_op/R_e, stn/stn_syns_op/stn, null, {weight: 1.0, delay: 0.8, spread: 0.4}]
+    - [stn/stn_syns_op/R_e, stn/stn_syns_op/stn, null, {weight: 1.0, delay: 1.75, spread: 1.25}]
 
 gpe_pop:
   base: CircuitTemplate
   nodes:
     gpe: gpe_proto
+
+gpe_2pop:
+  base: CircuitTemplate
+  nodes:
+    gpe_p: gpe_proto_syns
+    gpe_a: gpe_arky_syns
+    stn: stn_dummy
+    str: str_dummy
+  edges:
+    - [gpe_p/gpe_proto_syns_op/R_i, gpe_p/gpe_proto_syns_op/gpe_p, null, {weight: 1.0, delay: 1.5, spread: 1.0}]
+    - [gpe_p/gpe_proto_syns_op/R_i, gpe_a/gpe_arky_syns_op/gpe_p, null, {weight: 1.0, delay: 1.5, spread: 1.0}]
+    - [gpe_a/gpe_arky_syns_op/R_a, gpe_p/gpe_proto_syns_op/gpe_a, null, {weight: 1.0, delay: 1.5, spread: 1.0}]
+    - [gpe_a/gpe_arky_syns_op/R_a, gpe_a/gpe_arky_syns_op/gpe_a, null, {weight: 1.0, delay: 1.5, spread: 1.0}]
+    - [stn/stn_dummy_op/R_e, gpe_p/gpe_proto_syns_op/stn, null, {weight: 1.0}]
+    - [stn/stn_dummy_op/R_e, gpe_a/gpe_arky_syns_op/stn, null, {weight: 1.0}]
+    - [str/str_dummy_op/R_s, gpe_p/gpe_proto_syns_op/str, null, {weight: 1.0}]
+    - [str/str_dummy_op/R_s, gpe_a/gpe_arky_syns_op/str, null, {weight: 1.0}]
+
+gpe_syns_pop:
+  base: CircuitTemplate
+  nodes:
+    gpe: gpe_proto_syns
+  edges:
+    - [gpe/gpe_proto_syns_op/R_i, gpe/gpe_proto_syns_op/gpe_p, null, {weight: 1.0, delay: 1.5, spread: 1.0}]
 
 stn_gpe:
   base: CircuitTemplate

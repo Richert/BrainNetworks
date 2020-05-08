@@ -33,7 +33,7 @@ param_grid = {
         'k_ee': np.asarray([-k_0])*ks,
         'eta_e': np.asarray([0.0]) + etas,
         'delta_e': np.asarray([0.1]),
-        'tau_e': np.asarray([20]),
+        'tau_e': np.asarray([13]),
     }
 
 param_map = {

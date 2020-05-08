@@ -11,8 +11,8 @@ import os
 # find fittest candidate among fitting results
 ##############################################
 
-directory = "/home/rgast/JuliaProjects/JuRates/BasalGanglia/results/stn_gpe_ev_opt_results_final"
-fid = "stn_gpe_ev_opt"
+directory = "/home/rgast/JuliaProjects/JuRates/BasalGanglia/results/stn_gpe_syns"
+fid = "stn_gpe_syns_opt"
 dv = 'f'
 
 # load data into frame
@@ -26,7 +26,7 @@ for fn in os.listdir(directory):
 df = df.iloc[1:, :]
 df = df.sort_values("fitness")
 
-n_fittest = 1  # increase to get the second fittest candidate and so on
+n_fittest = 2  # increase to get the second fittest candidate and so on
 fidx = df.index[-n_fittest]
 
 # load parameter set of fittest candidate
@@ -83,15 +83,15 @@ param_map = {
     'k_pa': {'vars': ['weight'], 'edges': [('gpe_a', 'gpe_p')]},
     'k_ps': {'vars': ['weight'], 'edges': [('str', 'gpe_p')]},
     'k_as': {'vars': ['weight'], 'edges': [('str', 'gpe_a')]},
-    'eta_e': {'vars': ['stn_op/eta_e'], 'nodes': ['stn']},
-    'eta_p': {'vars': ['gpe_proto_op/eta_i'], 'nodes': ['gpe_p']},
-    'eta_a': {'vars': ['gpe_arky_op/eta_a'], 'nodes': ['gpe_a']},
-    'delta_e': {'vars': ['stn_op/delta_e'], 'nodes': ['stn']},
-    'delta_p': {'vars': ['gpe_proto_op/delta_i'], 'nodes': ['gpe_p']},
-    'delta_a': {'vars': ['gpe_arky_op/delta_a'], 'nodes': ['gpe_a']},
-    'tau_e': {'vars': ['stn_op/tau_e'], 'nodes': ['stn']},
-    'tau_p': {'vars': ['gpe_proto_op/tau_i'], 'nodes': ['gpe_p']},
-    'tau_a': {'vars': ['gpe_arky_op/tau_a'], 'nodes': ['gpe_a']},
+    'eta_e': {'vars': ['stn_syns_op/eta_e'], 'nodes': ['stn']},
+    'eta_p': {'vars': ['gpe_proto_syns_op/eta_i'], 'nodes': ['gpe_p']},
+    'eta_a': {'vars': ['gpe_arky_syns_op/eta_a'], 'nodes': ['gpe_a']},
+    'delta_e': {'vars': ['stn_syns_op/delta_e'], 'nodes': ['stn']},
+    'delta_p': {'vars': ['gpe_proto_syns_op/delta_i'], 'nodes': ['gpe_p']},
+    'delta_a': {'vars': ['gpe_arky_syns_op/delta_a'], 'nodes': ['gpe_a']},
+    'tau_e': {'vars': ['stn_syns_op/tau_e'], 'nodes': ['stn']},
+    'tau_p': {'vars': ['gpe_proto_syns_op/tau_i'], 'nodes': ['gpe_p']},
+    'tau_a': {'vars': ['gpe_arky_syns_op/tau_a'], 'nodes': ['gpe_a']},
 }
 
 # manual changes for bifurcation analysis
@@ -145,7 +145,7 @@ for c_dict in deepcopy(conditions):
         c_dict[key] = c_dict[key] * c_dict[key_tmp] ** power if key_tmp else c_dict[key] * power
     param_grid_tmp = pd.DataFrame.from_dict(c_dict)
     results, result_map = grid_search(
-        circuit_template="config/stn_gpe/stn_gpe",
+        circuit_template="config/stn_gpe/stn_gpe_syns",
         param_grid=param_grid_tmp,
         param_map=param_map,
         simulation_time=T,
@@ -156,7 +156,8 @@ for c_dict in deepcopy(conditions):
             #'stn/stn_op/ctx': ctx,
             #'str/str_dummy_op/I': stria
             },
-        outputs={'r_e': 'stn/stn_op/R_e', 'r_i': 'gpe_p/gpe_proto_op/R_i', 'r_a': 'gpe_a/gpe_arky_op/R_a'},
+        outputs={'r_e': 'stn/stn_syns_op/R_e', 'r_i': 'gpe_p/gpe_proto_syns_op/R_i',
+                 'r_a': 'gpe_a/gpe_arky_syns_op/R_a'},
         init_kwargs={
             'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
         method='RK45'

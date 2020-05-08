@@ -39,20 +39,17 @@ stria = gaussian_filter1d(stria, stim_var*2.0, axis=0)
 k = 1.0
 
 param_grid = {
-        'k_ee': [5.0],
-        'k_ae': [180.0],
-        'k_pe': [180.0],
+        'k_ae': [100.0],
+        'k_pe': [100.0],
         'k_pp': [20.0],
-        'k_ep': [60.0],
         'k_ap': [10.0],
         'k_aa': [60.0],
         'k_pa': [70.0],
-        'k_ps': [100.0],
-        'k_as': [400.0],
-        'eta_e': [1.0],
+        'k_ps': [200.0],
+        'k_as': [200.0],
+        'eta_e': [0.02],
         'eta_p': [-0.5],
         'eta_a': [-2.0],
-        'delta_e': [0.12],
         'delta_p': [0.25],
         'delta_a': [0.15],
         'tau_e': [13],
@@ -70,23 +67,20 @@ param_grid = pd.DataFrame.from_dict(param_grid)
 # param_grid = pd.DataFrame(data=np.asarray([data]), columns=ivs)
 
 param_map = {
-    'k_ee': {'vars': ['weight'], 'edges': [('stn', 'stn')]},
     'k_ae': {'vars': ['weight'], 'edges': [('stn', 'gpe_a')]},
     'k_pe': {'vars': ['weight'], 'edges': [('stn', 'gpe_p')]},
     'k_pp': {'vars': ['weight'], 'edges': [('gpe_p', 'gpe_p')]},
-    'k_ep': {'vars': ['weight'], 'edges': [('gpe_p', 'stn')]},
     'k_ap': {'vars': ['weight'], 'edges': [('gpe_p', 'gpe_a')]},
     'k_aa': {'vars': ['weight'], 'edges': [('gpe_a', 'gpe_a')]},
     'k_pa': {'vars': ['weight'], 'edges': [('gpe_a', 'gpe_p')]},
     'k_ps': {'vars': ['weight'], 'edges': [('str', 'gpe_p')]},
     'k_as': {'vars': ['weight'], 'edges': [('str', 'gpe_a')]},
-    'eta_e': {'vars': ['stn_syns_op/eta_e'], 'nodes': ['stn']},
+    'eta_e': {'vars': ['stn_dummy_op/eta_e'], 'nodes': ['stn']},
     'eta_p': {'vars': ['gpe_proto_syns_op/eta_i'], 'nodes': ['gpe_p']},
     'eta_a': {'vars': ['gpe_arky_syns_op/eta_a'], 'nodes': ['gpe_a']},
-    'delta_e': {'vars': ['stn_syns_op/delta_e'], 'nodes': ['stn']},
     'delta_p': {'vars': ['gpe_proto_syns_op/delta_i'], 'nodes': ['gpe_p']},
     'delta_a': {'vars': ['gpe_arky_syns_op/delta_a'], 'nodes': ['gpe_a']},
-    'tau_e': {'vars': ['stn_syns_op/tau_e'], 'nodes': ['stn']},
+    'tau_e': {'vars': ['stn_dummy_op/tau_e'], 'nodes': ['stn']},
     'tau_p': {'vars': ['gpe_proto_syns_op/tau_i'], 'nodes': ['gpe_p']},
     'tau_a': {'vars': ['gpe_arky_syns_op/tau_a'], 'nodes': ['gpe_a']},
 }
@@ -99,11 +93,8 @@ param_scalings = [
             #('delta_a', None, 1.0/k),
             #('k_ap', None, k),
             #('k_pa', None, k),
-            ('delta_e', 'tau_e', 2.0),
             ('delta_p', 'tau_p', 2.0),
             ('delta_a', 'tau_a', 2.0),
-            ('k_ee', 'delta_e', 0.5),
-            ('k_ep', 'delta_e', 0.5),
             ('k_pe', 'delta_p', 0.5),
             ('k_pp', 'delta_p', 0.5),
             ('k_pa', 'delta_p', 0.5),
@@ -112,21 +103,16 @@ param_scalings = [
             ('k_ap', 'delta_a', 0.5),
             ('k_aa', 'delta_a', 0.5),
             ('k_as', 'delta_a', 0.5),
-            ('eta_e', 'delta_e', 1.0),
             ('eta_p', 'delta_p', 1.0),
             ('eta_a', 'delta_a', 1.0),
             ]
 
 conditions = [{},  # healthy control -> GPe_p: 60 Hz, STN: 20 Hz, GPe_a: 30 Hz
               {'k_pe': 0.2, 'k_ae': 0.2},  # AMPA blockade in GPe -> GPe_p: 40 Hz
-              {'k_ep': 0.2},  # GABAA blocker in STN -> STN: 40 Hz, GPe_p: 100 Hz
               {'k_pe': 0.2, 'k_pp': 0.2, 'k_pa': 0.2, 'k_ae': 0.2, 'k_aa': 0.2, 'k_ap': 0.2,
                'k_ps': 0.2, 'k_as': 0.2},  # AMPA blockade and GABAA blockade in GPe -> GPe_p: 70 Hz
               {'k_pp': 0.2, 'k_pa': 0.2, 'k_aa': 0.2, 'k_ap': 0.2, 'k_ps': 0.2,
                'k_as': 0.2},  # GABAA blockade in GPe -> GPe_p: 100 Hz
-              #{'k_pe': 0.0, 'k_ae': 0.0},  # STN blockade -> GPe_p: 20 HZ
-              #{'k_pe': 0.0, 'k_ae': 0.0, 'k_pp': 0.2, 'k_pa': 0.2, 'k_aa': 0.2, 'k_ap': 0.2,
-              # 'k_ps': 0.2, 'k_as': 0.2},  # STN blockade + GABAA blockade in GPe -> GPe_p: 60 Hz
               ]
 
 # simulations
@@ -171,7 +157,7 @@ for c_dict in deepcopy(conditions):
         c_dict[key] = c_dict[key] * c_dict[key_tmp] ** power if key_tmp else c_dict[key] * power
     param_grid_tmp = pd.DataFrame.from_dict(c_dict)
     results, result_map = grid_search(
-        circuit_template="config/stn_gpe/stn_gpe_syns",
+        circuit_template="config/stn_gpe/gpe_2pop",
         param_grid=param_grid_tmp,
         param_map=param_map,
         simulation_time=T,
@@ -182,7 +168,7 @@ for c_dict in deepcopy(conditions):
             #'stn/stn_op/ctx': ctx,
             #'str/str_dummy_op/I': stria
             },
-        outputs={'r_e': 'stn/stn_syns_op/R_e', 'r_i': 'gpe_p/gpe_proto_syns_op/R_i',
+        outputs={'r_i': 'gpe_p/gpe_proto_syns_op/R_i',
                  'r_a': 'gpe_a/gpe_arky_syns_op/R_a'},
         init_kwargs={
             'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},

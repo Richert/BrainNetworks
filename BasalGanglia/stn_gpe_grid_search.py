@@ -187,7 +187,7 @@ for c_dict in deepcopy(conditions):
             'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
         method='RK45',
         reltol=1e-8,
-        abstol=1e-10
+        abstol=1e-10,
     )
 
     results = results*1e3

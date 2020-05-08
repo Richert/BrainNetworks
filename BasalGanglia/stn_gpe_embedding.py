@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 import h5py
 
 # parameters
-directories = ["/home/rgast/JuliaProjects/JuRates/BasalGanglia/results/stn_gpe_ev_opt_results_final"]
-fid = "stn_gpe_ev_opt"
+directories = ["/home/rgast/JuliaProjects/JuRates/BasalGanglia/results/stn_gpe_syns"]
+fid = "stn_gpe_syns_opt"
 dv = 'p'
 ivs = ['eta_e', 'eta_p', 'eta_a', 'k_ee', 'k_pe', 'k_ae', 'k_ep', 'k_pp', 'k_ap', 'k_pa', 'k_aa', 'k_ps', 'k_as',
        'delta_e', 'delta_p', 'delta_a']
