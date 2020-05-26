@@ -6,6 +6,33 @@ from copy import deepcopy
 from scipy.ndimage.filters import gaussian_filter1d
 from pyrates.utility import plot_timeseries, create_cmap
 import h5py
+import seaborn as sns
+import matplotlib as mpl
+
+linewidth = 1.2
+fontsize1 = 10
+fontsize2 = 12
+markersize1 = 60
+markersize2 = 60
+dpi = 200
+
+plt.style.reload_library()
+plt.style.use('seaborn-whitegrid')
+mpl.rcParams['text.latex.preamble'] = [r'\usepackage{sfmath} \boldmath']
+#mpl.rc('text', usetex=True)
+mpl.rcParams["font.sans-serif"] = ["Roboto"]
+mpl.rcParams["font.size"] = fontsize1
+mpl.rcParams["font.weight"] = "bold"
+mpl.rcParams['lines.linewidth'] = linewidth
+mpl.rcParams['axes.titlesize'] = fontsize2
+mpl.rcParams['axes.titleweight'] = 'bold'
+mpl.rcParams['axes.labelsize'] = 'large'
+mpl.rcParams['axes.labelweight'] = 'bold'
+mpl.rcParams['xtick.color'] = 'black'
+mpl.rcParams['ytick.color'] = 'black'
+mpl.rcParams['ytick.alignment'] = 'center'
+mpl.rcParams['legend.fontsize'] = fontsize1
+sns.set(style="whitegrid")
 
 # parameter definitions
 #######################
@@ -15,20 +42,21 @@ dt = 1e-3
 dts = 1e-1
 T = 600.0
 sim_steps = int(np.round(T/dt))
-stim_offset = int(np.round(T*0.5/dt))
-stim_delayed = int(np.round((T*0.5 + 14.0)/dt))
-stim_amp = 1.0
-stim_var = 100.0
+stim_offset = int(np.round(T/(3*dt)))
+stim_dur = int(np.round(100.0/dt))
+stim_delayed = int(np.round((T*0.2 + 200.0)/dt))
+stim_amp = -200.0
+stim_var = 50.0
 stim_freq = 14.0
 ctx = np.zeros((sim_steps, 1))
-ctx[stim_offset, 0] = stim_amp
+ctx[stim_offset:stim_offset+stim_dur, 0] = np.linspace(0., stim_amp, stim_dur)
 ctx = gaussian_filter1d(ctx, stim_var, axis=0)
-stria = np.zeros((sim_steps, 1))
-stria[stim_delayed, 0] = stim_amp
-stria = gaussian_filter1d(stria, stim_var*2.0, axis=0)
+# stria = np.zeros((sim_steps, 1))
+# stria[stim_delayed: stim_delayed+stim_dur, 0] = stim_amp
+# stria = gaussian_filter1d(stria, stim_var*2.0, axis=0)
 # time = np.linspace(0., T, sim_steps)
-# ctx = np.sin(2.0*np.pi*stim_freq*time*1e-3)*stim_amp + stim_amp
-# stria = ctx*0.005
+# ctx = np.sin(2.0*np.pi*stim_freq*time*1e-3)*stim_amp
+# stria = np.sin(2.0*np.pi*stim_freq*time*1e-3 + 1.0*np.pi)*stim_amp
 
 # plt.figure()
 # plt.plot(ctx)
@@ -36,25 +64,31 @@ stria = gaussian_filter1d(stria, stim_var*2.0, axis=0)
 # plt.show()
 
 # model parameters
-k = 1.0
-
+k_gp = 20.0
+k_p = 1.0
+k_i = 2.0
+k_pi = 1.0
+k_pe = 1.5
+k_ps = 1.0
+k_e = 1.0
 param_grid = {
-        'k_ee': [5.0],
-        'k_ae': [180.0],
-        'k_pe': [180.0],
-        'k_pp': [20.0],
-        'k_ep': [60.0],
-        'k_ap': [10.0],
-        'k_aa': [60.0],
-        'k_pa': [70.0],
-        'k_ps': [100.0],
-        'k_as': [400.0],
-        'eta_e': [1.0],
-        'eta_p': [-0.5],
-        'eta_a': [-2.0],
-        'delta_e': [0.12],
-        'delta_p': [0.25],
-        'delta_a': [0.15],
+        'k_ee': [6.0*k_e],
+        'k_ae': [80.0/k_pe],
+        'k_pe': [80.0*k_pe],
+        'k_ep': [100.0*k_e],
+        'k_pp': [1.0*k_gp*k_p/k_i],
+        'k_ap': [1.0*k_gp*k_p*k_i*k_pi],
+        'k_aa': [1.0*k_gp/(k_p*k_i)],
+        'k_pa': [1.0*k_gp*k_i/(k_p*k_pi)],
+        'k_ps': [200.0*k_ps],
+        'k_as': [200.0/k_ps],
+        'eta_e': [6.5],
+        'eta_p': [-3.0],
+        'eta_a': [0.0],
+        'eta_s': [0.002],
+        'delta_e': [0.2],
+        'delta_p': [0.1],
+        'delta_a': [0.2],
         'tau_e': [13],
         'tau_p': [25],
         'tau_a': [20],
@@ -81,6 +115,7 @@ param_map = {
     'k_ps': {'vars': ['weight'], 'edges': [('str', 'gpe_p')]},
     'k_as': {'vars': ['weight'], 'edges': [('str', 'gpe_a')]},
     'eta_e': {'vars': ['stn_syns_op/eta_e'], 'nodes': ['stn']},
+    'eta_s': {'vars': ['str_dummy_op/eta_s'], 'nodes': ['str']},
     'eta_p': {'vars': ['gpe_proto_syns_op/eta_i'], 'nodes': ['gpe_p']},
     'eta_a': {'vars': ['gpe_arky_syns_op/eta_a'], 'nodes': ['gpe_a']},
     'delta_e': {'vars': ['stn_syns_op/delta_e'], 'nodes': ['stn']},
@@ -128,6 +163,19 @@ conditions = [{},  # healthy control -> GPe_p: 60 Hz, STN: 20 Hz, GPe_a: 30 Hz
               #{'k_pe': 0.0, 'k_ae': 0.0, 'k_pp': 0.2, 'k_pa': 0.2, 'k_aa': 0.2, 'k_ap': 0.2,
               # 'k_ps': 0.2, 'k_as': 0.2},  # STN blockade + GABAA blockade in GPe -> GPe_p: 60 Hz
               ]
+
+# plotting the internal connections
+conns = ['k_pe', 'k_ae', 'k_pp', 'k_ap', 'k_pa', 'k_aa']
+connections = pd.DataFrame.from_dict({'value': [param_grid[k] for k in conns],
+                                      'connection': [r'$k_{pe}$', r'$k_{ae}$', r'$k_{pp}$', r'$k_{ap}$', r'$k_{pa}$',
+                                                     r'$k_{aa}$']})
+fig, ax = plt.subplots(figsize=(4, 3))
+sns.set_color_codes("muted")
+sns.barplot(x="value", y="connection", data=connections, color="b")
+ax.set(xlim=(0, 165.0), ylabel="", xlabel="")
+sns.despine(left=True, bottom=True)
+#ax.set_title('GPe Coupling: Condition 1')
+#plt.show()
 
 # simulations
 #############
@@ -179,8 +227,9 @@ for c_dict in deepcopy(conditions):
         permute=True,
         sampling_step_size=dts,
         inputs={
-            #'stn/stn_op/ctx': ctx,
-            #'str/str_dummy_op/I': stria
+            #'stn/stn_syns_op/ctx': ctx,
+            #'str/str_dummy_op/I': stria,
+            #'gpe_p/gpe_proto_syns_op/I_ext': ctx
             },
         outputs={'r_e': 'stn/stn_syns_op/R_e', 'r_i': 'gpe_p/gpe_proto_syns_op/R_i',
                  'r_a': 'gpe_a/gpe_arky_syns_op/R_a'},
@@ -190,7 +239,9 @@ for c_dict in deepcopy(conditions):
     )
 
     results = results*1e3
-    results.plot()
-    #plt.xlim(0, 100)
-    #plt.ylim(0, 200)
+    fig, ax = plt.subplots(figsize=(5, 3))
+    plot_timeseries(results, ax=ax)
+    plt.legend(['STN', 'GPe-p', 'GPe-a'])
+    ax.set_ylabel('firing rate')
+    plt.tight_layout()
     plt.show()

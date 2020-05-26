@@ -886,7 +886,7 @@ gpe_proto_syns_op:
   base: OperatorTemplate
   equations:
     - "d/dt * R_i = delta_i/(PI*tau_i^2) + 2.*R_i*V_i/tau_i"
-    - "d/dt * V_i = (V_i^2 + eta_i)/tau_i + I_ampa - I_gabaa - tau_i*(PI*R_i)^2"
+    - "d/dt * V_i = (V_i^2 + eta_i + I_ext)/tau_i + I_ampa - I_gabaa - tau_i*(PI*R_i)^2"
     - "d/dt * I_ampa = X_ampa"
     - "d/dt * X_ampa = (stn - X_ampa*(tau_ampa_r+tau_ampa_d) - I_ampa)/(tau_ampa_r*tau_ampa_d)"
     - "d/dt * I_gabaa = X_gabaa"
@@ -926,12 +926,14 @@ gpe_proto_syns_op:
       default: input
     gpe_a:
       default: input
+    I_ext:
+      default: input
 
 gpe_arky_syns_op:
   base: OperatorTemplate
   equations:
     - "d/dt * R_a = delta_a/(PI*tau_a^2) + 2.*R_a*V_a/tau_a"
-    - "d/dt * V_a = (V_a^2 + eta_a)/tau_a + I_ampa - I_gabaa - tau_a*(PI*R_a)^2"
+    - "d/dt * V_a = (V_a^2 + eta_a + I_ext)/tau_a + I_ampa - I_gabaa - tau_a*(PI*R_a)^2"
     - "d/dt * I_ampa = X_ampa"
     - "d/dt * X_ampa = (stn - X_ampa*(tau_ampa_r+tau_ampa_d) - I_ampa)/(tau_ampa_r*tau_ampa_d)"
     - "d/dt * I_gabaa = X_gabaa"
@@ -970,6 +972,8 @@ gpe_arky_syns_op:
     gpe_p:
       default: input
     gpe_a:
+      default: input
+    I_ext:
       default: input
 
 stn_op:
@@ -1126,6 +1130,27 @@ stn_dummy_op:
     I:
       default: input
 
+sl_op:
+  base: OperatorTemplate
+  equations:
+    - "X1 = float(Z1 > alpha)"
+    - "X2 = -1.0 * float(Z1 < -alpha)"
+    - "d/dt * Z1 = Z1 + omega*2.0*PI*Z2/1000.0 - Z1*(Z1^2 + Z2^2)"
+    - "d/dt * Z2 = Z2 - omega*2.0*PI*Z1/1000.0 - Z2*(Z1^2 + Z2^2)"
+  variables:
+    X1:
+      default: output
+    X2:
+      default: variable
+    Z1:
+      default: variable(1.0)
+    Z2:
+      default: variable(-1.0)
+    omega:
+      default: 10.0
+    alpha:
+      default: 0.9
+
 # population templates
 ######################
 
@@ -1267,6 +1292,11 @@ stn_dummy:
   operators:
     - stn_dummy_op
 
+sl_driver:
+  base: NodeTemplate
+  operators:
+    - sl_op
+
 # circuit templates
 ###################
 
@@ -1336,6 +1366,26 @@ gpe_2pop:
     - [stn/stn_dummy_op/R_e, gpe_a/gpe_arky_syns_op/stn, null, {weight: 1.0}]
     - [str/str_dummy_op/R_s, gpe_p/gpe_proto_syns_op/str, null, {weight: 1.0}]
     - [str/str_dummy_op/R_s, gpe_a/gpe_arky_syns_op/str, null, {weight: 1.0}]
+
+gpe_2pop_driver:
+  base: CircuitTemplate
+  nodes:
+    gpe_p: gpe_proto_syns
+    gpe_a: gpe_arky_syns
+    stn: stn_dummy
+    str: str_dummy
+    driver: sl_driver
+  edges:
+    - [gpe_p/gpe_proto_syns_op/R_i, gpe_p/gpe_proto_syns_op/gpe_p, null, {weight: 1.0, delay: 1.5, spread: 1.0}]
+    - [gpe_p/gpe_proto_syns_op/R_i, gpe_a/gpe_arky_syns_op/gpe_p, null, {weight: 1.0, delay: 1.5, spread: 1.0}]
+    - [gpe_a/gpe_arky_syns_op/R_a, gpe_p/gpe_proto_syns_op/gpe_a, null, {weight: 1.0, delay: 1.5, spread: 1.0}]
+    - [gpe_a/gpe_arky_syns_op/R_a, gpe_a/gpe_arky_syns_op/gpe_a, null, {weight: 1.0, delay: 1.5, spread: 1.0}]
+    - [stn/stn_dummy_op/R_e, gpe_p/gpe_proto_syns_op/stn, null, {weight: 1.0}]
+    - [stn/stn_dummy_op/R_e, gpe_a/gpe_arky_syns_op/stn, null, {weight: 1.0}]
+    - [str/str_dummy_op/R_s, gpe_p/gpe_proto_syns_op/str, null, {weight: 1.0}]
+    - [str/str_dummy_op/R_s, gpe_a/gpe_arky_syns_op/str, null, {weight: 1.0}]
+    - [driver/sl_op/X1, gpe_a/gpe_arky_syns_op/I_ext, null, {weight: 1.0}]
+    - [driver/sl_op/X2, gpe_a/gpe_arky_syns_op/I_ext, null, {weight: 1.0}]
 
 gpe_syns_pop:
   base: CircuitTemplate

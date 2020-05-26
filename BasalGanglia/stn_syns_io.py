@@ -1,4 +1,4 @@
-from pyrates.utility import grid_search
+from pyrates.utility import grid_search, create_cmap
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -24,16 +24,16 @@ dts = 1e-1
 T = 200.0
 
 # model parameters
-etas = np.linspace(-6.0, 6.0, num=40)
+etas = np.linspace(-6.0, 8.0, num=40)
 ks = np.asarray([0.5, 0.75, 1.0, 1.25, 1.5])
-k_0 = 9.0
+k_0 = 20.0
 param_grid = {
-        'k_ee': np.asarray([k_0])*ks,
+        'k_ee': np.asarray([-k_0])*ks,
         'eta_e': np.asarray([0.0]) + etas,
-        'delta_e': np.asarray([0.15]),
-        'tau_e': np.asarray([13]),
-        'd': np.asarray([1.75]),
-        's': np.asarray([1.25])
+        'delta_e': np.asarray([0.1]),
+        'tau_e': np.asarray([25]),
+        'd': np.asarray([1.5]),
+        's': np.asarray([1.0])
     }
 
 param_map = {
@@ -100,9 +100,16 @@ for i in range(len(etas)):
         outputs_tmp.append(np.max(ts))
     outputs.append(outputs_tmp)
 
-plt.plot(np.asarray(inputs), np.asarray(outputs))
+cmap = create_cmap(name='Greens_d', as_cmap=False, n_colors=len(ks))
+fig, ax = plt.subplots(figsize=(6, 4))
+outputs = np.asarray(outputs)
+for i in range(len(ks)):
+    ax.plot(np.asarray(inputs), outputs[:, i], color=cmap[i])
 plt.legend([f"J = {np.round(k_0*k, decimals=1)}" for k in ks])
 plt.ylabel(r'firing rate (r)')
-plt.xlabel(r'background current $\mathbf{\eta}$')
+plt.xlabel(r'background current $\frac{\mathbf{\eta}}{\mathbf{\Delta}}$')
+fig.canvas.draw()
+ax.set_xticklabels([np.round(label.get_position()[0] / param_grid['delta_e'], decimals=1)[0]
+                    for label in ax.get_xticklabels()])
 plt.tight_layout()
 plt.show()
