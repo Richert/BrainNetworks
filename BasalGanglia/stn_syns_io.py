@@ -24,16 +24,16 @@ dts = 1e-1
 T = 200.0
 
 # model parameters
-etas = np.linspace(-6.0, 8.0, num=40)
+etas = np.linspace(-10.0, 10.0, num=40)
 ks = np.asarray([0.5, 0.75, 1.0, 1.25, 1.5])
-k_0 = 20.0
+k_0 = 8.0
 param_grid = {
-        'k_ee': np.asarray([-k_0])*ks,
+        'k_ee': np.asarray([k_0])*ks,
         'eta_e': np.asarray([0.0]) + etas,
         'delta_e': np.asarray([0.1]),
-        'tau_e': np.asarray([25]),
-        'd': np.asarray([1.5]),
-        's': np.asarray([1.0])
+        'tau_e': np.asarray([13]),
+        'd': np.asarray([1.75]),
+        's': np.asarray([1.25])
     }
 
 param_map = {

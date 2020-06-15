@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from pyrates.utility import grid_search, welch, create_cmap, plot_connectivity
 from scipy.interpolate.interpolate import interp1d
+import scipy.io as scio
 
 linewidth = 1.2
 fontsize1 = 10
@@ -37,11 +38,12 @@ sns.set(style="whitegrid")
 # simulation parameters
 dt = 1e-2
 dts = 1e-1
-T = 6000.0
+T = 30000.0
 
 # stimulation parameters
-stim_freqs = np.linspace(4, 20, 10)
-n_infreqs = len(stim_freqs)
+stim_periods = np.arange(60, 80, 1)
+stim_amps = np.arange(5, 40, 5)
+n_infreqs = len(stim_periods)
 
 # model parameters
 k_gp = 20.0
@@ -65,9 +67,9 @@ param_grid = {
         'delta_a': [0.2],
         'tau_p': [25],
         'tau_a': [20],
-        'omega': np.asarray(stim_freqs),
-        'w': [200.0],
-        'alpha': 0.9 + np.asarray([np.min([0.09, 2.0/f**2]) for f in stim_freqs])
+        'omega': np.asarray(stim_periods),
+        'w': np.asarray(stim_amps),
+        'alpha': [0.9]
     }
 
 param_map = {
@@ -88,8 +90,7 @@ param_map = {
     'tau_p': {'vars': ['gpe_proto_syns_op/tau_i'], 'nodes': ['gpe_p']},
     'tau_a': {'vars': ['gpe_arky_syns_op/tau_a'], 'nodes': ['gpe_a']},
     'omega': {'vars': ['sl_op/omega'], 'nodes': ['driver']},
-    'alpha': {'vars': ['sl_op/alpha'], 'nodes': ['driver']},
-    'w': {'vars': ['weight'], 'edges': [('driver', 'gpe_a', 0), ('driver', 'gpe_a', 1)]}
+    'alpha': {'vars': ['sl_op/alpha'], 'nodes': ['driver']}
 }
 
 param_scalings = [
@@ -107,9 +108,9 @@ param_scalings = [
     ('eta_a', 'delta_a', 1.0)
             ]
 
-for key, val in param_grid.items():
-    if len(val) == 1:
-        param_grid[key] = val * n_infreqs
+#for key, val in param_grid.items():
+#    if len(val) == 1:
+#        param_grid[key] = val * n_infreqs
 for key, key_tmp, power in param_scalings:
     param_grid[key] = np.asarray(param_grid[key]) * np.asarray(param_grid[key_tmp]) ** power
 
@@ -122,7 +123,7 @@ results, result_map = grid_search(
     param_map=param_map,
     simulation_time=T,
     step_size=dt,
-    permute_grid=False,
+    permute_grid=True,
     sampling_step_size=dts,
     inputs={},
     outputs={'r_i': 'gpe_p/gpe_proto_syns_op/R_i',
@@ -133,39 +134,46 @@ results, result_map = grid_search(
     method='RK45'
 )
 
-# coherence calculation
-#######################
+results_dict = {}
+for key in result_map.index:
+    data1, data2 = results.loc[:, ('d', key)].values, results.loc[:, ('r_i', key)].values
+    results_dict[key] = {"omega": result_map.loc[key, 'omega'], 'alpha': result_map.loc[key, 'w'],
+                         "data": np.asarray([data1, data2])}
+scio.savemat('lc_data.mat', mdict=results_dict, long_field_names=True)
 
-results = results.loc[1000.0:, :]
-results.index *= 1e-3
-results = results * 1e3
-powers = []
-freq_labels = []
-target_freqs = np.linspace(4.0, 80.0, 50)
-for id in result_map.index:
-    r = results.loc[:, ('r_i', id)]
-    freq_labels.append(result_map.at[id, 'omega'])
-    psds, freqs = welch(r, fmin=1.0, fmax=100.0, n_fft=8192, n_overlap=512)
-    freq_inter = interp1d(freqs, psds.squeeze(), kind='cubic', axis=0)
-    powers.append(freq_inter(target_freqs))
-
-# plotting
-##########
-
-# coherences
-cmap = create_cmap("pyrates_blue", n_colors=64, as_cmap=False, reverse=True)
-powers = np.asarray(powers)
-powers[powers < 0] = 0.0
-ax = plot_connectivity(np.sqrt(powers), cmap=cmap)
-ax.set_xticks(ax.get_xticks()[0::8])
-ax.set_yticks(ax.get_yticks()[0::2])
-ax.set_xticklabels(np.round(target_freqs, decimals=1)[0::8], rotation='horizontal')
-ax.set_yticklabels(np.round(freq_labels, decimals=1)[0::2], rotation='horizontal')
-ax.set_xlabel('omega')
-ax.set_ylabel('alpha')
-plt.tight_layout()
-
-# timeseries
-#results.loc[:, 'r_i'].plot()
-
-plt.show()
+# # coherence calculation
+# #######################
+#
+# results = results.loc[1000.0:, :]
+# results.index *= 1e-3
+# results = results * 1e3
+# powers = []
+# freq_labels = []
+# target_freqs = np.linspace(4.0, 80.0, 50)
+# for id in result_map.index:
+#     r = results.loc[:, ('r_i', id)]
+#     freq_labels.append(result_map.at[id, 'omega'])
+#     psds, freqs = welch(r, fmin=1.0, fmax=100.0, n_fft=8192, n_overlap=512)
+#     freq_inter = interp1d(freqs, psds.squeeze(), kind='cubic', axis=0)
+#     powers.append(freq_inter(target_freqs))
+#
+# # plotting
+# ##########
+#
+# # coherences
+# cmap = create_cmap("pyrates_blue", n_colors=64, as_cmap=False, reverse=True)
+# powers = np.asarray(powers)
+# powers[powers < 0] = 0.0
+# ax = plot_connectivity(np.sqrt(powers), cmap=cmap)
+# ax.set_xticks(ax.get_xticks()[0::8])
+# ax.set_yticks(ax.get_yticks()[0::2])
+# ax.set_xticklabels(np.round(target_freqs, decimals=1)[0::8], rotation='horizontal')
+# ax.set_yticklabels(np.round(freq_labels, decimals=1)[0::2], rotation='horizontal')
+# ax.set_xlabel('omega')
+# ax.set_ylabel('alpha')
+# plt.tight_layout()
+#
+# # timeseries
+# #results.loc[:, 'r_i'].plot()
+#
+# plt.show()

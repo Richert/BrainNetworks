@@ -40,30 +40,21 @@ sns.set(style="whitegrid")
 # simulation parameters
 dt = 1e-3
 dts = 1e-1
-T = 1200.0
+T = 3000.0
 sim_steps = int(np.round(T/dt))
 stim_offset = int(np.round(T/(3*dt)))
 stim_dur = int(np.round(50.0/dt))
 stim_delayed = int(np.round((T*0.2 + 400.0)/dt))
-stim_amp = 100.0
+stim_amp = 10.0
 stim_var = 20.0
-stim_freq = 7.6
-stim_freqs = [stim_freq]
-# ctx = np.zeros((sim_steps, 1))
-# ctx[stim_offset:stim_offset+stim_dur, 0] = stim_amp
-# ctx = gaussian_filter1d(ctx, stim_var, axis=0)
-# stria = np.zeros((sim_steps, 1))
-# stria[stim_delayed: stim_delayed+stim_dur, 0] = stim_amp
-# stria = gaussian_filter1d(stria, stim_var*2.0, axis=0)
-time = np.linspace(0., T, sim_steps)
-ctx = np.sin(2.0*np.pi*stim_freq*time*1e-3)*stim_amp
-stria = np.sin(2.0*np.pi*stim_freq*time*1e-3 + 1.0*np.pi)*stim_amp
-ctx[np.abs(ctx) < 0.9*stim_amp] = 0.0
+stim_period = 78.0
+stim_periods = [stim_period]
+stim_amps = [-10.0]
 
 # model parameters
 k_gp = 20.0
 k_p = 1.0
-k_i = 0.5
+k_i = 2.0
 k_pi = 1.0
 param_grid = {
         'k_ae': [100.0],
@@ -75,16 +66,15 @@ param_grid = {
         'k_ps': [200.0],
         'k_as': [200.0],
         'eta_e': [0.02],
-        'eta_p': [3.0],
-        'eta_a': [-5.0],
+        'eta_p': [2.0],
+        'eta_a': [0.0],
         'eta_s': [0.002],
         'delta_p': [0.1],
         'delta_a': [0.2],
         'tau_p': [25],
         'tau_a': [20],
-        'omega': np.asarray(stim_freqs),
-        'w': [200.0],
-        'alpha': 0.9 + np.asarray([np.min([0.09, 2.0/f**2]) for f in stim_freqs])
+        'omega': stim_periods,
+        'alpha': np.asarray(stim_amps)
     }
 param_grid = pd.DataFrame.from_dict(param_grid)
 
@@ -105,9 +95,8 @@ param_map = {
     'delta_a': {'vars': ['gpe_arky_syns_op/delta_a'], 'nodes': ['gpe_a']},
     'tau_p': {'vars': ['gpe_proto_syns_op/tau_i'], 'nodes': ['gpe_p']},
     'tau_a': {'vars': ['gpe_arky_syns_op/tau_a'], 'nodes': ['gpe_a']},
-    'omega': {'vars': ['sl_op/omega'], 'nodes': ['driver']},
-    'alpha': {'vars': ['sl_op/alpha'], 'nodes': ['driver']},
-    'w': {'vars': ['weight'], 'edges': [('driver', 'gpe_a', 0), ('driver', 'gpe_a', 1)]}
+    'omega': {'vars': ['sl_op/t_off'], 'nodes': ['driver']},
+    'alpha': {'vars': ['sl_op/alpha'], 'nodes': ['driver']}
 }
 
 param_scalings = [
@@ -129,15 +118,15 @@ param_scalings = [
 conns = ['k_pp', 'k_ap', 'k_pa', 'k_aa']
 connections = pd.DataFrame.from_dict({'value': [param_grid[k] for k in conns],
                                       'connection': [r'$J_{pp}$', r'$J_{ap}$', r'$J_{pa}$', r'$J_{aa}$']})
-fig, ax = plt.subplots(figsize=(3, 2), dpi=dpi)
-sns.set_color_codes("muted")
-sns.barplot(x="value", y="connection", data=connections, color="b")
-ax.set(xlim=(0, 85), ylabel="", xlabel="")
-ax.tick_params(axis='x', which='major', labelsize=9)
-sns.despine(left=True, bottom=True)
-#ax.set_title('GPe Coupling: Condition 1')
-plt.tight_layout()
-plt.show()
+# fig, ax = plt.subplots(figsize=(3, 2), dpi=dpi)
+# sns.set_color_codes("muted")
+# sns.barplot(x="value", y="connection", data=connections, color="b")
+# ax.set(xlim=(0, 85), ylabel="", xlabel="")
+# ax.tick_params(axis='x', which='major', labelsize=9)
+# sns.despine(left=True, bottom=True)
+# #ax.set_title('GPe Coupling: Condition 1')
+# plt.tight_layout()
+# plt.show()
 
 for key, key_tmp, power in param_scalings:
     param_grid[key] = np.asarray(param_grid[key]) * np.asarray(param_grid[key_tmp]) ** power
@@ -170,7 +159,7 @@ plot_timeseries(results, ax=ax)
 plt.legend(['GPe-p', 'GPe-a'])
 ax.set_ylabel('Firing rate')
 ax.set_xlabel('time (ms)')
-ax.set_xlim([200.0, 1200.0])
+#ax.set_xlim([200.0, 1200.0])
 #ax.set_ylim([0.0, 120.0])
 ax.tick_params(axis='both', which='major', labelsize=9)
 plt.tight_layout()
