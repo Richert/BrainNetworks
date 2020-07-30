@@ -37,18 +37,18 @@ sns.set(style="whitegrid")
 
 # simulation parameters
 dt = 1e-2
-dts = 1e-1
-T = 30000.0
+dts = 1.0
+T = 20000.0
 
 # stimulation parameters
-stim_periods = np.arange(60, 80, 1)
-stim_amps = np.arange(5, 40, 5)
+stim_periods = np.arange(60, 80, 1.0)
+stim_amps = np.arange(1, 40, 2)
 n_infreqs = len(stim_periods)
 
 # model parameters
 k_gp = 20.0
 k_p = 1.0
-k_i = 0.5
+k_i = 2.0
 k_pi = 1.0
 param_grid = {
         'k_ae': [100.0],
@@ -60,16 +60,16 @@ param_grid = {
         'k_ps': [200.0],
         'k_as': [200.0],
         'eta_e': [0.02],
-        'eta_p': [3.0],
-        'eta_a': [-5.0],
+        'eta_p': [2.0],
+        'eta_a': [0.0],
         'eta_s': [0.002],
         'delta_p': [0.1],
         'delta_a': [0.2],
         'tau_p': [25],
         'tau_a': [20],
         'omega': np.asarray(stim_periods),
-        'w': np.asarray(stim_amps),
-        'alpha': [0.9]
+        #'w': np.asarray(stim_amps),
+        'alpha': np.asarray(stim_amps)
     }
 
 param_map = {
@@ -89,7 +89,7 @@ param_map = {
     'delta_a': {'vars': ['gpe_arky_syns_op/delta_a'], 'nodes': ['gpe_a']},
     'tau_p': {'vars': ['gpe_proto_syns_op/tau_i'], 'nodes': ['gpe_p']},
     'tau_a': {'vars': ['gpe_arky_syns_op/tau_a'], 'nodes': ['gpe_a']},
-    'omega': {'vars': ['sl_op/omega'], 'nodes': ['driver']},
+    'omega': {'vars': ['sl_op/t_off'], 'nodes': ['driver']},
     'alpha': {'vars': ['sl_op/alpha'], 'nodes': ['driver']}
 }
 
@@ -127,8 +127,9 @@ results, result_map = grid_search(
     sampling_step_size=dts,
     inputs={},
     outputs={'r_i': 'gpe_p/gpe_proto_syns_op/R_i',
-             'r_a': 'gpe_a/gpe_arky_syns_op/R_a',
-             'd': 'driver/sl_op/Z1'},
+             #'r_a': 'gpe_a/gpe_arky_syns_op/R_a',
+             'd': 'driver/sl_op/Z2'
+             },
     init_kwargs={
         'backend': 'numpy', 'solver': 'scipy', 'step_size': dt, 'matrix_sparseness': 1.0},
     method='RK45'
@@ -137,9 +138,9 @@ results, result_map = grid_search(
 results_dict = {}
 for key in result_map.index:
     data1, data2 = results.loc[:, ('d', key)].values, results.loc[:, ('r_i', key)].values
-    results_dict[key] = {"omega": result_map.loc[key, 'omega'], 'alpha': result_map.loc[key, 'w'],
+    results_dict[key] = {"omega": result_map.loc[key, 'omega'], 'alpha': result_map.loc[key, 'alpha'],
                          "data": np.asarray([data1, data2])}
-scio.savemat('lc_data.mat', mdict=results_dict, long_field_names=True)
+scio.savemat('bs_data.mat', mdict=results_dict, long_field_names=True)
 
 # # coherence calculation
 # #######################

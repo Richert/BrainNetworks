@@ -9,34 +9,35 @@ import scipy.io as scio
 
 # simulation parameters
 dt = 1e-2
-dts = 1e-1
-T = 30000.0
+dts = 1.0
+T = 300000.0
 
 # stimulation parameters
-stim_periods = np.arange(60.0, 80.1, 0.5)
-stim_amps = np.arange(1.0, 40.1, 1.0)
+stim_periods = np.linspace(58.0, 85.0, 100)
+stim_amps = np.linspace(50.0, 90.0, 40)
 n_infreqs = len(stim_periods)
 
 # model parameters
-k_gp = 20.0
-k_p = 1.0
-k_i = 0.5
+k_gp = 30.0
+k_p = 1.5
+k_i = 0.75
 k_pi = 1.0
+k = 10.0
 param_grid = {
-        'k_ae': [100.0],
-        'k_pe': [100.0],
-        'k_pp': [1.0*k_gp*k_p/k_i],
-        'k_ap': [1.0*k_gp*k_p*k_i*k_pi],
-        'k_aa': [1.0*k_gp/(k_p*k_i)],
-        'k_pa': [1.0*k_gp*k_i/(k_p*k_pi)],
-        'k_ps': [200.0],
-        'k_as': [200.0],
+        'k_ae': [100.0*k],
+        'k_pe': [100.0*k],
+        'k_pp': [k*k_gp*k_p/k_i],
+        'k_ap': [k*k_gp*k_p*k_i*k_pi],
+        'k_aa': [k*k_gp/(k_p*k_i)],
+        'k_pa': [k*k_gp*k_i/(k_p*k_pi)],
+        'k_ps': [200.0*k],
+        'k_as': [200.0*k],
         'eta_e': [0.02],
-        'eta_p': [3.0],
-        'eta_a': [-5.0],
+        'eta_p': [5.5],
+        'eta_a': [-6.0],
         'eta_s': [0.002],
-        'delta_p': [0.1],
-        'delta_a': [0.2],
+        'delta_p': [90.0],
+        'delta_a': [120.0],
         'tau_p': [25],
         'tau_a': [20],
         'omega': np.asarray(stim_periods),
@@ -63,24 +64,6 @@ param_map = {
     'omega': {'vars': ['sl_op/t_off'], 'nodes': ['driver']},
     'alpha': {'vars': ['sl_op/alpha'], 'nodes': ['driver']}
 }
-
-param_scalings = [
-    ('delta_p', 'tau_p', 2.0),
-    ('delta_a', 'tau_a', 2.0),
-    ('k_pe', 'delta_p', 0.5),
-    ('k_pp', 'delta_p', 0.5),
-    ('k_pa', 'delta_p', 0.5),
-    ('k_ps', 'delta_p', 0.5),
-    ('k_ae', 'delta_a', 0.5),
-    ('k_ap', 'delta_a', 0.5),
-    ('k_aa', 'delta_a', 0.5),
-    ('k_as', 'delta_a', 0.5),
-    ('eta_p', 'delta_p', 1.0),
-    ('eta_a', 'delta_a', 1.0)
-            ]
-
-for key, key_tmp, power in param_scalings:
-    param_grid[key] = np.asarray(param_grid[key]) * np.asarray(param_grid[key_tmp]) ** power
 
 # set up cluster
 ################

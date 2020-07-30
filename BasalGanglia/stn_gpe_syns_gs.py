@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from pyrates.utility.grid_search import grid_search
 from copy import deepcopy
 from scipy.ndimage.filters import gaussian_filter1d
-from pyrates.utility import plot_timeseries, create_cmap
+from pyrates.utility.visualization import plot_timeseries, create_cmap
 import h5py
 import seaborn as sns
 import matplotlib as mpl
@@ -64,31 +64,33 @@ ctx = gaussian_filter1d(ctx, stim_var, axis=0)
 # plt.show()
 
 # model parameters
-k_gp = 75.0
+k_gp = 30.0
 k_p = 1.5
-k_i = 2.0
+k_i = 1.0
 k_pi = 1.0
-k_pe = 1.25
+k_pe = 1.5
 k_ps = 1.0
 k_e = 1.0
+k = 10.0
+eta = 100.0
 param_grid = {
-        'k_ee': [6.0*k_e],
-        'k_ae': [80.0/k_pe],
-        'k_pe': [80.0*k_pe],
-        'k_ep': [100.0*k_e],
-        'k_pp': [1.0*k_gp*k_p/k_i],
-        'k_ap': [1.0*k_gp*k_p*k_i*k_pi],
-        'k_aa': [1.0*k_gp/(k_p*k_i)],
-        'k_pa': [1.0*k_gp*k_i/(k_p*k_pi)],
-        'k_ps': [200.0*k_ps],
-        'k_as': [200.0/k_ps],
-        'eta_e': [6.0],
-        'eta_p': [-5.0],
-        'eta_a': [4.0],
+        'k_ee': [6.0*k_e*k],
+        'k_ae': [80.0*k/k_pe],
+        'k_pe': [80.0*k_pe*k],
+        'k_ep': [120.0*k_e*k],
+        'k_pp': [1.0*k_gp*k_p*k/k_i],
+        'k_ap': [1.0*k_gp*k_p*k_i*k_pi*k],
+        'k_aa': [1.0*k_gp*k/(k_p*k_i)],
+        'k_pa': [1.0*k_gp*k_i*k/(k_p*k_pi)],
+        'k_ps': [200.0*k_ps*k],
+        'k_as': [200.0*k/k_ps],
+        'eta_e': [4.0*eta],
+        'eta_p': [2.0*eta],
+        'eta_a': [-2.0*eta],
         'eta_s': [0.002],
-        'delta_e': [0.2],
-        'delta_p': [0.1],
-        'delta_a': [0.2],
+        'delta_e': [30.0],
+        'delta_p': [90.0],
+        'delta_a': [120.0],
         'tau_e': [13],
         'tau_p': [25],
         'tau_a': [20],
@@ -134,22 +136,22 @@ param_scalings = [
             #('delta_a', None, 1.0/k),
             #('k_ap', None, k),
             #('k_pa', None, k),
-            ('delta_e', 'tau_e', 2.0),
-            ('delta_p', 'tau_p', 2.0),
-            ('delta_a', 'tau_a', 2.0),
-            ('k_ee', 'delta_e', 0.5),
-            ('k_ep', 'delta_e', 0.5),
-            ('k_pe', 'delta_p', 0.5),
-            ('k_pp', 'delta_p', 0.5),
-            ('k_pa', 'delta_p', 0.5),
-            ('k_ps', 'delta_p', 0.5),
-            ('k_ae', 'delta_a', 0.5),
-            ('k_ap', 'delta_a', 0.5),
-            ('k_aa', 'delta_a', 0.5),
-            ('k_as', 'delta_a', 0.5),
-            ('eta_e', 'delta_e', 1.0),
-            ('eta_p', 'delta_p', 1.0),
-            ('eta_a', 'delta_a', 1.0),
+            #('delta_e', 'tau_e', 2.0),
+            #('delta_p', 'tau_p', 2.0),
+            #('delta_a', 'tau_a', 2.0),
+            #('k_ee', 'delta_e', 0.5),
+            #('k_ep', 'delta_e', 0.5),
+            #('k_pe', 'delta_p', 0.5),
+            #('k_pp', 'delta_p', 0.5),
+            #('k_pa', 'delta_p', 0.5),
+            #('k_ps', 'delta_p', 0.5),
+            #('k_ae', 'delta_a', 0.5),
+            #('k_ap', 'delta_a', 0.5),
+            #('k_aa', 'delta_a', 0.5),
+            #('k_as', 'delta_a', 0.5),
+            #('eta_e', 'delta_e', 1.0),
+            #('eta_p', 'delta_p', 1.0),
+            #('eta_a', 'delta_a', 1.0),
             ]
 
 conditions = [{},  # healthy control -> GPe_p: 60 Hz, STN: 20 Hz, GPe_a: 30 Hz
@@ -240,7 +242,7 @@ for c_dict in deepcopy(conditions):
 
     results = results*1e3
     fig, ax = plt.subplots(figsize=(5, 3))
-    plot_timeseries(results, ax=ax)
+    plot_timeseries(results.loc[50.0:, :], ax=ax)
     plt.legend(['STN', 'GPe-p', 'GPe-a'])
     ax.set_ylabel('firing rate')
     plt.tight_layout()

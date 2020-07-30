@@ -1,4 +1,5 @@
-from pyrates.utility import plot_timeseries, create_cmap, grid_search
+from pyrates.utility.visualization import plot_timeseries, create_cmap
+from pyrates.utility.grid_search import grid_search
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage.filters import gaussian_filter1d
@@ -26,13 +27,13 @@ dts = 1e-1
 T = 200.0
 
 # model parameters
-etas = np.linspace(-8.0, 8.0, num=40)
+etas = np.linspace(-200.0, 200.0, num=40)
 ks = np.asarray([0.2, 0.6, 1.0, 1.4, 1.8])
-k_0 = 0.0
+k_0 = 20.0
 param_grid = {
-        'k_ee': np.asarray([-k_0])*ks,
+        'k_ee': np.asarray([k_0])*ks,
         'eta_e': np.asarray([0.0]) + etas,
-        'delta_e': np.asarray([0.1]),
+        'delta_e': np.asarray([30.0]),
         'tau_e': np.asarray([13]),
     }
 
@@ -44,9 +45,9 @@ param_map = {
 }
 
 param_scalings = [
-    ('delta_e', 'tau_e', 2.0),
-    ('k_ee', 'delta_e', 0.5),
-    ('eta_e', 'delta_e', 1.0)
+    #('delta_e', 'tau_e', 2.0),
+    #('k_ee', 'delta_e', 0.5),
+    #('eta_e', 'delta_e', 1.0)
 ]
 
 # grid-search

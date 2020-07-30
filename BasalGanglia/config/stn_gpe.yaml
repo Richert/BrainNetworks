@@ -7,33 +7,21 @@
 biexp_simple:
   base: OperatorTemplate
   equations:
-    - "d/dt * r = (I + r_0 - r) / tau"
-    - "d/dt * r2 = (I_ext - r2) / tau2"
     - "d/dt * I = x"
-    - "d/dt * x = (r_in - x*(tau_r+tau_d) - I)/(tau_r*tau_d)"
+    - "d/dt * x = (alpha*r_in - x*(tau_r+tau_d) - I)/(tau_r*tau_d)"
   variables:
-    r:
-      default: output
-    r2:
-      default: variable
     I:
       default: variable
     x:
       default: variable
-    r_0:
-      default: 0.0
-    tau:
-      default: 1.0
-    tau2:
-      default: 0.5
     tau_r:
-      default: 0.8
+      default: 2.0
     tau_d:
-      default: 3.7
-    I_ext:
-      default: input
+      default: 10.0
     r_in:
       default: input
+    alpha:
+      default: 10.0
 
 biexp_rate:
   base: OperatorTemplate
@@ -893,7 +881,7 @@ gpe_proto_syns_op:
     - "d/dt * X_gabaa = (gpe_p + str + gpe_a - X_gabaa*(tau_gabaa_r+tau_gabaa_d) - I_gabaa)/(tau_gabaa_r*tau_gabaa_d)"
   variables:
     R_i:
-      default: output
+      default: output(60.0)
     V_i:
       default: variable
     I_ampa:
@@ -933,14 +921,14 @@ gpe_arky_syns_op:
   base: OperatorTemplate
   equations:
     - "d/dt * R_a = delta_a/(PI*tau_a^2) + 2.*R_a*V_a/tau_a"
-    - "d/dt * V_a = (V_a^2 + eta_a)/tau_a + I_ampa - I_gabaa - tau_a*(PI*R_a)^2"
+    - "d/dt * V_a = (V_a^2 + eta_a + I_ext)/tau_a + I_ampa - I_gabaa - tau_a*(PI*R_a)^2"
     - "d/dt * I_ampa = X_ampa"
     - "d/dt * X_ampa = (stn - X_ampa*(tau_ampa_r+tau_ampa_d) - I_ampa)/(tau_ampa_r*tau_ampa_d)"
     - "d/dt * I_gabaa = X_gabaa"
-    - "d/dt * X_gabaa = (gpe_a + str + gpe_p + I_ext - X_gabaa*(tau_gabaa_r+tau_gabaa_d) - I_gabaa)/(tau_gabaa_r*tau_gabaa_d)"
+    - "d/dt * X_gabaa = (gpe_a + str + gpe_p + inh - X_gabaa*(tau_gabaa_r+tau_gabaa_d) - I_gabaa)/(tau_gabaa_r*tau_gabaa_d)"
   variables:
     R_a:
-      default: output
+      default: output(40.0)
     V_a:
       default: variable
     I_ampa:
@@ -974,6 +962,8 @@ gpe_arky_syns_op:
     gpe_a:
       default: input
     I_ext:
+      default: input
+    inh:
       default: input
 
 stn_op:
@@ -1143,15 +1133,15 @@ sl_op:
     S2:
       default: variable
     Z1:
-      default: variable(1.0)
+      default: variable(-1.0)
     Z2:
-      default: variable(1.0)
+      default: variable(0.0)
     t_on:
       default: 5.0
     t_off:
       default: 78.0
     alpha:
-      default: 1.0
+      default: input(1.0)
     beta:
       default: 100.0
 
@@ -1312,9 +1302,8 @@ qif_alpha_net:
 biexp:
   base: CircuitTemplate
   nodes:
-    n1: biexp_pop
+    n: biexp_pop
   edges:
-    - [n1/biexp_simple/r2, n1/biexp_simple/r_in, null, {weight: 1.0, delay: 3.0}]
 
 biexp_gamma:
   base: CircuitTemplate
@@ -1388,8 +1377,8 @@ gpe_2pop_driver:
     - [stn/stn_dummy_op/R_e, gpe_a/gpe_arky_syns_op/stn, null, {weight: 1.0}]
     - [str/str_dummy_op/R_s, gpe_p/gpe_proto_syns_op/str, null, {weight: 1.0}]
     - [str/str_dummy_op/R_s, gpe_a/gpe_arky_syns_op/str, null, {weight: 1.0}]
-    - [driver/sl_op/S1, gpe_a/gpe_arky_syns_op/I_ext, null, {weight: 1.0}]
-    - [driver/sl_op/S2, gpe_a/gpe_arky_syns_op/I_ext, null, {weight: -1.0}]
+    - [driver/sl_op/S1, gpe_a/gpe_arky_syns_op/inh, null, {weight: 1.0}]
+    - [driver/sl_op/S2, gpe_a/gpe_arky_syns_op/inh, null, {weight: -1.0}]
 
 gpe_syns_pop:
   base: CircuitTemplate

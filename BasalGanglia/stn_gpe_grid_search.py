@@ -53,8 +53,8 @@ param_grid = {
         'eta_p': [-0.5],
         'eta_a': [-2.0],
         'delta_e': [0.05],
-        'delta_p': [0.25],
-        'delta_a': [0.1],
+        'delta_p': [0.1],
+        'delta_a': [0.2],
         'tau_e': [13],
         'tau_p': [25],
         'tau_a': [20],
@@ -185,9 +185,7 @@ for c_dict in deepcopy(conditions):
         outputs={'r_e': 'stn/stn_op/R_e', 'r_i': 'gpe_p/gpe_proto_op/R_i', 'r_a': 'gpe_a/gpe_arky_op/R_a'},
         init_kwargs={
             'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
-        method='RK45',
-        reltol=1e-8,
-        abstol=1e-10,
+        method='RK45'
     )
 
     results = results*1e3

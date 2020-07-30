@@ -6,7 +6,7 @@ import matplotlib as mpl
 from pyrates.utility.grid_search import grid_search
 from copy import deepcopy
 from scipy.ndimage.filters import gaussian_filter1d
-from pyrates.utility import plot_timeseries, create_cmap
+from pyrates.utility.visualization import plot_timeseries, create_cmap
 import h5py
 
 linewidth = 1.2
@@ -39,44 +39,42 @@ sns.set(style="whitegrid")
 
 # simulation parameters
 dt = 1e-3
-dts = 1e-1
-T = 3000.0
+dts = 1.0
+T = 122000.0
 sim_steps = int(np.round(T/dt))
-stim_offset = int(np.round(T/(3*dt)))
-stim_dur = int(np.round(50.0/dt))
-stim_delayed = int(np.round((T*0.2 + 400.0)/dt))
-stim_amp = 10.0
-stim_var = 20.0
-stim_period = 78.0
-stim_periods = [stim_period]
-stim_amps = [-10.0]
+stim_offset = int(np.round(0.0/dt))
+stim_dur = int(np.round(500.0/dt))
+stim_period = 70.0
+stim_periods = np.linspace(30.0, 90.0, 120)
+stim_amps = np.linspace(0.0, 100.0, 40)
 
 # model parameters
-k_gp = 20.0
-k_p = 1.0
-k_i = 2.0
+k_gp = 30.0
+k_p = 1.5
+k_i = 0.75
 k_pi = 1.0
+k = 10.0
 param_grid = {
-        'k_ae': [100.0],
-        'k_pe': [100.0],
-        'k_pp': [1.0*k_gp*k_p/k_i],
-        'k_ap': [1.0*k_gp*k_p*k_i*k_pi],
-        'k_aa': [1.0*k_gp/(k_p*k_i)],
-        'k_pa': [1.0*k_gp*k_i/(k_p*k_pi)],
-        'k_ps': [200.0],
-        'k_as': [200.0],
+        'k_ae': [100.0*k],
+        'k_pe': [100.0*k],
+        'k_pp': [1.0*k*k_gp*k_p/k_i],
+        'k_ap': [1.0*k*k_gp*k_p*k_i*k_pi],
+        'k_aa': [1.0*k*k_gp/(k_p*k_i)],
+        'k_pa': [1.0*k*k_gp*k_i/(k_p*k_pi)],
+        'k_ps': [200.0*k],
+        'k_as': [200.0*k],
         'eta_e': [0.02],
-        'eta_p': [2.0],
-        'eta_a': [0.0],
+        'eta_p': [5.5*100.0],
+        'eta_a': [-600.0],
         'eta_s': [0.002],
-        'delta_p': [0.1],
-        'delta_a': [0.2],
+        'delta_p': [90.0],
+        'delta_a': [120.0],
         'tau_p': [25],
         'tau_a': [20],
         'omega': stim_periods,
         'alpha': np.asarray(stim_amps)
     }
-param_grid = pd.DataFrame.from_dict(param_grid)
+#param_grid = pd.DataFrame.from_dict(param_grid)
 
 param_map = {
     'k_ae': {'vars': ['weight'], 'edges': [('stn', 'gpe_a')]},
@@ -100,18 +98,18 @@ param_map = {
 }
 
 param_scalings = [
-            ('delta_p', 'tau_p', 2.0),
-            ('delta_a', 'tau_a', 2.0),
-            ('k_pe', 'delta_p', 0.5),
-            ('k_pp', 'delta_p', 0.5),
-            ('k_pa', 'delta_p', 0.5),
-            ('k_ps', 'delta_p', 0.5),
-            ('k_ae', 'delta_a', 0.5),
-            ('k_ap', 'delta_a', 0.5),
-            ('k_aa', 'delta_a', 0.5),
-            ('k_as', 'delta_a', 0.5),
-            ('eta_p', 'delta_p', 1.0),
-            ('eta_a', 'delta_a', 1.0),
+            #('delta_p', 'tau_p', 2.0),
+            #('delta_a', 'tau_a', 2.0),
+            #('k_pe', 'delta_p', 0.5),
+            #('k_pp', 'delta_p', 0.5),
+            #('k_pa', 'delta_p', 0.5),
+            #('k_ps', 'delta_p', 0.5),
+            #('k_ae', 'delta_a', 0.5),
+            #('k_ap', 'delta_a', 0.5),
+            #('k_aa', 'delta_a', 0.5),
+            #('k_as', 'delta_a', 0.5),
+            #('eta_p', 'delta_p', 1.0),
+            #('eta_a', 'delta_a', 1.0),
             ]
 
 # plotting the internal connections
@@ -131,6 +129,10 @@ connections = pd.DataFrame.from_dict({'value': [param_grid[k] for k in conns],
 for key, key_tmp, power in param_scalings:
     param_grid[key] = np.asarray(param_grid[key]) * np.asarray(param_grid[key_tmp]) ** power
 
+# ctx *= param_grid['delta_p']
+# plt.plot(ctx)
+# plt.show()
+
 # simulations
 #############
 
@@ -140,27 +142,31 @@ results, result_map = grid_search(
     param_map=param_map,
     simulation_time=T,
     step_size=dt,
-    permute=True,
+    permute_grid=True,
     sampling_step_size=dts,
     inputs={
-        #'gpe_p/gpe_proto_syns_op/I_ext': ctx,
-        #'gpe_a/gpe_arky_syns_op/I_ext': stria
-        },
-    outputs={'r_i': 'gpe_p/gpe_proto_syns_op/R_i',
-             'r_a': 'gpe_a/gpe_arky_syns_op/R_a'},
+        #'driver/sl_op/alpha': inp
+    },
+    outputs={
+        'r_i': 'gpe_p/gpe_proto_syns_op/R_i',
+        #'r_a': 'gpe_a/gpe_arky_syns_op/R_a'
+    },
     init_kwargs={
         'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
-    method='RK45'
+    method='RK45',
 )
 
-fig2, ax = plt.subplots(figsize=(6, 2.0), dpi=dpi)
-results = results * 1e3
-plot_timeseries(results, ax=ax)
-plt.legend(['GPe-p', 'GPe-a'])
-ax.set_ylabel('Firing rate')
-ax.set_xlabel('time (ms)')
-#ax.set_xlim([200.0, 1200.0])
-#ax.set_ylim([0.0, 120.0])
-ax.tick_params(axis='both', which='major', labelsize=9)
-plt.tight_layout()
-plt.show()
+# results.plot()
+# plt.show()
+#
+# fig2, ax = plt.subplots(figsize=(6, 2.0), dpi=dpi)
+# results = results * 1e3
+# plot_timeseries(results, ax=ax)
+# #plt.legend(['GPe-p', 'GPe-a'])
+# ax.set_ylabel('Firing rate')
+# ax.set_xlabel('time (ms)')
+# ax.set_xlim([500.0, 1500.0])
+# ax.set_ylim([0.0, 120.0])
+# ax.tick_params(axis='both', which='major', labelsize=9)
+# plt.tight_layout()
+# plt.show()
