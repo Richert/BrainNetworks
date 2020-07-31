@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from pyrates.utility import ClusterGridSearch
+from pyrates.utility.grid_search import ClusterGridSearch
 import os
 import scipy.io as scio
 
