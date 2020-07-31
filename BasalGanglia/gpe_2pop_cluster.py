@@ -108,7 +108,7 @@ chunk_size = [
         ]
 
 res_file = cgs.run(
-            circuit_template="config/stn_gpe/gpe_2pop_driver",
+            circuit_template="/data/u_rgast_software/PycharmProjects/BrainNetworks/BasalGanglia/config/stn_gpe/gpe_2pop_driver",
             param_grid=param_grid,
             param_map=param_map,
             simulation_time=T,
