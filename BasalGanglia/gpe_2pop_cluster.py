@@ -118,7 +118,7 @@ res_file = cgs.run(
                      'r_a': 'gpe_a/gpe_arky_syns_op/R_a',
                      'd': 'driver/sl_op/Z1'},
             sampling_step_size=dts,
-            permute=True,
+            permute_grid=True,
             chunk_size=chunk_size,
             worker_env="/data/u_rgast_software/anaconda3/envs/pyrates/bin/python3",
             worker_file=f'{os.getcwd()}/stn_gpe_syns_worker.py',
