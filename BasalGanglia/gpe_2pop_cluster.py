@@ -10,11 +10,11 @@ import scipy.io as scio
 # simulation parameters
 dt = 1e-2
 dts = 1.0
-T = 300000.0
+T = 120000.0
 
 # stimulation parameters
-stim_periods = np.linspace(58.0, 85.0, 100)
-stim_amps = np.linspace(50.0, 90.0, 40)
+stim_periods = np.linspace(59.0, 83.0, 50)
+stim_amps = np.linspace(50.0, 100.0, 50)
 n_infreqs = len(stim_periods)
 
 # model parameters
@@ -115,14 +115,13 @@ res_file = cgs.run(
             dt=dt,
             inputs={},
             outputs={'r_i': 'gpe_p/gpe_proto_syns_op/R_i',
-                     'r_a': 'gpe_a/gpe_arky_syns_op/R_a',
                      'd': 'driver/sl_op/Z1'},
             sampling_step_size=dts,
             permute_grid=True,
             chunk_size=chunk_size,
             worker_env="/data/u_rgast_software/anaconda3/envs/pyrates/bin/python3",
             worker_file=f'{os.getcwd()}/gpe_2pop_worker.py',
-            worker_kwargs={'time_lim': 4000.0, 'cpu_lim': True, 'nproc_lim': False, 'memory_lim': False},
+            worker_kwargs={'time_lim': 3000.0, 'cpu_lim': True, 'nproc_lim': False, 'memory_lim': False},
             gs_kwargs={'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt, 'matrix_sparseness': 1.0}
                        },
             method='RK45',
