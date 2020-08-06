@@ -66,9 +66,9 @@ ctx = gaussian_filter1d(ctx, stim_var, axis=0)
 # model parameters
 k_gp = 30.0
 k_p = 1.5
-k_i = 1.0
+k_i = 0.5
 k_pi = 1.0
-k_pe = 1.5
+k_pe = 1.0
 k_ps = 1.0
 k_e = 1.0
 k = 10.0
@@ -84,9 +84,9 @@ param_grid = {
         'k_pa': [1.0*k_gp*k_i*k/(k_p*k_pi)],
         'k_ps': [200.0*k_ps*k],
         'k_as': [200.0*k/k_ps],
-        'eta_e': [4.0*eta],
+        'eta_e': [5.0*eta],
         'eta_p': [2.0*eta],
-        'eta_a': [-2.0*eta],
+        'eta_a': [-1.0*eta],
         'eta_s': [0.002],
         'delta_e': [30.0],
         'delta_p': [90.0],
