@@ -10,17 +10,17 @@ import scipy.io as scio
 # simulation parameters
 dt = 1e-2
 dts = 1.0
-T = 120000.0
+T = 60000.0
 
 # stimulation parameters
-stim_periods = np.linspace(59.0, 83.0, 50)
-stim_amps = np.linspace(50.0, 100.0, 50)
+stim_periods = np.linspace(30.0, 90.0, 30)
+stim_amps = np.linspace(0.0, 60.0, 20)
 n_infreqs = len(stim_periods)
 
 # model parameters
 k_gp = 30.0
 k_p = 1.5
-k_i = 0.75
+k_i = 0.9
 k_pi = 1.0
 k = 10.0
 param_grid = {
@@ -33,8 +33,8 @@ param_grid = {
         'k_ps': [200.0*k],
         'k_as': [200.0*k],
         'eta_e': [0.02],
-        'eta_p': [5.5],
-        'eta_a': [-6.0],
+        'eta_p': [4.8],
+        'eta_a': [-6.5],
         'eta_s': [0.002],
         'delta_p': [90.0],
         'delta_a': [120.0],

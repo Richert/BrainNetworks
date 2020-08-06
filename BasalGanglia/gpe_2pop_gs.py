@@ -6,7 +6,7 @@ import matplotlib as mpl
 from pyrates.utility.grid_search import grid_search
 from copy import deepcopy
 from scipy.ndimage.filters import gaussian_filter1d
-from pyrates.utility import plot_timeseries, create_cmap
+from pyrates.utility.visualization import plot_timeseries, create_cmap
 import h5py
 
 linewidth = 1.2
@@ -42,43 +42,44 @@ dt = 1e-3
 dts = 1e-1
 T = 1700.0
 sim_steps = int(np.round(T/dt))
-stim_offset = int(np.round(700.0/dt))
-stim_dur = int(np.round(200.0/dt))
-stim_delayed = int(np.round((1100.0)/dt))
+stim_offset = int(np.round(600.0/dt))
+stim_dur = int(np.round(50.0/dt))
+stim_delayed = int(np.round((1200.0)/dt))
 stim_amp = 10.0
-stim_var = 20.0
+stim_var = 10.0
 stim_period = 75.8
 stim_periods = [stim_period]
 stim_amps = [37.5]
 
 ctx = np.zeros((sim_steps, 1))
-ctx[stim_offset:stim_offset+stim_dur, 0] = -350.0
-ctx[stim_delayed:stim_delayed+stim_dur, 0] = 350.0
+ctx[stim_offset:stim_offset+stim_dur, 0] = 5.0*100.0
+ctx[stim_delayed:stim_delayed+stim_dur, 0] = -5.0*100.0
 ctx = gaussian_filter1d(ctx, stim_var, axis=0)
 
 plt.plot(ctx)
 plt.show()
 
 # model parameters
-k_gp = 20.0
-k_p = 1.0
-k_i = 0.5
+k_gp = 30.0
+k_p = 1.5
+k_i = 1.8
 k_pi = 1.0
+k = 10.0
 param_grid = {
-        'k_ae': [100.0],
-        'k_pe': [100.0],
-        'k_pp': [1.0*k_gp*k_p/k_i],
-        'k_ap': [1.0*k_gp*k_p*k_i*k_pi],
-        'k_aa': [1.0*k_gp/(k_p*k_i)],
-        'k_pa': [1.0*k_gp*k_i/(k_p*k_pi)],
-        'k_ps': [200.0],
-        'k_as': [200.0],
+        'k_ae': [k*100.0],
+        'k_pe': [k*100.0],
+        'k_pp': [k*k_gp*k_p/k_i],
+        'k_ap': [k*k_gp*k_p*k_i*k_pi],
+        'k_aa': [k*k_gp/(k_p*k_i)],
+        'k_pa': [k*k_gp*k_i/(k_p*k_pi)],
+        'k_ps': [k*200.0],
+        'k_as': [k*200.0],
         'eta_e': [0.02],
-        'eta_p': [3.0],
-        'eta_a': [0.0],
+        'eta_p': [3.2*100.0],
+        'eta_a': [3.4*100.0],
         'eta_s': [0.002],
-        'delta_p': [0.1],
-        'delta_a': [0.2],
+        'delta_p': [90.0],
+        'delta_a': [120.0],
         'tau_p': [25],
         'tau_a': [20],
         #'omega': stim_periods,
@@ -108,33 +109,33 @@ param_map = {
 }
 
 param_scalings = [
-            ('delta_p', 'tau_p', 2.0),
-            ('delta_a', 'tau_a', 2.0),
-            ('k_pe', 'delta_p', 0.5),
-            ('k_pp', 'delta_p', 0.5),
-            ('k_pa', 'delta_p', 0.5),
-            ('k_ps', 'delta_p', 0.5),
-            ('k_ae', 'delta_a', 0.5),
-            ('k_ap', 'delta_a', 0.5),
-            ('k_aa', 'delta_a', 0.5),
-            ('k_as', 'delta_a', 0.5),
-            ('eta_p', 'delta_p', 1.0),
-            ('eta_a', 'delta_a', 1.0),
+            #('delta_p', 'tau_p', 2.0),
+            #('delta_a', 'tau_a', 2.0),
+            #('k_pe', 'delta_p', 0.5),
+            #('k_pp', 'delta_p', 0.5),
+            #('k_pa', 'delta_p', 0.5),
+            #('k_ps', 'delta_p', 0.5),
+            #('k_ae', 'delta_a', 0.5),
+            #('k_ap', 'delta_a', 0.5),
+            #('k_aa', 'delta_a', 0.5),
+            #('k_as', 'delta_a', 0.5),
+            #('eta_p', 'delta_p', 1.0),
+            #('eta_a', 'delta_a', 1.0),
             ]
 
 # plotting the internal connections
 conns = ['k_pp', 'k_ap', 'k_pa', 'k_aa']
 connections = pd.DataFrame.from_dict({'value': [param_grid[k] for k in conns],
                                       'connection': [r'$J_{pp}$', r'$J_{ap}$', r'$J_{pa}$', r'$J_{aa}$']})
-# fig, ax = plt.subplots(figsize=(3, 2), dpi=dpi)
-# sns.set_color_codes("muted")
-# sns.barplot(x="value", y="connection", data=connections, color="b")
-# ax.set(xlim=(0, 85), ylabel="", xlabel="")
-# ax.tick_params(axis='x', which='major', labelsize=9)
-# sns.despine(left=True, bottom=True)
-# #ax.set_title('GPe Coupling: Condition 1')
-# plt.tight_layout()
-# plt.show()
+fig, ax = plt.subplots(figsize=(3, 2), dpi=dpi)
+sns.set_color_codes("muted")
+sns.barplot(x="value", y="connection", data=connections, color="b")
+ax.set(xlim=(0, 850), ylabel="", xlabel="")
+ax.tick_params(axis='x', which='major', labelsize=9)
+sns.despine(left=True, bottom=True)
+#ax.set_title('GPe Coupling: Condition 1')
+plt.tight_layout()
+plt.show()
 
 for key, key_tmp, power in param_scalings:
     param_grid[key] = np.asarray(param_grid[key]) * np.asarray(param_grid[key_tmp]) ** power
@@ -167,8 +168,8 @@ plot_timeseries(results, ax=ax)
 plt.legend(['GPe-p', 'GPe-a'])
 ax.set_ylabel('Firing rate')
 ax.set_xlabel('time (ms)')
-#ax.set_xlim([200.0, 1200.0])
-#ax.set_ylim([0.0, 120.0])
+ax.set_xlim([400.0, 1600.0])
+ax.set_ylim([0.0, 200.0])
 ax.tick_params(axis='both', which='major', labelsize=9)
 plt.tight_layout()
 plt.show()
