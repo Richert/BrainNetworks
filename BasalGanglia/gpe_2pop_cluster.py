@@ -10,7 +10,7 @@ import scipy.io as scio
 # simulation parameters
 dt = 1e-2
 dts = 1.0
-T = 60000.0
+T = 320000.0
 
 # stimulation parameters
 stim_periods = np.linspace(60.0, 85.0, 25)
@@ -131,8 +131,9 @@ results = pd.read_hdf(res_file, key=f'/Results/results')
 result_map = pd.read_hdf(res_file, key=f'/Results/result_map')
 
 results_dict = {}
+cutoff = 20000.0
 for key in result_map.index:
-    data1, data2 = results.loc[:, ('d', key)].values, results.loc[:, ('r_i', key)].values
+    data1, data2 = results.loc[cutoff:, ('d', key)].values, results.loc[cutoff:, ('r_i', key)].values
     results_dict[key] = {"omega": result_map.loc[key, 'omega'], 'alpha': result_map.loc[key, 'alpha'],
                          "data": np.asarray([data1, data2])}
 scio.savemat('lc_data.mat', mdict=results_dict, long_field_names=True)
