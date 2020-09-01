@@ -70,7 +70,7 @@ param_map = {
 
 nodes = [
             'carpenters',
-            'osttimor',
+            #'osttimor',
             'spanien',
             'animals',
             'kongo',
@@ -91,17 +91,17 @@ cgs = ClusterGridSearch(nodes=nodes, compute_dir=compute_dir)
 #############
 
 chunk_size = [
-            15,  # carpenters
-            20,  # osttimor
-            15,  # spanien
-            20,  # animals
-            10,  # kongo
-            10,  # tschad
-            15,  # uganda
-            10,  # tiber
-            15,  # giraffe
-            10,  # lech
-            5,  # rilke
+            50,  # carpenters
+            #20,  # osttimor
+            30,  # spanien
+            50,  # animals
+            20,  # kongo
+            20,  # tschad
+            50,  # uganda
+            20,  # tiber
+            3,  # giraffe
+            20,  # lech
+            10,  # rilke
             #50,  # dinkel
             #10,  # rosmarin
             #10,  # mosambik
