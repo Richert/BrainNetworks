@@ -125,7 +125,7 @@ res_file = cgs.run(
             gs_kwargs={'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt, 'matrix_sparseness': 0.1}
                        },
             method='RK45',
-            result_concat_axis=0)
+            result_concat_axis=1)
 
 results = pd.read_hdf(res_file, key=f'/Results/results')
 result_map = pd.read_hdf(res_file, key=f'/Results/result_map')
