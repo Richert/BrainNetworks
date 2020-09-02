@@ -137,4 +137,4 @@ for key in result_map.index:
     data1, data2 = results.loc[cutoff:, ('d', key)].values, results.loc[cutoff:, ('r_i', key)].values
     results_dict[key] = {"omega": result_map.loc[key, 'omega'], 'alpha': result_map.loc[key, 'alpha'],
                          "data": np.asarray([data1, data2])}
-scio.savemat('lc_data.mat', mdict=results_dict, long_field_names=True)
+scio.savemat('bs_data.mat', mdict=results_dict, long_field_names=True)
