@@ -20,7 +20,7 @@ n_infreqs = len(stim_periods)
 # model parameters
 k_gp = 30.0
 k_p = 1.5
-k_i = 0.9
+k_i = 1.8
 k_pi = 1.0
 k = 10.0
 eta = 100.0
@@ -34,8 +34,8 @@ param_grid = {
         'k_ps': [200.0*k],
         'k_as': [200.0*k],
         'eta_e': [0.02],
-        'eta_p': [4.8*eta],
-        'eta_a': [-6.5*eta],
+        'eta_p': [3.2*eta],
+        'eta_a': [3.0*eta],
         'eta_s': [0.002],
         'delta_p': [90.0],
         'delta_a': [120.0],
@@ -132,7 +132,7 @@ results = pd.read_hdf(res_file, key=f'/Results/results')
 result_map = pd.read_hdf(res_file, key=f'/Results/result_map')
 
 results_dict = {}
-cutoff = 20000.0
+cutoff = 20.0
 for key in result_map.index:
     data1, data2 = results.loc[cutoff:, ('d', key)].values, results.loc[cutoff:, ('r_i', key)].values
     results_dict[key] = {"omega": result_map.loc[key, 'omega'], 'alpha': result_map.loc[key, 'alpha'],
