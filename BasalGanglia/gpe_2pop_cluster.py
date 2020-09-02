@@ -122,7 +122,7 @@ res_file = cgs.run(
             chunk_size=chunk_size,
             worker_env="/data/u_rgast_software/anaconda3/envs/pyrates/bin/python3",
             worker_file=f'{os.getcwd()}/gpe_2pop_worker.py',
-            worker_kwargs={'time_lim': 3000.0, 'cpu_lim': True, 'nproc_lim': False, 'memory_lim': False},
+            worker_kwargs={'time_lim': 4000.0, 'cpu_lim': True, 'nproc_lim': False, 'memory_lim': False},
             gs_kwargs={'init_kwargs': {'backend': 'numpy', 'solver': 'scipy', 'step_size': dt, 'matrix_sparseness': 0.1}
                        },
             method='RK45',

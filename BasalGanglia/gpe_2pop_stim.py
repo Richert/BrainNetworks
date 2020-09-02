@@ -40,21 +40,20 @@ sns.set(style="whitegrid")
 # simulation parameters
 dt = 1e-3
 dts = 1.0
-T = 1700.0
+T = 2100.0
 sim_steps = int(np.round(T/dt))
 stim_offset = int(np.round(0.0/dt))
 stim_dur = int(np.round(500.0/dt))
-stim_period = 70.0
-stim_periods = [65.0]
-stim_amps = [30.0]
+stim_periods = [40.0]
+stim_amps = [37.0]
 
 # model parameters
 k_gp = 30.0
 k_p = 1.5
-k_i = 0.9
+k_i = 1.8
 k_pi = 1.0
 k = 10.0
-eta = 1.0
+eta = 100.0
 param_grid = {
         'k_ae': [100.0*k],
         'k_pe': [100.0*k],
@@ -65,8 +64,8 @@ param_grid = {
         'k_ps': [200.0*k],
         'k_as': [200.0*k],
         'eta_e': [0.02],
-        'eta_p': [4.8*eta],
-        'eta_a': [-6.5*eta],
+        'eta_p': [3.2*eta],
+        'eta_a': [3.0*eta],
         'eta_s': [0.002],
         'delta_p': [90.0],
         'delta_a': [120.0],
@@ -166,7 +165,7 @@ plot_timeseries(results, ax=ax)
 plt.legend(['GPe-p', 'GPe-a'])
 ax.set_ylabel('Firing rate')
 ax.set_xlabel('time (ms)')
-ax.set_xlim([500.0, 1500.0])
+ax.set_xlim([1000.0, 2000.0])
 ax.set_ylim([0.0, 120.0])
 ax.tick_params(axis='both', which='major', labelsize=9)
 plt.tight_layout()
