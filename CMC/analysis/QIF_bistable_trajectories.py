@@ -1,4 +1,5 @@
-from pyrates.utility import plot_connectivity, grid_search, create_cmap
+from pyrates.utility.grid_search import grid_search
+from pyrates.utility.visualization import plot_connectivity
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -9,7 +10,7 @@ import matplotlib.pyplot as plt
 # general parameters
 dt = np.round(5e-4, decimals=5)
 dts = 1e-2
-T = 100.
+T = 1000.
 
 # model parameters
 n_samples = 5

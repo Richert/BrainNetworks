@@ -44,13 +44,13 @@ T = 2100.0
 sim_steps = int(np.round(T/dt))
 stim_offset = int(np.round(0.0/dt))
 stim_dur = int(np.round(500.0/dt))
-stim_periods = [40.0]
-stim_amps = [37.0]
+stim_periods = [78.0]
+stim_amps = [50.0]
 
 # model parameters
 k_gp = 30.0
 k_p = 1.5
-k_i = 1.8
+k_i = 0.9
 k_pi = 1.0
 k = 10.0
 eta = 100.0
@@ -64,8 +64,8 @@ param_grid = {
         'k_ps': [200.0*k],
         'k_as': [200.0*k],
         'eta_e': [0.02],
-        'eta_p': [3.2*eta],
-        'eta_a': [3.0*eta],
+        'eta_p': [4.8*eta],
+        'eta_a': [0.0*eta],
         'eta_s': [0.002],
         'delta_p': [90.0],
         'delta_a': [120.0],
@@ -153,11 +153,11 @@ results, result_map = grid_search(
     },
     init_kwargs={
         'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
-    method='RK45',
+    method='RK45'
 )
 
-results.plot()
-plt.show()
+# results.plot()
+# plt.show()
 
 fig2, ax = plt.subplots(figsize=(6, 2.0), dpi=dpi)
 results = results * 1e3
@@ -165,7 +165,7 @@ plot_timeseries(results, ax=ax)
 plt.legend(['GPe-p', 'GPe-a'])
 ax.set_ylabel('Firing rate')
 ax.set_xlabel('time (ms)')
-ax.set_xlim([1000.0, 2000.0])
+ax.set_xlim([1000.0, T-100.0])
 ax.set_ylim([0.0, 120.0])
 ax.tick_params(axis='both', which='major', labelsize=9)
 plt.tight_layout()

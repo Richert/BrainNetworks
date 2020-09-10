@@ -151,9 +151,9 @@ scio.savemat('bs_data.mat', mdict=results_dict, long_field_names=True)
 # powers = []
 # freq_labels = []
 # target_freqs = np.linspace(4.0, 80.0, 50)
-# for id in result_map.index:
-#     r = results.loc[:, ('r_i', id)]
-#     freq_labels.append(result_map.at[id, 'omega'])
+# for key in result_map.index:
+#     r = results.loc[:, ('r_i', key)]
+#     freq_labels.append(result_map.at[key, 'omega'])
 #     psds, freqs = welch(r, fmin=1.0, fmax=100.0, n_fft=8192, n_overlap=512)
 #     freq_inter = interp1d(freqs, psds.squeeze(), kind='cubic', axis=0)
 #     powers.append(freq_inter(target_freqs))

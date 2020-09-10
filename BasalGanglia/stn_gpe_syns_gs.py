@@ -64,11 +64,11 @@ ctx = gaussian_filter1d(ctx, stim_var, axis=0)
 # plt.show()
 
 # model parameters
-k_gp = 30.0
+k_gp = 80.0
 k_p = 1.5
-k_i = 0.5
+k_i = 0.9
 k_pi = 1.0
-k_pe = 1.0
+k_pe = 0.75
 k_ps = 1.0
 k_e = 1.0
 k = 10.0
@@ -77,16 +77,16 @@ param_grid = {
         'k_ee': [6.0*k_e*k],
         'k_ae': [80.0*k/k_pe],
         'k_pe': [80.0*k_pe*k],
-        'k_ep': [120.0*k_e*k],
+        'k_ep': [90.0*k_e*k],
         'k_pp': [1.0*k_gp*k_p*k/k_i],
         'k_ap': [1.0*k_gp*k_p*k_i*k_pi*k],
         'k_aa': [1.0*k_gp*k/(k_p*k_i)],
         'k_pa': [1.0*k_gp*k_i*k/(k_p*k_pi)],
         'k_ps': [200.0*k_ps*k],
         'k_as': [200.0*k/k_ps],
-        'eta_e': [5.0*eta],
-        'eta_p': [2.0*eta],
-        'eta_a': [-1.0*eta],
+        'eta_e': [3.0*eta],
+        'eta_p': [4.0*eta],
+        'eta_a': [-2.0*eta],
         'eta_s': [0.002],
         'delta_e': [30.0],
         'delta_p': [90.0],
@@ -155,12 +155,12 @@ param_scalings = [
             ]
 
 conditions = [{},  # healthy control -> GPe_p: 60 Hz, STN: 20 Hz, GPe_a: 30 Hz
-              {'k_pe': 0.2, 'k_ae': 0.2},  # AMPA blockade in GPe -> GPe_p: 40 Hz
-              {'k_ep': 0.2},  # GABAA blocker in STN -> STN: 40 Hz, GPe_p: 100 Hz
-              {'k_pe': 0.2, 'k_pp': 0.2, 'k_pa': 0.2, 'k_ae': 0.2, 'k_aa': 0.2, 'k_ap': 0.2,
-               'k_ps': 0.2, 'k_as': 0.2},  # AMPA blockade and GABAA blockade in GPe -> GPe_p: 70 Hz
-              {'k_pp': 0.2, 'k_pa': 0.2, 'k_aa': 0.2, 'k_ap': 0.2, 'k_ps': 0.2,
-               'k_as': 0.2},  # GABAA blockade in GPe -> GPe_p: 100 Hz
+              #{'k_pe': 0.2, 'k_ae': 0.2},  # AMPA blockade in GPe -> GPe_p: 40 Hz
+              #{'k_ep': 0.2},  # GABAA blocker in STN -> STN: 40 Hz, GPe_p: 100 Hz
+              #{'k_pe': 0.2, 'k_pp': 0.2, 'k_pa': 0.2, 'k_ae': 0.2, 'k_aa': 0.2, 'k_ap': 0.2,
+              # 'k_ps': 0.2, 'k_as': 0.2},  # AMPA blockade and GABAA blockade in GPe -> GPe_p: 70 Hz
+              #{'k_pp': 0.2, 'k_pa': 0.2, 'k_aa': 0.2, 'k_ap': 0.2, 'k_ps': 0.2,
+              # 'k_as': 0.2},  # GABAA blockade in GPe -> GPe_p: 100 Hz
               #{'k_pe': 0.0, 'k_ae': 0.0},  # STN blockade -> GPe_p: 20 HZ
               #{'k_pe': 0.0, 'k_ae': 0.0, 'k_pp': 0.2, 'k_pa': 0.2, 'k_aa': 0.2, 'k_ap': 0.2,
               # 'k_ps': 0.2, 'k_as': 0.2},  # STN blockade + GABAA blockade in GPe -> GPe_p: 60 Hz
