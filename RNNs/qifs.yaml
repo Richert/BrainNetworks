@@ -1,0 +1,220 @@
+%YAML 1.2
+---
+
+# Operator Templates
+####################
+
+# operator for a qif population with synaptic depression (bi-exponential)
+Op_sd_biexp:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * r = delta/(PI * tau^2) + 2.*r*v/tau"
+    - "d/dt * v = (v^2 + eta + inp)/tau + J*(r + r_in)*(1.0 - I_a) - tau*(PI*r)^2"
+    - "d/dt * I_a = x"
+    - "d/dt * x = (alpha*r*tau_d - x*(tau_r+tau_d) - I_a)/(tau_r*tau_d)"
+  variables:
+    r:
+      default: output(0.75)
+    v:
+      default: variable(-0.4)
+    I_a:
+      default: variable(0.36)
+    x:
+      default: variable(0.0)
+    r_in:
+      default: input
+    tau:
+      default: 1.0
+    delta:
+      default: 2.0
+    eta:
+      default: -4.6
+    J:
+      default: 21.2132
+    alpha:
+      default: 0.05
+    tau_d:
+      default: 10.0
+    tau_r:
+      default: 10.0
+    inp:
+      default: input
+
+# operator for a qif population with synaptic depression (mono-exponential)
+Op_sd_exp:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * r = delta/(PI * tau^2) + 2.*r*v/tau"
+    - "d/dt * v = (v^2 + eta + inp)/tau + J*(r + r_in)*(1.0 - I_a) - tau*(PI*r)^2"
+    - "d/dt * I_a = -I_a/tau_a + alpha*r"
+  variables:
+    r:
+      default: output(0.75)
+    v:
+      default: variable(-0.4)
+    I_a:
+      default: variable(0.36)
+    r_in:
+      default: input
+    tau:
+      default: 1.0
+    delta:
+      default: 2.0
+    eta:
+      default: -5.22
+    J:
+      default: 21.2132
+    alpha:
+      default: 0.05
+    tau_a:
+      default: 10.0
+    inp:
+      default: input
+
+# operator for a qif population with spike-frequency adaptation (mono-exponential)
+Op_sfa_exp:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * r = delta/(PI * tau^2) + 2.*r*v/tau"
+    - "d/dt * v = (v^2 + eta + inp)/tau + J*(r + r_in) - I_a - tau*(PI*r)^2"
+    - "d/dt * I_a = -I_a/tau_a + alpha*r"
+  variables:
+    r:
+      default: output(0.75)
+    v:
+      default: variable(-0.4)
+    I_a:
+      default: variable(0.36)
+    r_in:
+      default: input
+    tau:
+      default: 1.0
+    delta:
+      default: 2.0
+    eta:
+      default: -4.6
+    J:
+      default: 21.2132
+    alpha:
+      default: 0.05
+    tau_a:
+      default: 10.0
+    inp:
+      default: input
+
+Op_lorenz:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * l1 = a*(l2 - l1)"
+    - "d/dt * l2 = l1*(b - l3) - l2"
+    - "d/dt * l3 = l1*l2 - c*l3"
+  variables:
+    l1:
+      default: output(1.0)
+    l2:
+      default: variable(0.0)
+    l3:
+      default: variable(0.0)
+    a:
+      default: 10.0
+    b:
+      default: 28.0
+    c:
+      default: 2.66667
+
+Op_sl:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * s1 = -omega*s2 + s1*(1 - s1^2 - s2^2)"
+    - "d/dt * s2 = omega*s1 + s2*(1 - s1^2 - s2^2)"
+  variables:
+    s1:
+      default: output(1.0)
+    s2:
+      default: variable(0.0)
+    omega:
+      default: 1.25664
+
+
+# population templates
+######################
+
+# excitatory qif population with synaptic depression (mono-exponential kernel)
+Pop_sd_exp:
+  base: NodeTemplate
+  operators:
+    - Op_sd_exp
+
+# excitatory qif population with synaptic depression (bi-exponential kernel)
+Pop_sd_biexp:
+  base: NodeTemplate
+  operators:
+    - Op_sd_biexp
+
+# excitatory qif population with synaptic depression (mono-exponential kernel)
+Pop_sfa_exp:
+  base: NodeTemplate
+  operators:
+    - Op_sfa_exp
+
+Pop_lorenz:
+  base: NodeTemplate
+  operators:
+    - Op_lorenz
+
+Pop_sl:
+  base: NodeTemplate
+  operators:
+    - Op_sl
+
+
+# circuit templates
+###################
+
+# excitatory qif population with synaptic depression (mono-exponential kernel)
+QIF_sd_exp:
+  base: CircuitTemplate
+  nodes:
+    p: Pop_sd_exp
+  edges:
+
+# excitatory qif population with synaptic depression (bi-exponential kernel)
+QIF_sd_biexp:
+  base: CircuitTemplate
+  nodes:
+    p: Pop_sd_biexp
+  edges:
+
+# excitatory qif population with spike-frequency adaptation (mono-exponential kernel)
+QIF_sfa_exp:
+  base: CircuitTemplate
+  nodes:
+    p: Pop_sfa_exp
+  edges:
+
+# excitatory qif population with synaptic depression and input from a lorenz attractor
+QIF_sd_lorenz:
+  base: CircuitTemplate
+  nodes:
+    qif: Pop_sd_exp
+    inp: Pop_lorenz
+  edges:
+    - [inp/Op_lorenz/l1, qif/Op_sd_exp/inp, null, {weight: 1.0}]
+
+# excitatory qif population with bi-exponential synaptic depression and input from a lorenz attractor
+QIF_sd_biexp_lorenz:
+  base: CircuitTemplate
+  nodes:
+    qif: Pop_sd_biexp
+    inp: Pop_lorenz
+  edges:
+    - [inp/Op_lorenz/l1, qif/Op_sd_biexp/inp, null, {weight: 1.0}]
+
+# excitatory qif population with synaptic depression and input from a stuart-landau oscillator
+QIF_sd_sl:
+  base: CircuitTemplate
+  nodes:
+    qif: Pop_sd_biexp
+    inp: Pop_sl
+  edges:
+    - [inp/Op_sl/s1, qif/Op_sd_biexp/inp, null, {weight: 1.0}]

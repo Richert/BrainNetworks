@@ -2,7 +2,7 @@ from RNNs import QIFExpAddRNN
 import numpy as np
 import matplotlib.pyplot as plt
 
-N = 200
+N = 2000
 p = 0.05
 m = 4
 T = 100.0
