@@ -80,7 +80,7 @@ class CustomGOA(CGSGeneticAlgorithm):
                 worker_env=self.cgs_config['worker_env'],
                 gs_kwargs={'init_kwargs': self.gs_config['init_kwargs'], 'conditions': conditions,
                            'param_scalings': param_scalings},
-                worker_kwargs={'freq_targets': freq_targets, 'targets': target, 'time_lim': 5400.0, 'cpu_lim': False,
+                worker_kwargs={'freq_targets': freq_targets, 'y': target, 'time_lim': 5400.0, 'cpu_lim': False,
                                'nproc_lim': False, 'memory_lim': False, 'T': self.gs_config['simulation_time']},
                 result_concat_axis=0)
             results_tmp = read_hdf(res_file, key=f'Results/results')

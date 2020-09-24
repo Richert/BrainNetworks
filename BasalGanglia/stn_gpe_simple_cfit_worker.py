@@ -27,7 +27,7 @@ class ExtendedWorker(MinimalWorker):
     def worker_postprocessing(self, **kwargs):
         kwargs_tmp = kwargs.copy()
         param_grid = kwargs_tmp.pop('param_grid')
-        targets = kwargs_tmp.pop('targets')
+        targets = kwargs_tmp.pop('y')
         self.processed_results = DataFrame(data=None, columns=['fitness', 'r_e', 'r_i'])
 
         # calculate fitness

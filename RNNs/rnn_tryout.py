@@ -50,10 +50,10 @@ print(f'classification score: {score}')
 # plotting
 fig, axes = plt.subplots(nrows=3)
 ax = axes[0]
-ax.plot(np.mean(qif_rnn.fr_record[:, :N], axis=1))
+ax.plot(np.mean(qif_rnn.state_records[:, :N], axis=1))
 ax = axes[1]
-ax.plot(np.mean(qif_rnn.fr_record[:, N:], axis=1))
+ax.plot(np.mean(qif_rnn.state_records[:, N:], axis=1))
 ax = axes[2]
-ax.plot(qif_rnn.fr_record[:, :N])
+ax.plot(qif_rnn.state_records[:, :N])
 plt.tight_layout()
 plt.show()

@@ -42,7 +42,7 @@ class ExtendedWorker(MinimalWorker):
         kwargs_tmp = kwargs.copy()
         param_grid = kwargs_tmp.pop('param_grid')
         freq_targets = kwargs_tmp.pop('freq_targets')
-        targets = kwargs_tmp.pop('targets')
+        targets = kwargs_tmp.pop('y')
         self.processed_results = DataFrame(data=None, columns=['fitness', 'r_e', 'r_p', 'r_a', 'r_m', 'r_f'])
 
         # calculate fitness

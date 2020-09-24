@@ -214,7 +214,7 @@ QIF_sd_biexp_lorenz:
 QIF_sd_sl:
   base: CircuitTemplate
   nodes:
-    qif: Pop_sd_biexp
+    qif: Pop_sd_exp
     inp: Pop_sl
   edges:
-    - [inp/Op_sl/s1, qif/Op_sd_biexp/inp, null, {weight: 1.0}]
+    - [inp/Op_sl/s1, qif/Op_sd_exp/inp, null, {weight: 1.0}]

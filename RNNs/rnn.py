@@ -2,6 +2,7 @@ import numpy as np
 from numba import njit
 import typing as tp
 from sklearn.linear_model import Ridge, RidgeCV
+from sklearn.model_selection import StratifiedKFold
 
 
 class RNN:
@@ -15,9 +16,10 @@ class RNN:
         self.func_kwargs = kwargs
         self.func_args = args
         self.net_update = evolution_func
-        self.fr_record = []
+        self.state_records = {}
         self.readouts = {}
-        self.readout_identifier = 0
+        self.readout_id = 0
+        self.state_id = 0
         self.classifier = None
 
     def train(self, dt: float, dts: float, targets: np.ndarray, inp: np.ndarray, W_in: tp.Optional[np.ndarray] = None,
@@ -34,83 +36,72 @@ class RNN:
         classifier.fit(X[cutoff:, :], targets[cutoff:])
 
         if key is None:
-            key = self.readout_identifier
-            self.readout_identifier += 1
+            key = self.readout_id
+            self.readout_id += 1
+        self.readouts[key] = classifier
         print(f'Finished readout training. The readout weights are stored under the key: {key}. '
               f'Please use that key when calling `RNN.test()` or `RNN.predict()`.')
-        self.readouts[key] = classifier
+        return key
 
-    def train_cv(self, dt: float, dts: float, targets: np.ndarray, inp: np.ndarray, W_in: tp.Optional[np.ndarray] = None,
-              state_record_idx: tp.Optional[np.ndarray] = None, cutoff: float = 0.0, key: tp.Any = None, **kwargs):
+    def train_cv(self, X: np.ndarray, y: np.ndarray, readout_key: tp.Any = None, **kwargs):
 
-        T = inp.shape[1] * dt
-        cutoff = int(np.round(cutoff / dts))
-
-        # collect states
-        X = self.run(T, dt, dts, inp=inp, W_in=W_in, state_record_idx=state_record_idx)
+        if readout_key is None:
+            readout_key = self.readout_id
+            self.readout_id += 1
 
         # perform ridge regression
         classifier = RidgeCV(**kwargs)
-        classifier.fit(X[cutoff:, :], targets[cutoff:])
-
-        if key is None:
-            key = self.readout_identifier
-            self.readout_identifier += 1
-        print(f'Finished readout training. The readout weights are stored under the key: {key}. '
+        classifier.fit(X, y)
+        self.readouts[readout_key] = classifier
+        print(f'Finished readout training. The readout weights are stored under the key: {readout_key}. '
               f'Please use that key when calling `RNN.test()` or `RNN.predict()`.')
-        self.readouts[key] = classifier
 
-    def test(self, key: tp.Any, dt: float, dts: float, targets: np.ndarray, inp: np.ndarray,
-             W_in: tp.Optional[np.ndarray] = None, state_record_idx: tp.Optional[np.ndarray] = None,
-             cutoff: float = 0.0, **kwargs):
+        return classifier, readout_key
 
-        T = inp.shape[1] * dt
-        cutoff = int(np.round(cutoff / dts))
+    def kfold_crossval(self, X: np.ndarray, y: np.ndarray, k: int = 10, **kwargs):
 
-        # collect states
-        X = self.run(T, dt, dts, inp=inp, W_in=W_in, state_record_idx=state_record_idx)
-
-        # predict targets
-        classifier = self.readouts[key]
-        return classifier.score(X[cutoff:, :], targets[cutoff:], **kwargs)
-
-    def predict(self, key: tp.Any, dt: float, dts: float, inp: np.ndarray, W_in: tp.Optional[np.ndarray] = None,
-                state_record_idx: tp.Optional[np.ndarray] = None, cutoff: float = 0.0, **kwargs):
-
-        T = inp.shape[1] * dt
-        cutoff = int(np.round(cutoff / dts))
-
-        # collect states
-        X = self.run(T, dt, dts, inp=inp, W_in=W_in, state_record_idx=state_record_idx)
-
-        # predict targets
-        classifier = self.readouts[key]
-        return classifier.predict(X[cutoff:, :], **kwargs)
+        splitter = StratifiedKFold(n_splits=k)
+        scores = []
+        for train_idx, test_idx in splitter.split(X=X, y=y):
+            m, key = self.train_cv(X[train_idx], y[train_idx], **kwargs)
+            score = m.score(X[test_idx], y[test_idx])
+            scores.append(score)
+        return scores
 
     def run(self, T: float, dt: float, dts: float, t_init: float = 0.0, inp: tp.Optional[np.ndarray] = None,
-            W_in: tp.Optional[np.ndarray] = None, state_record_idx: tp.Optional[np.ndarray] = None):
+            W_in: tp.Optional[np.ndarray] = None, state_record_idx: tp.Optional[np.ndarray] = None,
+            state_record_key: tp.Optional[tp.Any] = None, cutoff: float = 0.0):
+
+        if state_record_key is None:
+            key = self.state_id
+            self.state_id += 1
+        else:
+            key = state_record_key
 
         steps = int(np.round(T/dt))
         sampling_steps = int(np.round(dts/dt))
-        store_steps = int(np.round(T/dts))
+        store_steps = int(np.round((T-cutoff)/dts))
+        start_step = steps - store_steps
         self.t += t_init
         self.func_kwargs['dt'] = dt
+
         if state_record_idx is None:
             state_record_idx = np.arange(self.N)
-        self.fr_record = np.zeros((store_steps, len(state_record_idx)))
+        self.state_records[key] = np.zeros((store_steps, len(state_record_idx)))
 
         if inp is None:
             inp = np.zeros((self.N,))
 
         sample = 0
         for step in range(steps):
-            self.u, rates = self.net_update(self.u, np.asarray(inp[:, step], order='C'), W_in, *self.func_args,
-                                            **self.func_kwargs)
-            if step % sampling_steps == 0:
-                self.fr_record[sample, :] = rates[state_record_idx]
+            self.u, observables = self.net_update(self.u, np.asarray(inp[:, step], order='C'), W_in, *self.func_args,
+                                                  **self.func_kwargs)
+            if step > start_step and step % sampling_steps == 0:
+                self.state_records[key][sample, :] = observables[state_record_idx]
                 sample += 1
 
-        return self.fr_record
+        print(f'Finished simulation. The state recordings are stored under the key: {key}.')
+        return self.state_records[key]
 
     def get_coefs(self, key: tp.Any):
         return self.readouts[key].coef_
@@ -171,3 +162,40 @@ class QIFExpAddRNN(RNN):
         spike_t = np.zeros((1, self.N))
         wait = np.ones((self.N,))
         self.func_args = (C.shape[0], C, etas, J, tau, alpha, tau_a, v_th, spike_t, wait)
+
+
+class mQIFExpAddRNN(RNN):
+
+    def __init__(self, C: np.ndarray, etas: list, Js: list, Deltas: list, taus: list,
+                 alphas: list, tau_as: list, *args,  **kwargs):
+
+        @njit
+        def mqif_update(u: np.ndarray, inp: np.ndarray, W_in: np.ndarray, N: int, C: np.ndarray, etas: np.ndarray,
+                        Deltas: np.ndarray, Js: np.ndarray, taus: np.ndarray, alphas: np.ndarray, tau_as: np.ndarray,
+                        dt: float = 1e-4) -> tp.Tuple[np.ndarray, np.ndarray]:
+            """Calculates right-hand side update of a network of coupled QIF populations
+            (described by mean-field equations) with heterogeneous background excitabilities and mono-exponential
+            synaptic depression."""
+
+            # extract state variables from u
+            v, r, e = u[:N], u[N:2*N], u[2*N:]
+
+            # calculate network input
+            s = C @ r
+            net_inp = Js*s[0, :]*(1-e)
+            ext_inp = W_in @ inp
+
+            # calculate state vector updates
+            r += dt * (Deltas/(taus*np.pi) + 2*r*v)
+            v += dt * ((v**2 + etas + ext_inp) / taus + net_inp - taus*(np.pi*r)**2)
+            e += dt * (alphas*s[0, :] - e/tau_as)
+
+            u[:N] = v
+            u[N:2*N] = r
+            u[2*N:] = e
+            return u, r
+
+        if "u_init" not in kwargs:
+            kwargs["u_init"] = np.zeros((2*C.shape[0],))
+        super().__init__(C=C, evolution_func=mqif_update, *args, **kwargs)
+        self.func_args = (C.shape[0], C, etas, Deltas, Js, taus, alphas, tau_as)
