@@ -9,8 +9,7 @@ import pickle
 #####################################
 
 # parse worker indices from script arguments
-idx_w = int(sys.argv[1])
-idx_eta = int(sys.argv[2])
+idx_cond = int(sys.argv[1])
 
 # STEP 1: Load pre-generated RNN parameters
 ###########################################
@@ -37,10 +36,10 @@ cutoff = config['cutoff']
 targets = config['targets']
 
 # input strength
-w = config['alphas'][idx_w]
+w = config['alphas'][idx_cond]
 
 # eta
-eta = config['etas'][idx_eta]
+eta = config['etas'][idx_cond]
 
 # STEP 2: define remaining network parameters
 #############################################
