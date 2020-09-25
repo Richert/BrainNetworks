@@ -71,7 +71,7 @@ target_end = int(np.round(sim_time/dts))
 
 inp = np.zeros((1, steps))
 inp[0, in_start:in_start+in_end] = y_lorenz[0, :]
-inp[0, in_start+in_end:] = y_stula[0, :]
+inp[0, in_start+in_end:] = y_stula[0, :] * 10.0
 targets = np.zeros((store_steps,))
 targets[target_start:target_start+target_end] = 1.0
 targets[target_start+target_end:] = -1.0
