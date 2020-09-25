@@ -51,7 +51,7 @@ def lorenz(t, y):
 
 sim_time = (T-cutoff)*0.5
 t_eval = np.arange(0.0, sim_time, dt)
-y_lorenz = solve_ivp(lorenz, t_span=[0.0, sim_time], y0=[1.0, 0.0, 0.0], t_eval=t_eval).y
+y_lorenz = solve_ivp(lorenz, t_span=[0.0, sim_time], y0=[1.0, 0.0, 0.0], t_eval=t_eval, method='DOP853').y
 
 # create stuart-landau input
 y_delta = np.zeros((2,))
@@ -59,7 +59,7 @@ def stula(t, y):
     y_delta[0] = -omega*y[1] + y[0]*(1 - y[0]**2 - y[1]**2)
     y_delta[1] = omega*y[0] + y[1]*(1 - y[0]**2 - y[1]**2)
     return y_delta
-y_stula = solve_ivp(stula, t_span=[0.0, sim_time], y0=[1.0, 0.0,], t_eval=t_eval).y
+y_stula = solve_ivp(stula, t_span=[0.0, sim_time], y0=[1.0, 0.0,], t_eval=t_eval, method='DOP853').y
 
 # create input and target matrix
 steps = int(np.round(T/dt))
