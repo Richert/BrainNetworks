@@ -67,4 +67,4 @@ y = targets
 # train RNN
 scores = qif_rnn.kfold_crossval(X=X, y=y, k=n_folds, alphas=alpha, cv=n_folds)
 avg_score = np.mean(scores, axis=0)
-np.save(f"{path}/cv_score_{idx_w}_{idx_eta}", avg_score)
+np.save(f"{path}/cv_score_{idx_cond}", avg_score)
