@@ -83,5 +83,5 @@ data['inp'] = inp
 data['targets'] = targets
 data['etas'] = etas
 data['alphas'] = alphas
-fn = "/home/rgast/PycharmProjects/BrainNetworks/RC/results/qif_micro_config.pkl"
+fn = "/u/rgast/ptmp_link/BrainNetworks/RC/results/qif_micro_config.pkl"
 pickle.dump(data, open(fn, 'wb'))

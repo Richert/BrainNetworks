@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/home/rgast/PycharmProjects/BrainNetworks")
+sys.path.append("/u/rgast/ptmp_link/BrainNetworks")
 from RNNs import QIFExpAddRNN
 import numpy as np
 import sys
