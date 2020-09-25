@@ -12,8 +12,8 @@ cutoff = 10.0
 N = 2000
 p = 0.05
 m = 1
-n_etas = 10
-n_alphas = 2
+n_etas = 100
+n_alphas = 10
 etas = np.linspace(-6.5, -4.5, num=n_etas)
 alphas = np.linspace(0.0, 0.1, num=n_alphas)
 
@@ -56,14 +56,18 @@ y_stula = solve_ivp(stula, t_span=[0.0, sim_time], y0=[1.0, 0.0,], t_eval=t_eval
 
 # create input and target matrix
 steps = int(np.round(T/dt))
+store_steps = int(np.round((T-cutoff)/dts))
 in_start = int(np.round(cutoff/dt))
 in_end = int(np.round(sim_time/dt))
+target_start = int(np.round(0.0/dts))
+target_end = int(np.round(sim_time/dts))
+
 inp = np.zeros((1, steps))
 inp[0, in_start:in_start+in_end] = y_lorenz[0, :]
 inp[0, in_start+in_end:] = y_stula[0, :]
-targets = np.zeros((steps,))
-targets[in_start:in_start+in_end] = 1.0
-targets[in_start+in_end:] = -1.0
+targets = np.zeros((store_steps,))
+targets[target_start:target_start+target_end] = 1.0
+targets[target_start+target_end:] = -1.0
 
 # store data
 data = {}
@@ -79,5 +83,5 @@ data['inp'] = inp
 data['targets'] = targets
 data['etas'] = etas
 data['alphas'] = alphas
-fn = "results/qif_micro_config.pkl"
+fn = "/home/rgast/PycharmProjects/BrainNetworks/RC/results/qif_micro_config.pkl"
 pickle.dump(data, open(fn, 'wb'))

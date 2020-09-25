@@ -1,3 +1,5 @@
+import sys
+sys.path.append("/home/rgast/PycharmProjects/BrainNetworks")
 from RNNs import QIFExpAddRNN
 import numpy as np
 import sys
@@ -7,10 +9,8 @@ import pickle
 #####################################
 
 # parse worker indices from script arguments
-#idx_w = sys.argv[1]
-#idx_eta = sys.argv[2]
-idx_w = 1
-idx_eta = 3
+idx_w = int(sys.argv[1])
+idx_eta = int(sys.argv[2])
 
 # STEP 1: Load pre-generated RNN parameters
 ###########################################
@@ -67,5 +67,5 @@ y = targets
 
 # train RNN
 scores = qif_rnn.kfold_crossval(X=X, y=y, k=n_folds, alphas=alpha, cv=n_folds)
-avg_score = np.mean(scores, axis=1)
-np.save(f"{path}/results/cv_score_{idx_w}_{idx_eta}", avg_score)
+avg_score = np.mean(scores, axis=0)
+np.save(f"results/cv_score_{idx_w}_{idx_eta}", avg_score)
