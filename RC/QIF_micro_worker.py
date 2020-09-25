@@ -15,8 +15,8 @@ idx_eta = int(sys.argv[2])
 # STEP 1: Load pre-generated RNN parameters
 ###########################################
 
-path = "results/qif_micro_config.pkl"
-config = pickle.load(open(path, 'rb'))
+path = "/u/rgast/ptmp_link/BrainNetworks/RC/results"
+config = pickle.load(open(f"{path}/qif_micro_config.pkl", 'rb'))
 
 # connectivity matrix
 C = config['C']
@@ -68,4 +68,4 @@ y = targets
 # train RNN
 scores = qif_rnn.kfold_crossval(X=X, y=y, k=n_folds, alphas=alpha, cv=n_folds)
 avg_score = np.mean(scores, axis=0)
-np.save(f"results/cv_score_{idx_w}_{idx_eta}", avg_score)
+np.save(f"{path}/cv_score_{idx_w}_{idx_eta}", avg_score)

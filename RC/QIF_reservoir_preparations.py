@@ -2,6 +2,8 @@ import numpy as np
 from scipy.integrate import solve_ivp
 import pickle
 
+path = "/u/rgast/ptmp_link/BrainNetworks/RC/results"
+
 # simulation parameters
 T = 130.0
 dt = 1e-4
@@ -83,5 +85,4 @@ data['inp'] = inp
 data['targets'] = targets
 data['etas'] = etas
 data['alphas'] = alphas
-fn = "/u/rgast/ptmp_link/BrainNetworks/RC/results/qif_micro_config.pkl"
-pickle.dump(data, open(fn, 'wb'))
+pickle.dump(data, open(f"{path}/qif_micro_config.pkl", 'wb'))
