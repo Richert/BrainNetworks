@@ -5,13 +5,13 @@ import pickle
 path = "/u/rgast/ptmp_link/BrainNetworks/RC/results"
 
 # simulation parameters
-T = 60.0
+T = 130.0
 dt = 1e-4
 dts = 1e-2
 cutoff = 10.0
 
 # network configuration parameters
-N = 1000
+N = 2000
 p = 0.05
 m = 1
 n_etas = 100
