@@ -5,19 +5,24 @@ import pickle
 path = "/u/rgast/ptmp_link/BrainNetworks/RC/results"
 
 # simulation parameters
-T = 130.0
+T = 60.0
 dt = 1e-4
 dts = 1e-2
 cutoff = 10.0
 
 # network configuration parameters
-N = 2000
+N = 1000
 p = 0.05
 m = 1
 n_etas = 100
 n_alphas = 10
 etas = np.linspace(-6.5, -4.5, num=n_etas)
 alphas = np.linspace(0.0, 0.1, num=n_alphas)
+etas_all = np.tile(etas, reps=(n_alphas,))
+alphas_all = []
+for i in range(n_alphas):
+    alphas_all += [alphas[i]]*n_etas
+alphas_all = np.asarray(alphas_all)
 
 # input parameters
 a = 10.0
@@ -83,6 +88,6 @@ data['C'] = C
 data['W_in'] = W_in
 data['inp'] = inp
 data['targets'] = targets
-data['etas'] = etas
-data['alphas'] = alphas
+data['etas'] = etas_all
+data['alphas'] = alphas_all
 pickle.dump(data, open(f"{path}/qif_micro_config.pkl", 'wb'))

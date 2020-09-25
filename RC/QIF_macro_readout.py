@@ -11,10 +11,11 @@ n_folds = 10
 cutoff = 0.0
 
 # load data
-lorenz_map = pd.read_pickle("results/lorenz_map.pkl")
-lorenz_data = pd.read_pickle("results/lorenz_ts.pkl")
-stula_map = pd.read_pickle("results/stuart_landau_map.pkl")
-stula_data = pd.read_pickle("results/stuart_landau_ts.pkl")
+path = "/home/rgast/PycharmProjects/BrainNetworks/RC/results"
+lorenz_map = pd.read_pickle(f"{path}/lorenz_map.pkl")
+lorenz_data = pd.read_pickle(f"{path}/lorenz_ts.pkl")
+stula_map = pd.read_pickle(f"{path}/stuart_landau_map.pkl")
+stula_data = pd.read_pickle(f"{path}/stuart_landau_ts.pkl")
 
 # train ridge regressions for each eta and alpha
 etas, alphas, scores = [], [], []
@@ -60,7 +61,8 @@ scores_2d = np.zeros((len(alphas_unique), len(etas_unique)))
 for eta, alpha, score in zip(etas, alphas, scores):
     idx_c = np.argwhere(etas_unique == eta)
     idx_r = np.argwhere(alphas_unique == alpha)
-    scores_2d[idx_r, idx_c] = score
+    if score >= 0.0:
+        scores_2d[idx_r, idx_c] = score
 
 plot_connectivity(scores_2d, xticklabels=np.round(etas_unique, decimals=2),
                   yticklabels=np.round(alphas_unique, decimals=2))
