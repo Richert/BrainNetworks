@@ -7,18 +7,18 @@ import matplotlib.pyplot as plt
 import h5py
 
 # parameters
-directories = ["/home/rgast/JuliaProjects/JuRates/BasalGanglia/results/stn_gpe_ev_opt_results_final"]
-fid = "stn_gpe_ev_opt"
+directories = ["/home/rgast/JuliaProjects/JuRates/BasalGanglia/results/stn_gpe_beta_results"]
+fid = "stn_gpe_beta"
 dv = 'p'
-ivs = ['eta_e', 'eta_p', 'eta_a', 'k_ee', 'k_pe', 'k_ae', 'k_ep', 'k_pp', 'k_ap', 'k_pa', 'k_aa', 'k_ps', 'k_as',
-       'delta_e', 'delta_p', 'delta_a']
+ivs = ["tau_e", "tau_p", "tau_ampa_r","tau_ampa_d", "tau_gabaa_r", "tau_gabaa_d", "tau_stn", "eta", "delta", "k",
+       "eta_e", "eta_p", "k_pe", "k_ep", "k_pp"]
 
 # load data into frame
 df = DataFrame(data=np.zeros((1, len(ivs))), columns=ivs)
 df_dv = DataFrame(data=np.zeros((1, 1)), columns=["fitness"])
 for d in directories:
     for fn in os.listdir(d):
-        if fn.startswith(fid):
+        if fn.startswith(fid) and fn.endswith('.h5'):
             f = h5py.File(f"{d}/{fn}", 'r')
             index = int(fn.split('_')[-2])
             if fn.endswith("params.h5"):
@@ -36,13 +36,13 @@ y = np.squeeze(df_dv.values)
 X = np.asarray([df.pop(iv) for iv in ivs]).T
 
 # perform dimensionality reduction on data
-n_comps = 5
-dim_red = Isomap(n_components=n_comps, n_neighbors=10, p=2)
-X_ld = dim_red.fit_transform(X, y)
+# n_comps = 5
+# dim_red = Isomap(n_components=n_comps, n_neighbors=10, p=2)
+# X_ld = dim_red.fit_transform(X, y)
 
 # fit linear classifier to dim-reduced data
 X_final = X
-lm = LassoLars(alpha=0.0)
+lm = LassoLars(alpha=0.001)
 lm = lm.fit(X_final, y)
 
 # plot regression coefficient

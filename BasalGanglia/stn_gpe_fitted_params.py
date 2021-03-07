@@ -29,14 +29,13 @@ df = df.iloc[1:, :]
 df_dv = df_dv.iloc[1:, :]
 df.sort_index(inplace=True)
 df_dv.sort_index(inplace=True)
-df['fitness'] = df_dv['fitness']
 
-# visualize and cluster distance matrix
-cmap = create_cmap('pyrates_red', as_cmap=True, n_colors=20)
-g = sns.clustermap(data=df, method='ward', metric='euclidean', z_score=1, standard_scale=None, cmap=cmap)
-#sns.clustermap(data=df_dv, method='ward', metric='euclidean', z_score=1, standard_scale=None, col_cluster=False,
-#               row_cluster=True)
-alphas = np.asarray([np.squeeze(df_dv.values) for _ in range(len(ivs))]).T
-alphas /= np.max(alphas)
-#g.ax_heatmap.set_alpha(alphas)
+# calculate average of parameters of interest, weighted by fitness
+# df_dv['fitness'] /= np.sum(df_dv['fitness'])
+# for i in range(df.shape[0]):
+#     df.iloc[i, :] *= df_dv.iloc[i, 0]
+# df *= df.shape[0]
+
+ax = sns.barplot(data=df.loc[df_dv.iloc[:, 0] > 0.5, :], palette="Blues_d")
+# ax = sns.barplot(data=df, palette="Blues_d")
 plt.show()

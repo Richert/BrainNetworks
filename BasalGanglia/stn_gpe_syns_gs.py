@@ -5,7 +5,6 @@ from pyrates.utility.grid_search import grid_search
 from copy import deepcopy
 from scipy.ndimage.filters import gaussian_filter1d
 from pyrates.utility.visualization import plot_timeseries, create_cmap
-import h5py
 import seaborn as sns
 import matplotlib as mpl
 
@@ -32,68 +31,67 @@ mpl.rcParams['xtick.color'] = 'black'
 mpl.rcParams['ytick.color'] = 'black'
 mpl.rcParams['ytick.alignment'] = 'center'
 mpl.rcParams['legend.fontsize'] = fontsize1
-sns.set(style="whitegrid")
 
 # parameter definitions
 #######################
 
 # simulation parameters
-dt = 1e-3
+dt = 1e-4
 dts = 1e-1
-T = 600.0
+T = 2050.0
 sim_steps = int(np.round(T/dt))
-stim_offset = int(np.round(T/(3*dt)))
-stim_dur = int(np.round(100.0/dt))
-stim_delayed = int(np.round((T*0.2 + 200.0)/dt))
-stim_amp = -200.0
+stim_offset = int(np.round(1400.0/dt))
+stim_dur = int(np.round(600.0/dt))
+stim_delayed = int(np.round(1700.0/dt))
+stim_delayed_dur = int(np.round(300.0/dt))
+stim_amp = 1.0
 stim_var = 50.0
 stim_freq = 14.0
 ctx = np.zeros((sim_steps, 1))
-ctx[stim_offset:stim_offset+stim_dur, 0] = np.linspace(0., stim_amp, stim_dur)
+ctx[stim_offset:stim_offset+stim_dur, 0] = stim_amp #np.linspace(0., -stim_amp, stim_dur)
+# ctx[stim_delayed:stim_delayed+stim_delayed_dur, 0] = 60*stim_amp #np.linspace(0.0, 50*stim_amp, stim_dur)
 ctx = gaussian_filter1d(ctx, stim_var, axis=0)
 # stria = np.zeros((sim_steps, 1))
-# stria[stim_delayed: stim_delayed+stim_dur, 0] = stim_amp
-# stria = gaussian_filter1d(stria, stim_var*2.0, axis=0)
-# time = np.linspace(0., T, sim_steps)
-# ctx = np.sin(2.0*np.pi*stim_freq*time*1e-3)*stim_amp
-# stria = np.sin(2.0*np.pi*stim_freq*time*1e-3 + 1.0*np.pi)*stim_amp
-
+# stria[stim_delayed:stim_delayed+stim_delayed_dur, 0] = 0.5*stim_amp #np.linspace(0.0, 2*stim_amp, stim_dur)
+# stria = gaussian_filter1d(stria, stim_var, axis=0)
 # plt.figure()
 # plt.plot(ctx)
 # plt.plot(stria)
 # plt.show()
 
 # model parameters
-k_gp = 80.0
-k_p = 1.5
-k_i = 0.9
-k_pi = 1.0
-k_pe = 0.75
-k_ps = 1.0
-k_e = 1.0
-k = 10.0
+k_gp = 7.6
+k_p = 2.0
+k_i = 1.5
+k = 100.0
 eta = 100.0
+delta = 100.0
 param_grid = {
-        'k_ee': [6.0*k_e*k],
-        'k_ae': [80.0*k/k_pe],
-        'k_pe': [80.0*k_pe*k],
-        'k_ep': [90.0*k_e*k],
+        'k_ee': [0.8*k],
+        'k_ae': [3.0*k],
+        'k_pe': [8.0*k],
+        'k_ep': [10.0*k],
         'k_pp': [1.0*k_gp*k_p*k/k_i],
-        'k_ap': [1.0*k_gp*k_p*k_i*k_pi*k],
+        'k_ap': [1.0*k_gp*k_p*k_i*k],
         'k_aa': [1.0*k_gp*k/(k_p*k_i)],
-        'k_pa': [1.0*k_gp*k_i*k/(k_p*k_pi)],
-        'k_ps': [200.0*k_ps*k],
-        'k_as': [200.0*k/k_ps],
-        'eta_e': [3.0*eta],
+        'k_pa': [1.0*k_gp*k_i*k/k_p],
+        'k_ps': [20.0*k],
+        'k_as': [20.0*k],
+        'eta_e': [4.0*eta],
         'eta_p': [4.0*eta],
-        'eta_a': [-2.0*eta],
+        'eta_a': [1.0*eta],
         'eta_s': [0.002],
-        'delta_e': [30.0],
-        'delta_p': [90.0],
-        'delta_a': [120.0],
-        'tau_e': [13],
-        'tau_p': [25],
-        'tau_a': [20],
+        'delta_e': [0.3*delta],
+        'delta_p': [0.9*delta],
+        'delta_a': [1.2*delta],
+        'tau_e': [13.0],
+        'tau_p': [25.0],
+        'tau_a': [20.0],
+        'tau_ampa_r': [0.8],
+        'tau_ampa_d': [3.7],
+        'tau_gabaa_r': [0.5],
+        'tau_gabaa_d': [5.0],
+        'tau_stn': [2.0]
     }
 param_grid = pd.DataFrame.from_dict(param_grid)
 
@@ -126,6 +124,11 @@ param_map = {
     'tau_e': {'vars': ['stn_syns_op/tau_e'], 'nodes': ['stn']},
     'tau_p': {'vars': ['gpe_proto_syns_op/tau_i'], 'nodes': ['gpe_p']},
     'tau_a': {'vars': ['gpe_arky_syns_op/tau_a'], 'nodes': ['gpe_a']},
+    'tau_ampa_r': {'vars': ['gpe_proto_syns_op/tau_ampa_r', 'stn_syns_op/tau_ampa_r'], 'nodes': ['gpe_p', 'stn']},
+    'tau_ampa_d': {'vars': ['gpe_proto_syns_op/tau_ampa_d', 'stn_syns_op/tau_ampa_d'], 'nodes': ['gpe_p', 'stn']},
+    'tau_gabaa_r': {'vars': ['gpe_proto_syns_op/tau_gabaa_r', 'stn_syns_op/tau_gabaa_r'], 'nodes': ['gpe_p', 'stn']},
+    'tau_gabaa_d': {'vars': ['gpe_proto_syns_op/tau_gabaa_d', 'stn_syns_op/tau_gabaa_d'], 'nodes': ['gpe_p', 'stn']},
+    'tau_stn': {'vars': ['stn_syns_op/tau_gabaa'], 'nodes': ['stn']}
 }
 
 # manual changes for bifurcation analysis
@@ -167,15 +170,18 @@ conditions = [{},  # healthy control -> GPe_p: 60 Hz, STN: 20 Hz, GPe_a: 30 Hz
               ]
 
 # plotting the internal connections
-conns = ['k_pe', 'k_ae', 'k_pp', 'k_ap', 'k_pa', 'k_aa']
-connections = pd.DataFrame.from_dict({'value': [param_grid[k] for k in conns],
-                                      'connection': [r'$k_{pe}$', r'$k_{ae}$', r'$k_{pp}$', r'$k_{ap}$', r'$k_{pa}$',
-                                                     r'$k_{aa}$']})
-fig, ax = plt.subplots(figsize=(4, 3))
+conns = ['k_ee', 'k_pe', 'k_ae', 'k_ep', 'k_pp', 'k_ap', 'k_pa', 'k_aa']
+conn_labels = [r'$J_{ee}$', r'$J_{pe}$', r'$J_{ae}$', r'$J_{ep}$', r'$J_{pp}$', r'$J_{ap}$', r'$J_{pa}$', r'$J_{aa}$']
+conn_select = [0, 1, 2, 3, 4, 5, 6, 7]
+connections = pd.DataFrame.from_dict({'value': [param_grid[conns[idx]] for idx in conn_select],
+                                      'connection': [conn_labels[idx] for idx in conn_select]})
+fig, ax = plt.subplots(figsize=(3, 2))
 sns.set_color_codes("muted")
 sns.barplot(x="value", y="connection", data=connections, color="b")
-ax.set(xlim=(0, 165.0), ylabel="", xlabel="")
+ax.set(ylabel="", xlabel="")
 sns.despine(left=True, bottom=True)
+plt.savefig('stn_gpe_c1_32_conns.svg')
+
 #ax.set_title('GPe Coupling: Condition 1')
 #plt.show()
 
@@ -230,8 +236,8 @@ for c_dict in deepcopy(conditions):
         sampling_step_size=dts,
         inputs={
             #'stn/stn_syns_op/ctx': ctx,
-            #'str/str_dummy_op/I': stria,
-            #'gpe_p/gpe_proto_syns_op/I_ext': ctx
+            #'gpe_p/gpe_proto_syns_op/I_ext': ctx,
+            #'gpe_a/gpe_arky_syns_op/I_ext': -ctx
             },
         outputs={'r_e': 'stn/stn_syns_op/R_e', 'r_i': 'gpe_p/gpe_proto_syns_op/R_i',
                  'r_a': 'gpe_a/gpe_arky_syns_op/R_a'},
@@ -241,9 +247,11 @@ for c_dict in deepcopy(conditions):
     )
 
     results = results*1e3
-    fig, ax = plt.subplots(figsize=(5, 3))
-    plot_timeseries(results.loc[50.0:, :], ax=ax)
+    fig, ax = plt.subplots(figsize=(5, 1.7), dpi=dpi)
+    ax.plot(results.loc[50.0:, :])
     plt.legend(['STN', 'GPe-p', 'GPe-a'])
-    ax.set_ylabel('firing rate')
+    ax.set_ylabel('Firing rates')
+    ax.set_xlabel('time')
     plt.tight_layout()
+    plt.savefig('stn_gpe_lc_c13.svg')
     plt.show()

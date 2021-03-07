@@ -1,0 +1,142 @@
+%YAML 1.2
+---
+
+# operators
+###########
+
+# dummy cortex operator
+m1_dummy:
+  base: OperatorTemplate
+  equations: "d/dt * r_ctx = (m_in - r_ctx) / tau_ctx"
+  variables:
+    r_ctx:
+      default: output
+    m_in:
+      default: input
+    tau_ctx:
+      default: 0.1
+
+# alpha motor neuron operator
+alpha_op:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * I_ampa = X_ampa"
+    - "d/dt * X_ampa = (ctx - X_ampa*(tau_ampa_r+tau_ampa_d) - I_ampa)/(tau_ampa_r*tau_ampa_d)"
+    - "d/dt * I_glycin = X_glycin"
+    - "d/dt * X_glycin = (renshaw - X_glycin*(tau_glycin_r+tau_glycin_d) - I_glycin)/(tau_glycin_r*tau_glycin_d)"
+    - "r_alpha = r_max / (1 + exp(-s*(I_ampa-I_glycin-I_thr)))"
+  variables:
+    r_alpha:
+      default: output
+    I_ampa:
+      default: variable
+    X_ampa:
+      default: variable
+    I_glycin:
+      default: variable
+    X_glycin:
+      default: variable
+    ctx:
+      default: input
+    renshaw:
+      default: input
+    tau_ampa_r:
+      default: 0.2
+    tau_ampa_d:
+      default: 2.0
+    tau_glycin_r:
+      default: 0.4
+    tau_glycin_d:
+      default: 4.0
+    r_max:
+      default: 1.0
+    s:
+      default: 1.0
+    I_thr:
+      default: -3.0
+
+# alpha motor neuron operator
+renshaw_op:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * I_acc = X_acc"
+    - "d/dt * X_acc = (alpha - X_acc*(tau_acc_r+tau_acc_d) - I_acc)/(tau_acc_r*tau_acc_d)"
+    - "r_renshaw = r_max / (1 + exp(-s*(I_acc-I_thr)))"
+  variables:
+    r_renshaw:
+      default: output
+    I_acc:
+      default: variable
+    X_acc:
+      default: variable
+    alpha:
+      default: input
+    renshaw:
+      default: input
+    tau_acc_r:
+      default: 1.0
+    tau_acc_d:
+      default: 4.0
+    r_max:
+      default: 1.0
+    s:
+      default: 1.0
+    I_thr:
+      default: 5.0
+
+# muscle operator
+muscle_op:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * I_acc = X_acc"
+    - "d/dt * X_acc = (alpha - X_acc*(tau_acc_r+tau_acc_d) - I_acc)/(tau_acc_r*tau_acc_d)"
+  variables:
+    I_acc:
+      default: output
+    X_acc:
+      default: variable
+    alpha:
+      default: input
+    tau_acc_r:
+      default: 3.2
+    tau_acc_d:
+      default: 8.0
+
+# populations
+#############
+
+m1:
+  base: NodeTemplate
+  operators:
+    - m1_dummy
+
+alpha_neuron:
+  base: NodeTemplate
+  operators:
+    - alpha_op
+
+renshaw_neuron:
+  base: NodeTemplate
+  operators:
+    - renshaw_op
+
+muscle:
+  base: NodeTemplate
+  operators:
+    - muscle_op
+
+# circuits
+##########
+
+sc:
+  base: CircuitTemplate
+  nodes:
+    m1: m1
+    alpha: alpha_neuron
+    renshaw: renshaw_neuron
+    muscle: muscle
+  edges:
+    - [m1/m1_dummy/r_ctx, alpha/alpha_op/ctx, null, {weight: 1.0, delay: 2.0}]
+    - [alpha/alpha_op/r_alpha, renshaw/renshaw_op/alpha, null, {weight: 10.0}]
+    - [alpha/alpha_op/r_alpha, muscle/muscle_op/alpha, null, {weight: 100.0, delay: 5.0}]
+    - [renshaw/renshaw_op/r_renshaw, alpha/alpha_op/renshaw, null, {weight: 5.0}]

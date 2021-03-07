@@ -2,49 +2,54 @@ from pyrates.frontend import CircuitTemplate
 from pyrates.utility.grid_search import grid_search
 from pyrates.utility.visualization import plot_connectivity
 import matplotlib.pyplot as plt
-import os
 import numpy as np
 
-# parameters
-dt = 5e-4
-T = 30.0
-start = int(10.0/dt)
-stop = int(12.0/dt)
+# parameter definition
+dt = 1e-3
 dts = 1e-2
+cutoff = 100.0
+T = 200.0 + cutoff
+start = int((0 + cutoff)/dt)
+dur = int(5/(0.6*dt))
+steps = int(T/dt)
+inp = np.zeros((steps, 1))
+inp[start:start+dur] = 0.6
 
-inp = np.zeros((int(T/dt), 1))
-inp[start:stop] = 1.0
-
-# target: delayed biexponential feedback
-biexp = CircuitTemplate.from_yaml("config/stn_gpe/biexp_gamma"
-                                  ).apply().compile(backend='numpy', step_size=dt, solver='euler')
-r1 = biexp.run(simulation_time=T, sampling_step_size=dts, inputs={'n1/biexp_rate/I_ext': inp},
-               outputs={'r': 'n1/biexp_rate/r'})
-biexp.clear()
+# target: delayed biexponential response of the alpha or renshaw neuron
+path = "../config/spinal_cord/sc"
+neuron = 'alpha'
+target_var = 'I_ampa'
+model = CircuitTemplate.from_yaml(path).apply().compile(backend='numpy', step_size=dt, solver='euler')
+r1 = model.run(simulation_time=T, sampling_step_size=dts, inputs={'m1/m1_dummy/m_in': inp},
+               outputs={neuron: f'{neuron}/{neuron}_op/{target_var}'})
+model.clear()
 r1.plot()
 plt.show()
 
 # approximation: gamma-distributed feedback
-param_grid = {'d': np.asarray([0.8, 0.9, 1.0, 1.1, 1.2]),
-              's': np.asarray([0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8])}
-param_map = {'d': {'vars': ['delay'], 'edges': [('n1', 'n1')]}, 's': {'vars': ['spread'], 'edges': [('n1', 'n1')]}}
+source = 'm1'
+param_grid = {'d': np.asarray([1.5, 2.0, 2.5]),
+              's': np.asarray([0.4, 0.6, 0.8, 1.0])}
+param_map = {'d': {'vars': ['delay'], 'edges': [(source, neuron)]},
+             's': {'vars': ['spread'], 'edges': [(source, neuron)]}}
 
-r2, r_map = grid_search("config/stn_gpe/biexp_gamma", param_grid, param_map, step_size=dt, simulation_time=T,
+r2, r_map = grid_search(path, param_grid, param_map, step_size=dt, simulation_time=T,
                         sampling_step_size=dts, permute_grid=True,
                         init_kwargs={'backend': 'numpy', 'step_size': dt, 'solver': 'scipy'},
-                        outputs={'r': 'n1/biexp_rate/r'}, inputs={'n1/biexp_rate/I_ext': inp})
+                        outputs={neuron: f'{neuron}/{neuron}_op/{target_var}'},
+                        inputs={'m1/m1_dummy/m_in': inp})
 
 # calculate difference between target and approximation
 n = len(param_grid['d'])
 m = len(param_grid['s'])
-alpha = 0.95
+alpha = 0.95   # controls trade-off between accuracy and complexity of gamma-kernel convolution. alpha = 1.0 for max accuracy.
 error = np.zeros((n, m))
 indices = [['_'for j in range(m)] for i in range(n)]
 for idx in r_map.index:
     idx_r = np.argmin(np.abs(param_grid['d'] - r_map.at[idx, 'd']))
     idx_c = np.argmin(np.abs(param_grid['s'] - r_map.at[idx, 's']))
-    r = r2.loc[:, ('r', idx)]
-    diff = r - r1.loc[:, 'r']
+    r = r2.loc[:, (neuron, idx)]
+    diff = r - r1.loc[:, neuron]
     d, s = r_map.loc[idx, 'd'], r_map.loc[idx, 's']
     order = (d/s)**2
     error[idx_r, idx_c] = alpha*np.sqrt(diff.T @ diff).iloc[0, 0] + (1-alpha)*order
@@ -62,8 +67,8 @@ plt.tight_layout()
 fig2, ax2 = plt.subplots()
 winner = np.argmin(error)
 idx = np.asarray(indices).flatten()[winner]
-ax2.plot(r1.loc[:, 'r'])
-ax2.plot(r2.loc[:, ('r', idx)])
+ax2.plot(r1.loc[:, neuron])
+ax2.plot(r2.loc[:, (neuron, idx)])
 ax2.set_title(f"delay = {r_map.loc[idx, 'd']}, spread = {r_map.loc[idx, 's']}")
 plt.tight_layout()
 

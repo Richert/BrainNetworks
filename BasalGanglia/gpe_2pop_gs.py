@@ -47,41 +47,38 @@ stim_dur = int(np.round(50.0/dt))
 stim_delayed = int(np.round((1200.0)/dt))
 stim_amp = 10.0
 stim_var = 10.0
-stim_period = 75.8
+stim_period = 77
 stim_periods = [stim_period]
-stim_amps = [37.5]
+stim_amps = [15.0]
 
 ctx = np.zeros((sim_steps, 1))
 ctx[stim_offset:stim_offset+stim_dur, 0] = 5.0*100.0
 ctx[stim_delayed:stim_delayed+stim_dur, 0] = -5.0*100.0
 ctx = gaussian_filter1d(ctx, stim_var, axis=0)
 
-plt.plot(ctx)
-plt.show()
+# plt.plot(ctx)
+# plt.show()
 
 # model parameters
-k_gp = 30.0
-k_p = 1.5
-k_i = 1.8
-k_pi = 1.0
+k_p = 1.0
 k = 10.0
 param_grid = {
-        'k_ae': [k*100.0],
-        'k_pe': [k*100.0],
-        'k_pp': [k*k_gp*k_p/k_i],
-        'k_ap': [k*k_gp*k_p*k_i*k_pi],
-        'k_aa': [k*k_gp/(k_p*k_i)],
-        'k_pa': [k*k_gp*k_i/(k_p*k_pi)],
-        'k_ps': [k*200.0],
-        'k_as': [k*200.0],
+        'k_ae': [k*1.5],
+        'k_pe': [k*5.0],
+        'k_pp': [4.5*k*k_p],
+        'k_ap': [2.0*k],
+        'k_aa': [0.1*k],
+        'k_pa': [0.5*k*k_p],
+        'k_ps': [k*10.0],
+        'k_as': [k*2.0],
         'eta_e': [0.02],
-        'eta_p': [3.2*100.0],
-        'eta_a': [3.4*100.0],
+        'eta_p': [44.0],
+        'eta_a': [27.0],
         'eta_s': [0.002],
-        'delta_p': [90.0],
-        'delta_a': [120.0],
-        'tau_p': [25],
-        'tau_a': [20],
+        'delta_p': [10.0],
+        'delta_a': [3.0],
+        'tau_p': [18],
+        'tau_a': [32],
         #'omega': stim_periods,
         #'alpha': np.asarray(stim_amps)
     }
@@ -108,37 +105,19 @@ param_map = {
     #'alpha': {'vars': ['sl_op/alpha'], 'nodes': ['driver']}
 }
 
-param_scalings = [
-            #('delta_p', 'tau_p', 2.0),
-            #('delta_a', 'tau_a', 2.0),
-            #('k_pe', 'delta_p', 0.5),
-            #('k_pp', 'delta_p', 0.5),
-            #('k_pa', 'delta_p', 0.5),
-            #('k_ps', 'delta_p', 0.5),
-            #('k_ae', 'delta_a', 0.5),
-            #('k_ap', 'delta_a', 0.5),
-            #('k_aa', 'delta_a', 0.5),
-            #('k_as', 'delta_a', 0.5),
-            #('eta_p', 'delta_p', 1.0),
-            #('eta_a', 'delta_a', 1.0),
-            ]
-
 # plotting the internal connections
-conns = ['k_pp', 'k_ap', 'k_pa', 'k_aa']
-connections = pd.DataFrame.from_dict({'value': [param_grid[k] for k in conns],
-                                      'connection': [r'$J_{pp}$', r'$J_{ap}$', r'$J_{pa}$', r'$J_{aa}$']})
-fig, ax = plt.subplots(figsize=(3, 2), dpi=dpi)
-sns.set_color_codes("muted")
-sns.barplot(x="value", y="connection", data=connections, color="b")
-ax.set(xlim=(0, 850), ylabel="", xlabel="")
-ax.tick_params(axis='x', which='major', labelsize=9)
-sns.despine(left=True, bottom=True)
-#ax.set_title('GPe Coupling: Condition 1')
-plt.tight_layout()
-plt.show()
-
-for key, key_tmp, power in param_scalings:
-    param_grid[key] = np.asarray(param_grid[key]) * np.asarray(param_grid[key_tmp]) ** power
+# conns = ['k_pp', 'k_ap', 'k_pa', 'k_aa']
+# connections = pd.DataFrame.from_dict({'value': [param_grid[k] for k in conns],
+#                                       'connection': [r'$J_{pp}$', r'$J_{ap}$', r'$J_{pa}$', r'$J_{aa}$']})
+# fig, ax = plt.subplots(figsize=(3, 2), dpi=dpi)
+# sns.set_color_codes("muted")
+# sns.barplot(x="value", y="connection", data=connections, color="b")
+# ax.set(xlim=(0, 850), ylabel="", xlabel="")
+# ax.tick_params(axis='x', which='major', labelsize=9)
+# sns.despine(left=True, bottom=True)
+# #ax.set_title('GPe Coupling: Condition 1')
+# plt.tight_layout()
+# plt.show()
 
 # simulations
 #############
@@ -153,10 +132,12 @@ results, result_map = grid_search(
     sampling_step_size=dts,
     inputs={
         #'gpe_p/gpe_proto_syns_op/I_ext': ctx,
-        'gpe_a/gpe_arky_syns_op/I_ext': ctx
+        #'gpe_a/gpe_arky_syns_op/I_ext': ctx
         },
-    outputs={'r_i': 'gpe_p/gpe_proto_syns_op/R_i',
-             'r_a': 'gpe_a/gpe_arky_syns_op/R_a'},
+    outputs={
+        'r_i': 'gpe_p/gpe_proto_syns_op/R_i',
+        'r_a': 'gpe_a/gpe_arky_syns_op/R_a',
+    },
     init_kwargs={
         'backend': 'numpy', 'solver': 'scipy', 'step_size': dt},
     method='RK45',
@@ -168,8 +149,8 @@ plot_timeseries(results, ax=ax)
 plt.legend(['GPe-p', 'GPe-a'])
 ax.set_ylabel('Firing rate')
 ax.set_xlabel('time (ms)')
-ax.set_xlim([400.0, 1600.0])
-ax.set_ylim([0.0, 200.0])
+# ax.set_xlim([000.0, 1500.0])
+# ax.set_ylim([0.0, 100.0])
 ax.tick_params(axis='both', which='major', labelsize=9)
 plt.tight_layout()
 plt.show()

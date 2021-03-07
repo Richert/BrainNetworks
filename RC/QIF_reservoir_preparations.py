@@ -2,7 +2,7 @@ import numpy as np
 from scipy.integrate import solve_ivp
 import pickle
 
-path = "/u/rgast/ptmp_link/BrainNetworks/RC/results"
+path = "/home/rgast/PycharmProjects/BrainNetworks/RC/results"
 
 # simulation parameters
 T = 130.0

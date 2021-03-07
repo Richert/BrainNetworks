@@ -4,14 +4,12 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from pyrates.utility.grid_search import grid_search
-from copy import deepcopy
-from scipy.ndimage.filters import gaussian_filter1d
-from pyrates.utility.visualization import plot_timeseries, create_cmap
-import h5py
+from pyrates.utility.visualization import plot_timeseries
+from pyrates.utility.data_analysis import welch
 
 linewidth = 1.2
-fontsize1 = 10
-fontsize2 = 10
+fontsize1 = 12
+fontsize2 = 12
 markersize1 = 60
 markersize2 = 60
 dpi = 200
@@ -40,41 +38,37 @@ sns.set(style="whitegrid")
 # simulation parameters
 dt = 1e-3
 dts = 1.0
-T = 2100.0
+T = 2050.0
 sim_steps = int(np.round(T/dt))
 stim_offset = int(np.round(0.0/dt))
 stim_dur = int(np.round(500.0/dt))
 stim_periods = [78.0]
-stim_amps = [50.0]
+stim_amps = [1.0]
 
 # model parameters
-k_gp = 30.0
-k_p = 1.5
-k_i = 0.9
-k_pi = 1.0
+k_gp = 1.0
 k = 10.0
-eta = 100.0
 param_grid = {
-        'k_ae': [100.0*k],
-        'k_pe': [100.0*k],
-        'k_pp': [1.0*k*k_gp*k_p/k_i],
-        'k_ap': [1.0*k*k_gp*k_p*k_i*k_pi],
-        'k_aa': [1.0*k*k_gp/(k_p*k_i)],
-        'k_pa': [1.0*k*k_gp*k_i/(k_p*k_pi)],
-        'k_ps': [200.0*k],
-        'k_as': [200.0*k],
+        'k_ae': [k*1.5],
+        'k_pe': [k*5.0],
+        'k_pp': [4.5*k*k_gp],
+        'k_ap': [2.0*k*k_gp],
+        'k_aa': [0.1*k*k_gp],
+        'k_pa': [0.5*k*k_gp],
+        'k_ps': [k*10.0],
+        'k_as': [k*2.0],
         'eta_e': [0.02],
-        'eta_p': [4.8*eta],
-        'eta_a': [0.0*eta],
+        'eta_p': [44.0],
+        'eta_a': [27.0],
         'eta_s': [0.002],
-        'delta_p': [90.0],
-        'delta_a': [120.0],
-        'tau_p': [25],
-        'tau_a': [20],
+        'delta_p': [10.0],
+        'delta_a': [3.0],
+        'tau_p': [18],
+        'tau_a': [32],
         'omega': stim_periods,
-        'alpha': np.asarray(stim_amps)
+        'a1': np.asarray(stim_amps),
+        'a2': [0.0]
     }
-#param_grid = pd.DataFrame.from_dict(param_grid)
 
 param_map = {
     'k_ae': {'vars': ['weight'], 'edges': [('stn', 'gpe_a')]},
@@ -94,40 +88,9 @@ param_map = {
     'tau_p': {'vars': ['gpe_proto_syns_op/tau_i'], 'nodes': ['gpe_p']},
     'tau_a': {'vars': ['gpe_arky_syns_op/tau_a'], 'nodes': ['gpe_a']},
     'omega': {'vars': ['sl_op/t_off'], 'nodes': ['driver']},
-    'alpha': {'vars': ['sl_op/alpha'], 'nodes': ['driver']}
+    'a1': {'vars': ['weight'], 'edges': [('driver', 'gpe_p', 0)]},
+    'a2': {'vars': ['weight'], 'edges': [('driver', 'gpe_p', 1)]}
 }
-
-param_scalings = [
-            #('delta_p', 'tau_p', 2.0),
-            #('delta_a', 'tau_a', 2.0),
-            #('k_pe', 'delta_p', 0.5),
-            #('k_pp', 'delta_p', 0.5),
-            #('k_pa', 'delta_p', 0.5),
-            #('k_ps', 'delta_p', 0.5),
-            #('k_ae', 'delta_a', 0.5),
-            #('k_ap', 'delta_a', 0.5),
-            #('k_aa', 'delta_a', 0.5),
-            #('k_as', 'delta_a', 0.5),
-            #('eta_p', 'delta_p', 1.0),
-            #('eta_a', 'delta_a', 1.0),
-            ]
-
-# plotting the internal connections
-conns = ['k_pp', 'k_ap', 'k_pa', 'k_aa']
-connections = pd.DataFrame.from_dict({'value': [param_grid[k] for k in conns],
-                                      'connection': [r'$J_{pp}$', r'$J_{ap}$', r'$J_{pa}$', r'$J_{aa}$']})
-# fig, ax = plt.subplots(figsize=(3, 2), dpi=dpi)
-# sns.set_color_codes("muted")
-# sns.barplot(x="value", y="connection", data=connections, color="b")
-# ax.set(xlim=(0, 85), ylabel="", xlabel="")
-# ax.tick_params(axis='x', which='major', labelsize=9)
-# sns.despine(left=True, bottom=True)
-# #ax.set_title('GPe Coupling: Condition 1')
-# plt.tight_layout()
-# plt.show()
-
-for key, key_tmp, power in param_scalings:
-    param_grid[key] = np.asarray(param_grid[key]) * np.asarray(param_grid[key_tmp]) ** power
 
 # ctx *= param_grid['delta_p']
 # plt.plot(ctx)
@@ -159,14 +122,25 @@ results, result_map = grid_search(
 # results.plot()
 # plt.show()
 
-fig2, ax = plt.subplots(figsize=(6, 2.0), dpi=dpi)
+fig2, ax = plt.subplots(figsize=(6, 1.8), dpi=dpi)
 results = results * 1e3
 plot_timeseries(results, ax=ax)
 plt.legend(['GPe-p', 'GPe-a'])
-ax.set_ylabel('Firing rate')
+ax.set_ylabel('Firing rate (GPe-p)')
 ax.set_xlabel('time (ms)')
-ax.set_xlim([1000.0, T-100.0])
-ax.set_ylim([0.0, 120.0])
-ax.tick_params(axis='both', which='major', labelsize=9)
+ax.set_xlim([1000.0, T-50.0])
+ax.set_ylim([00.0, 400.0])
+ax.tick_params(axis='both', which='major', labelsize=fontsize1)
+plt.tight_layout()
+
+# fig3, ax = plt.subplots(figsize=(6, 1.8), dpi=dpi)
+# results.index = results.index * 1e-3
+# psds, freqs = welch(results, fmin=1.0, fmax=100.0, tmin=1.0, n_fft=2048, n_overlap=1024)
+# freq_results = pd.DataFrame(data=np.log(psds.T), index=freqs, columns=['r_i'])
+# plot_timeseries(freq_results, ax=ax)
+# ax.set_ylabel('log PSD')
+# ax.set_xlabel('frequency (Hz)')
+# ax.set_ylim([-15.0, 5.0])
+
 plt.tight_layout()
 plt.show()

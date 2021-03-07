@@ -1,4 +1,4 @@
-from pyrates.utility import PyAuto
+from pyrates.utility.pyauto import PyAuto
 import matplotlib.pyplot as plt
 import os
 import numpy as np
