@@ -71,16 +71,16 @@ nodes = [
             'carpenters',
             #'osttimor',
             'spanien',
-            'animals',
+            #'animals',
             'kongo',
             'tschad',
             'uganda',
             'tiber',
             'giraffe',
-            'lech',
-            'rilke',
+            #'lech',
+            #'rilke',
             #'dinkel',
-            #'rosmarin',
+            'rosmarin',
             #'mosambik',
         ]
 compute_dir = f"{os.getcwd()}/gpe_2pop_forced"
@@ -93,16 +93,16 @@ chunk_size = [
             50,  # carpenters
             #20,  # osttimor
             30,  # spanien
-            50,  # animals
+            #50,  # animals
             20,  # kongo
             20,  # tschad
             50,  # uganda
             20,  # tiber
             30,  # giraffe
-            20,  # lech
-            10,  # rilke
+            #20,  # lech
+            #10,  # rilke
             #50,  # dinkel
-            #10,  # rosmarin
+            10,  # rosmarin
             #10,  # mosambik
         ]
 
