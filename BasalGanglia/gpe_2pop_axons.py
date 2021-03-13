@@ -40,7 +40,7 @@ sns.set(style="whitegrid")
 # simulation parameters
 dt = 1e-3
 dts = 1e-1
-T = 5000.0
+T = 2000.0
 sim_steps = int(np.round(T/dt))
 stim_offset = int(np.round(600.0/dt))
 stim_dur = int(np.round(50.0/dt))
@@ -62,25 +62,28 @@ ctx = gaussian_filter1d(ctx, stim_var, axis=0)
 # model parameters
 k_gp = 1.0
 k = 10.0
+delays = [1.0, 2.0, 3.0, 4.0]
+spreads = [0.6, 0.8, 1.0, 1.155]
+n = len(delays)
 param_grid = {
-        'k_ae': [k*1.5],
-        'k_pe': [k*5.0],
-        'k_pp': [1.5*k*k_gp],
-        'k_ap': [2.0*k*k_gp],
-        'k_aa': [0.1*k*k_gp],
-        'k_pa': [5.0*k*k_gp],
-        'k_ps': [10.0*k*k_gp],
-        'k_as': [1.0*k*k_gp],
-        'eta_e': [0.02],
-        'eta_p': [22.2],
-        'eta_a': [26.0],
-        'eta_s': [0.002],
-        'delta_p': [9.0],
-        'delta_a': [3.0],
-        'tau_p': [18],
-        'tau_a': [32],
-        #'omega': stim_periods,
-        #'alpha': np.asarray(stim_amps)
+        'k_ae': [k*1.5]*n,
+        'k_pe': [k*5.0]*n,
+        'k_pp': [5.0*k*k_gp]*n,
+        'k_ap': [2.0*k*k_gp]*n,
+        'k_aa': [0.1*k*k_gp]*n,
+        'k_pa': [0.5*k*k_gp]*n,
+        'k_ps': [10.0*k*k_gp]*n,
+        'k_as': [1.0*k*k_gp]*n,
+        'eta_e': [0.02]*n,
+        'eta_p': [30.0]*n,
+        'eta_a': [26.0]*n,
+        'eta_s': [0.002]*n,
+        'delta_p': [9.0]*n,
+        'delta_a': [3.0]*n,
+        'tau_p': [18]*n,
+        'tau_a': [32]*n,
+        'delays': delays,
+        'spreads': spreads
     }
 param_grid = pd.DataFrame.from_dict(param_grid)
 
@@ -101,29 +104,15 @@ param_map = {
     'delta_a': {'vars': ['gpe_arky_syns_op/delta_a'], 'nodes': ['gpe_a']},
     'tau_p': {'vars': ['gpe_proto_syns_op/tau_i'], 'nodes': ['gpe_p']},
     'tau_a': {'vars': ['gpe_arky_syns_op/tau_a'], 'nodes': ['gpe_a']},
-    #'omega': {'vars': ['sl_op/t_off'], 'nodes': ['driver']},
-    #'alpha': {'vars': ['sl_op/alpha'], 'nodes': ['driver']}
+    'delays': {'vars': ['delay'], 'edges': [('gpe_p', 'gpe_p'), ('gpe_p', 'gpe_a'), ('gpe_a', 'gpe_p'), ('gpe_a', 'gpe_a')]},
+    'spreads': {'vars': ['spread'], 'edges': [('gpe_p', 'gpe_p'), ('gpe_p', 'gpe_a'), ('gpe_a', 'gpe_p'), ('gpe_a', 'gpe_a')]}
 }
-
-conditions = [{},  # healthy control -> GPe-p: 60 Hz, GPe-a: 10 Hz
-              {'eta_s': 20.0},  # STR excitation -> GPe-p: 10 Hz, GPe-a: 40 Hz
-              {'eta_e': 0.1},  # STN inhibition -> GPe-p: 30 Hz, GPe_a: 20 Hz
-              {'k_pp': 0.1, 'k_pa': 0.1, 'k_aa': 0.1, 'k_ap': 0.1, 'k_ps': 0.1,
-               'k_as': 0.1},  # GABAA blockade in GPe -> GPe_p: 100 Hz
-              {'k_pe': 0.1, 'k_pp': 0.1, 'k_pa': 0.1, 'k_ae': 0.1, 'k_aa': 0.1, 'k_ap': 0.1,
-               'k_ps': 0.1, 'k_as': 0.1},  # AMPA blockade and GABAA blockade in GPe -> GPe_p: 70 Hz
-              ]
 
 # simulations
 #############
 
-for c_dict in deepcopy(conditions):
-    for key in param_grid:
-        if key in c_dict:
-            c_dict[key] = np.asarray(param_grid[key]) * c_dict[key]
-        elif key in param_grid:
-            c_dict[key] = np.asarray(param_grid[key])
-    param_grid_tmp = pd.DataFrame.from_dict(c_dict)
+for i in range(n):
+    param_grid_tmp = pd.DataFrame.from_dict({key: [val[i]] for key, val in param_grid.items()})
     results, result_map = grid_search(
         circuit_template="config/stn_gpe/gpe_2pop",
         param_grid=param_grid_tmp,

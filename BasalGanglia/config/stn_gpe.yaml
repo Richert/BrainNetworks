@@ -1042,10 +1042,10 @@ gpe_2pop:
     stn: stn_dummy
     str: str_dummy
   edges:
-    - [gpe_p/gpe_proto_syns_op/R_i, gpe_p/gpe_proto_syns_op/gpe_p, null, {weight: 0.0, delay: 1.5, spread: 1.0}]
-    - [gpe_p/gpe_proto_syns_op/R_i, gpe_a/gpe_arky_syns_op/gpe_p, null, {weight: 0.0, delay: 1.5, spread: 1.0}]
-    - [gpe_a/gpe_arky_syns_op/R_a, gpe_p/gpe_proto_syns_op/gpe_a, null, {weight: 0.0, delay: 1.5, spread: 1.0}]
-    - [gpe_a/gpe_arky_syns_op/R_a, gpe_a/gpe_arky_syns_op/gpe_a, null, {weight: 0.0, delay: 1.5, spread: 1.0}]
+    - [gpe_p/gpe_proto_syns_op/R_i, gpe_p/gpe_proto_syns_op/gpe_p, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [gpe_p/gpe_proto_syns_op/R_i, gpe_a/gpe_arky_syns_op/gpe_p, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [gpe_a/gpe_arky_syns_op/R_a, gpe_p/gpe_proto_syns_op/gpe_a, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [gpe_a/gpe_arky_syns_op/R_a, gpe_a/gpe_arky_syns_op/gpe_a, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
     - [stn/stn_dummy_op/R_e, gpe_p/gpe_proto_syns_op/stn, null, {weight: 0.0}]
     - [stn/stn_dummy_op/R_e, gpe_a/gpe_arky_syns_op/stn, null, {weight: 0.0}]
     - [str/str_dummy_op/R_s, gpe_p/gpe_proto_syns_op/str, null, {weight: 0.0}]

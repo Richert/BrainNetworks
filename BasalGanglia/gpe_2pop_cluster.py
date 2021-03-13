@@ -18,31 +18,28 @@ stim_amps = np.linspace(0.0, 60.0, 30)
 n_infreqs = len(stim_periods)
 
 # model parameters
-k_gp = 30.0
-k_p = 1.5
-k_i = 0.9
-k_pi = 1.0
+k_gp = 1.0
 k = 10.0
-eta = 100.0
 param_grid = {
-        'k_ae': [100.0*k],
-        'k_pe': [100.0*k],
-        'k_pp': [k*k_gp*k_p/k_i],
-        'k_ap': [k*k_gp*k_p*k_i*k_pi],
-        'k_aa': [k*k_gp/(k_p*k_i)],
-        'k_pa': [k*k_gp*k_i/(k_p*k_pi)],
-        'k_ps': [200.0*k],
-        'k_as': [200.0*k],
+        'k_ae': [k*1.5],
+        'k_pe': [k*5.0],
+        'k_pp': [1.5*k*k_gp],
+        'k_ap': [2.0*k*k_gp],
+        'k_aa': [0.1*k*k_gp],
+        'k_pa': [0.5*k*k_gp],
+        'k_ps': [k*10.0],
+        'k_as': [k*1.0],
         'eta_e': [0.02],
-        'eta_p': [4.8*eta],
-        'eta_a': [0.0*eta],
+        'eta_p': [12.0],
+        'eta_a': [26.0],
         'eta_s': [0.002],
-        'delta_p': [90.0],
-        'delta_a': [120.0],
-        'tau_p': [25],
-        'tau_a': [20],
-        'omega': np.asarray(stim_periods),
-        'alpha': np.asarray(stim_amps),
+        'delta_p': [9.0],
+        'delta_a': [3.0],
+        'tau_p': [18],
+        'tau_a': [32],
+        'omega': stim_periods,
+        'a2': np.asarray(stim_amps),
+        'a1': [0.0]
     }
 
 param_map = {
@@ -63,7 +60,8 @@ param_map = {
     'tau_p': {'vars': ['gpe_proto_syns_op/tau_i'], 'nodes': ['gpe_p']},
     'tau_a': {'vars': ['gpe_arky_syns_op/tau_a'], 'nodes': ['gpe_a']},
     'omega': {'vars': ['sl_op/t_off'], 'nodes': ['driver']},
-    'alpha': {'vars': ['sl_op/alpha'], 'nodes': ['driver']}
+    'a1': {'vars': ['weight'], 'edges': [('driver', 'gpe_p', 0)]},
+    'a2': {'vars': ['weight'], 'edges': [('driver', 'gpe_p', 1)]}
 }
 
 # set up cluster
