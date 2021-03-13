@@ -133,6 +133,6 @@ results_dict = {}
 cutoff = 20.0
 for key in result_map.index:
     data1, data2 = results.loc[cutoff:, ('d', key)].values, results.loc[cutoff:, ('r_i', key)].values
-    results_dict[key] = {"omega": result_map.loc[key, 'omega'], 'alpha': result_map.loc[key, 'alpha'],
+    results_dict[key] = {"omega": result_map.loc[key, 'omega'], 'alpha': result_map.loc[key, 'a2'],
                          "data": np.asarray([data1, data2])}
 scio.savemat('ss_data.mat', mdict=results_dict, long_field_names=True)
