@@ -13,7 +13,7 @@ dts = 1.0
 T = 320000.0
 
 # stimulation parameters
-stim_periods = np.linspace(60.0, 85.0, 25)
+stim_periods = np.linspace(65.0, 90.0, 25)
 stim_amps = np.linspace(0.0, 3.0, 30)
 n_infreqs = len(stim_periods)
 
