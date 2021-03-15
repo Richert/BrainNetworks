@@ -10,7 +10,7 @@ import scipy.io as scio
 # simulation parameters
 dt = 1e-2
 dts = 1.0
-T = 120000.0
+T = 320000.0
 
 # stimulation parameters
 stim_periods = np.linspace(65.0, 90.0, 25)
