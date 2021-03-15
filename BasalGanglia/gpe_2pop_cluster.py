@@ -23,14 +23,14 @@ k = 10.0
 param_grid = {
         'k_ae': [k*1.5],
         'k_pe': [k*5.0],
-        'k_pp': [1.5*k*k_gp],
+        'k_pp': [5.0*k*k_gp],
         'k_ap': [2.0*k*k_gp],
         'k_aa': [0.1*k*k_gp],
         'k_pa': [0.5*k*k_gp],
         'k_ps': [k*10.0],
         'k_as': [k*1.0],
         'eta_e': [0.02],
-        'eta_p': [12.0],
+        'eta_p': [40.0],
         'eta_a': [26.0],
         'eta_s': [0.002],
         'delta_p': [9.0],
@@ -135,4 +135,4 @@ for key in result_map.index:
     data1, data2 = results.loc[cutoff:, ('d', key)].values, results.loc[cutoff:, ('r_i', key)].values
     results_dict[key] = {"omega": result_map.loc[key, 'omega'], 'alpha': result_map.loc[key, 'a2'],
                          "data": np.asarray([data1, data2])}
-scio.savemat('ss_data.mat', mdict=results_dict, long_field_names=True)
+scio.savemat('lc_data.mat', mdict=results_dict, long_field_names=True)
