@@ -42,8 +42,8 @@ T = 2050.0
 sim_steps = int(np.round(T/dt))
 stim_offset = int(np.round(0.0/dt))
 stim_dur = int(np.round(500.0/dt))
-stim_periods = [65.0]
-stim_amps = [0.4]
+stim_periods = [62.0]
+stim_amps = [0.8]
 
 # model parameters
 k_gp = 1.0
@@ -54,11 +54,11 @@ param_grid = {
         'k_pp': [1.5*k*k_gp],
         'k_ap': [2.0*k*k_gp],
         'k_aa': [0.1*k*k_gp],
-        'k_pa': [4.0*k*k_gp],
+        'k_pa': [5.0*k*k_gp],
         'k_ps': [k*10.0],
         'k_as': [k*1.0],
         'eta_e': [0.02],
-        'eta_p': [18.3],
+        'eta_p': [24.0],
         'eta_a': [26.0],
         'eta_s': [0.002],
         'delta_p': [9.0],
@@ -67,7 +67,7 @@ param_grid = {
         'tau_a': [32],
         'omega': stim_periods,
         'a2': np.asarray(stim_amps),
-        'a1': np.asarray(stim_amps)
+        'a1': [0.0]
     }
 
 param_map = {
@@ -129,7 +129,7 @@ plt.legend(['GPe-p', 'GPe-a'])
 ax.set_ylabel('Firing rate (GPe-p)')
 ax.set_xlabel('time (ms)')
 ax.set_xlim([1000.0, T-50.0])
-ax.set_ylim([00.0, 150.0])
+ax.set_ylim([0.0, 150.0])
 ax.tick_params(axis='both', which='major', labelsize=fontsize1)
 plt.tight_layout()
 
