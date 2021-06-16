@@ -1186,29 +1186,7 @@ stn_gpe_noax:
     - [str/str_dummy_op/R_s, gpe_a/gpe_arky_syns_op/str, null, {weight: 2262.7}]
     - [str/str_dummy_op/R_s, gpe_p/gpe_proto_syns_op/str, null, {weight: 1517.9}]
 
-stn_gpe_str:
-  base: CircuitTemplate
-  nodes:
-    stn: stn
-    gpe_p: gpe_proto
-    gpe_a: gpe_arky
-    msn: str_msn
-    fsi: str_fsi
-  edges:
-    - [stn/stn_op/R_e, stn/stn_op/I_e, null, {weight: 4.0, delay: 1.6, spread: 0.4}]
-    - [stn/stn_op/R_e, gpe_a/gpe_arky_op/I_e, null, {weight: 50.0, delay: 4.0, spread: 1.0}]
-    - [stn/stn_op/R_e, gpe_p/gpe_proto_op/I_e, null, {weight: 100.0, delay: 4.0, spread: 1.0}]
-    - [gpe_p/gpe_proto_op/R_i, gpe_p/gpe_proto_op/I_i, null, {weight: 20.0, delay: 1.6, spread: 0.4}]
-    - [gpe_p/gpe_proto_op/R_i, stn/stn_op/I_i, null, {weight: 40.0, delay: 3.2, spread: 0.8}]
-    - [gpe_p/gpe_proto_op/R_i, gpe_a/gpe_arky_op/I_i, null, {weight: 40.0, delay: 1.6, spread: 0.4}]
-    - [gpe_a/gpe_arky_op/R_a, gpe_a/gpe_arky_op/I_i, null, {weight: 40.0, delay: 1.6, spread: 0.4}]
-    - [gpe_a/gpe_arky_op/R_a, gpe_p/gpe_proto_op/I_i, null, {weight: 10.0, delay: 1.6, spread: 0.4}]
-    - [gpe_a/gpe_arky_op/R_a, fsi/str_fsi_op/I_i, null, {weight: 40.0, delay: 3.2, spread: 0.8}]
-    - [msn/str_msn_op/R_s, msn/str_msn_op/I_i, null, {weight: 40.0, delay: 3.2, spread: 0.8}]
-    - [msn/str_msn_op/R_s, gpe_a/gpe_arky_op/I_i, null, {weight: 150.0, delay: 8.0, spread: 1.4}]
-    - [msn/str_msn_op/R_s, gpe_p/gpe_proto_op/I_i, null, {weight: 15.0, delay: 8.0, spread: 1.4}]
-    - [fsi/str_fsi_op/R_f, msn/str_msn_op/I_i, null, {weight: 100.0, delay: 1.6, spread: 0.4}]
-    - [fsi/str_fsi_op/R_f, fsi/str_fsi_op/I_i, null, {weight: 60.0, delay: 0.4, spread: 0.2}]
+
 
 gpe_str:
   base: CircuitTemplate

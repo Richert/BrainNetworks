@@ -1,0 +1,290 @@
+%YAML 1.2
+---
+
+# Operator templates
+####################
+
+qif_syns_op:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * R = delta/(PI*tau^2) + 2.*R*V/tau"
+    - "d/dt * V = (V^2 + eta)/tau + I_ampa - I_gabaa - tau*(PI*R)^2"
+    - "d/dt * I_ampa = X_ampa"
+    - "d/dt * X_ampa = (s_e - X_ampa*(tau_ampa_r+tau_ampa_d) - I_ampa)/(tau_ampa_r*tau_ampa_d)"
+    - "d/dt * I_gabaa = X_gabaa"
+    - "d/dt * X_gabaa = (s_i - X_gabaa*(tau_gabaa_r+tau_gabaa_d) - I_gabaa)/(tau_gabaa_r*tau_gabaa_d)"
+  variables:
+    R:
+      default: output
+    V:
+      default: variable
+    I_ampa:
+      default: variable
+    I_gabaa:
+      default: variable
+    X_ampa:
+      default: variable
+    X_gabaa:
+      default: variable
+    eta:
+      default: -2.0
+    tau:
+      default: 1.0
+    tau_ampa_r:
+      default: 0.8
+    tau_ampa_d:
+      default: 3.7
+    tau_gabaa_r:
+      default: 0.4
+    tau_gabaa_d:
+      default: 5.0
+    delta:
+      default: 2.0
+    s_e:
+      default: input
+    s_i:
+      default: input
+
+qif_gap_syns_op:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * R = delta/(PI*tau^2) + R*(2*V-g)/tau"
+    - "d/dt * V = (V^2 + eta)/tau + I_ampa - I_gabaa - tau*(PI*R)^2"
+    - "d/dt * I_ampa = X_ampa"
+    - "d/dt * X_ampa = (s_e - X_ampa*(tau_ampa_r+tau_ampa_d) - I_ampa)/(tau_ampa_r*tau_ampa_d)"
+    - "d/dt * I_gabaa = X_gabaa"
+    - "d/dt * X_gabaa = (s_i - X_gabaa*(tau_gabaa_r+tau_gabaa_d) - I_gabaa)/(tau_gabaa_r*tau_gabaa_d)"
+  variables:
+    R:
+      default: output
+    V:
+      default: variable
+    I_ampa:
+      default: variable
+    I_gabaa:
+      default: variable
+    X_ampa:
+      default: variable
+    X_gabaa:
+      default: variable
+    eta:
+      default: -2.0
+    tau:
+      default: 1.0
+    tau_ampa_r:
+      default: 0.8
+    tau_ampa_d:
+      default: 3.7
+    tau_gabaa_r:
+      default: 0.4
+    tau_gabaa_d:
+      default: 5.0
+    delta:
+      default: 2.0
+    g:
+      default: 0.0
+    s_e:
+      default: input
+    s_i:
+      default: input
+
+qif_sfa_syns_op:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * R = delta/(PI*tau^2) + 2.*R*V/tau"
+    - "d/dt * V = (V^2 + eta)/tau + I_ampa - I_gabaa - A/tau - tau*(PI*R)^2"
+    - "d/dt * A = alpha*R - A/tau_a"
+    - "d/dt * I_ampa = X_ampa"
+    - "d/dt * X_ampa = (s_e - X_ampa*(tau_ampa_r+tau_ampa_d) - I_ampa)/(tau_ampa_r*tau_ampa_d)"
+    - "d/dt * I_gabaa = X_gabaa"
+    - "d/dt * X_gabaa = (s_i - X_gabaa*(tau_gabaa_r+tau_gabaa_d) - I_gabaa)/(tau_gabaa_r*tau_gabaa_d)"
+  variables:
+    R:
+      default: output
+    V:
+      default: variable
+    A:
+      default: variable
+    I_ampa:
+      default: variable
+    I_gabaa:
+      default: variable
+    X_ampa:
+      default: variable
+    X_gabaa:
+      default: variable
+    eta:
+      default: -2.0
+    tau:
+      default: 1.0
+    tau_ampa_r:
+      default: 0.8
+    tau_ampa_d:
+      default: 3.7
+    tau_gabaa_r:
+      default: 0.4
+    tau_gabaa_d:
+      default: 5.0
+    tau_a:
+      default: 150.0
+    alpha:
+      default: 0.0
+    delta:
+      default: 2.0
+    s_e:
+      default: input
+    s_i:
+      default: input
+      
+stn_op:
+  base: qif_syns_op
+  variables:
+    tau:
+      default: 13.0
+    eta:
+      default: 0.3
+    delta:
+      default: 0.5
+
+gpe_p_op:
+  base: qif_syns_op
+  variables:
+    tau:
+      default: 13.0
+    eta:
+      default: 2.0
+    delta:
+      default: 2.0
+
+gpe_a_op:
+  base: qif_syns_op
+  variables:
+    tau:
+      default: 22.0
+    eta:
+      default: -0.5
+    delta:
+      default: 1.0
+
+msn_op:
+  base: qif_sfa_syns_op
+  variables:
+    tau:
+      default: 32.0
+    eta:
+      default: 0.1
+    delta:
+      default: 0.1
+    alpha:
+      default: 0.0
+    tau_a:
+      default: 250.0
+
+fsi_op:
+  base: qif_gap_syns_op
+  variables:
+    tau:
+      default: 8.0
+    eta:
+      default: 0.4
+    delta:
+      default: 0.05
+    g:
+      default: 0.1
+    
+# population templates
+######################
+
+stn:
+  base: NodeTemplate
+  operators:
+    - stn_op
+
+gpe_p:
+  base: NodeTemplate
+  operators:
+    - gpe_p_op
+
+gpe_a:
+  base: NodeTemplate
+  operators:
+    - gpe_a_op
+
+msn:
+  base: NodeTemplate
+  operators:
+    - msn_op
+
+fsi:
+  base: NodeTemplate
+  operators:
+    - fsi_op
+
+# Circuit templates
+###################
+
+stn_gpe_str:
+  base: CircuitTemplate
+  nodes:
+    stn: stn
+    gpe_p: gpe_p
+    gpe_a: gpe_a
+    msn_d1: msn
+    msn_d2: msn
+    fsi_d1: fsi
+    fsi_d2: fsi
+  edges:
+    - [stn/stn_op/R, gpe_a/stn_op/s_e, null, {weight: 0.0, delay: 2.5, spread: 1.0}]
+    - [stn/stn_op/R, gpe_p/stn_op/s_e, null, {weight: 0.0, delay: 2.5, spread: 1.0}]
+    - [gpe_p/stn_op/R, gpe_p/stn_op/s_i, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [gpe_p/stn_op/R, stn/stn_op/s_i, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [gpe_p/stn_op/R, gpe_a/stn_op/s_i, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [gpe_p/stn_op/R, fsi_d1/fsi_op/s_i, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [gpe_p/stn_op/R, fsi_d2/fsi_op/s_i, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [gpe_a/stn_op/R, gpe_a/stn_op/s_i, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [gpe_a/stn_op/R, msn_d1/msn_op/s_i, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [gpe_a/stn_op/R, msn_d2/msn_op/s_i, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [msn_d1/msn_op/R, msn_d1/msn_op/s_i, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [msn_d1/msn_op/R, msn_d2/msn_op/s_i, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [msn_d1/msn_op/R, gpe_a/stn_op/s_i, null, {weight: 0.0, delay: 7.0, spread: 2.0}]
+    - [msn_d2/msn_op/R, msn_d1/msn_op/s_i, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [msn_d2/msn_op/R, msn_d2/msn_op/s_i, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [msn_d2/msn_op/R, gpe_a/stn_op/s_i, null, {weight: 0.0, delay: 7.0, spread: 2.0}]
+    - [msn_d2/msn_op/R, gpe_p/stn_op/s_i, null, {weight: 0.0, delay: 7.0, spread: 2.0}]
+    - [fsi_d1/fsi_op/R, msn_d1/msn_op/s_i, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [fsi_d1/fsi_op/R, fsi_d1/fsi_op/s_i, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [fsi_d2/fsi_op/R, msn_d2/msn_op/s_i, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+    - [fsi_d2/fsi_op/R, fsi_d2/fsi_op/s_i, null, {weight: 0.0, delay: 1.0, spread: 0.6}]
+
+stn_gpe_str_nodelay:
+  base: CircuitTemplate
+  nodes:
+    stn: stn
+    gpe_p: gpe_p
+    gpe_a: gpe_a
+    msn_d1: msn
+    msn_d2: msn
+    fsi_d1: fsi
+    fsi_d2: fsi
+  edges:
+    - [stn/stn_op/R, gpe_a/stn_op/s_e, null, {weight: 0.0}]
+    - [stn/stn_op/R, gpe_p/stn_op/s_e, null, {weight: 0.0}]
+    - [gpe_p/stn_op/R, gpe_p/stn_op/s_i, null, {weight: 0.0}]
+    - [gpe_p/stn_op/R, stn/stn_op/s_i, null, {weight: 0.0}]
+    - [gpe_p/stn_op/R, gpe_a/stn_op/s_i, null, {weight: 0.0}]
+    - [gpe_p/stn_op/R, fsi_d1/fsi_op/s_i, null, {weight: 0.0}]
+    - [gpe_p/stn_op/R, fsi_d2/fsi_op/s_i, null, {weight: 0.0}]
+    - [gpe_a/stn_op/R, gpe_a/stn_op/s_i, null, {weight: 0.0}]
+    - [gpe_a/stn_op/R, msn_d1/msn_op/s_i, null, {weight: 0.0}]
+    - [gpe_a/stn_op/R, msn_d2/msn_op/s_i, null, {weight: 0.0}]
+    - [msn_d1/msn_op/R, msn_d1/msn_op/s_i, null, {weight: 0.0}]
+    - [msn_d1/msn_op/R, msn_d2/msn_op/s_i, null, {weight: 0.0}]
+    - [msn_d1/msn_op/R, gpe_a/stn_op/s_i, null, {weight: 0.0}]
+    - [msn_d2/msn_op/R, msn_d1/msn_op/s_i, null, {weight: 0.0}]
+    - [msn_d2/msn_op/R, msn_d2/msn_op/s_i, null, {weight: 0.0}]
+    - [msn_d2/msn_op/R, gpe_a/stn_op/s_i, null, {weight: 0.0}]
+    - [msn_d2/msn_op/R, gpe_p/stn_op/s_i, null, {weight: 0.0}]
+    - [fsi_d1/fsi_op/R, msn_d1/msn_op/s_i, null, {weight: 0.0}]
+    - [fsi_d1/fsi_op/R, fsi_d1/fsi_op/s_i, null, {weight: 0.0}]
+    - [fsi_d2/fsi_op/R, msn_d2/msn_op/s_i, null, {weight: 0.0}]
+    - [fsi_d2/fsi_op/R, fsi_d2/fsi_op/s_i, null, {weight: 0.0}]

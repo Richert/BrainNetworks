@@ -1,6 +1,7 @@
 from pyrates.utility.grid_search import grid_search
 import numpy as np
-
+from pyrates.utility.visualization import plot_connectivity
+from matplotlib.pyplot import show
 
 # Parameters
 ############
@@ -12,41 +13,38 @@ T = 130.
 cutoff = 10.0
 
 # model parameters
-n_etas = 20
-n_alphas = 5
-etas = np.linspace(-6.5, -4.5, num=n_etas)
-alphas = np.linspace(0.0, 0.1, num=n_alphas)
-params = {'eta': etas, 'alpha': alphas}
-param_map = {'eta': {'vars': ['Op_sd_exp/eta'], 'nodes': ['qif']},
-             'alpha': {'vars': ['weight'], 'edges': [('inp', 'qif')]}
+n_etas = 10
+n_js = 10
+etas = np.linspace(-1.0, 1.0, num=n_etas)
+Js = np.linspace(2.0, 20.0, num=n_js)
+params = {'eta': etas, 'J': Js}
+param_map = {'eta': {'vars': ['Op_sfa_syns_noise/eta'], 'nodes': ['qif']},
+             'Js': {'vars': ['Op_sfa_syns_noise/J'], 'nodes': ['qif']}
              }
 
-# simulation of stuart-landau-driven system
-###########################################
+# simulation
+############
 
-results_sl, result_map_sl = grid_search(circuit_template="qifs/QIF_sd_sl",
-                                        param_grid=params,
-                                        param_map=param_map,
-                                        inputs={},
-                                        outputs={"r": "qif/Op_sd_exp/r", "v": "qif/Op_sd_exp/v"},
-                                        step_size=dt, simulation_time=T, permute_grid=True, sampling_step_size=dts,
-                                        method='RK45')
+results, result_map = grid_search(circuit_template="qifs/QIF_sfa_syns_noise",
+                                  param_grid=params,
+                                  param_map=param_map,
+                                  inputs={},
+                                  outputs={"r": "qif/Op_sfa_syns_noise/r", "v": "qif/Op_sfa_syns_noise/v"},
+                                  step_size=dt, simulation_time=T, permute_grid=True, sampling_step_size=dts,
+                                  method='RK45')
 
-# simulation of lorenz-driven system
-####################################
-
-results_lo, result_map_lo = grid_search(circuit_template="qifs/QIF_sd_lorenz",
-                                        param_grid=params,
-                                        param_map=param_map,
-                                        inputs={},
-                                        outputs={"r": "qif/Op_sd_exp/r", "v": "qif/Op_sd_exp/v"},
-                                        step_size=dt, simulation_time=T, permute_grid=True, sampling_step_size=dts,
-                                        method='RK45')
-
-# store results
+# visualization
 ###############
 
-results_sl.to_pickle("results/stuart_landau_ts.pkl")
-result_map_sl.to_pickle("results/stuart_landau_map.pkl")
-results_lo.to_pickle("results/lorenz_ts.pkl")
-result_map_lo.to_pickle("results/lorenz_map.pkl")
+sigmas = np.zeros((len(Js), len(etas)))
+for i, J in enumerate(Js[::-1]):
+    for j, eta in enumerate(etas):
+        idx = result_map[result_map['eta'] == eta and result_map['J'] == J]
+        r = results.loc[:, ('r', idx)]
+        v = results.loc[:, ('v', idx)]
+        w = np.complex(real=np.pi*r, imag=-v)
+        sigmas[i, j] = (1-w)/(1+w)
+
+plot_connectivity(sigmas, xticklabels=np.round(etas, decimals=2),
+                  yticklabels=np.round(Js[::-1], decimals=2))
+show()
