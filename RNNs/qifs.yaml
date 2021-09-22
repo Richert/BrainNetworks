@@ -106,8 +106,8 @@ Op_sfa_exp:
 Op_sfa_syns_noise:
   base: OperatorTemplate
   equations:
-    - "d/dt * r = (delta + sqrt(D)/PI)/(PI * tau^2) + 2.*r*v/tau"
-    - "d/dt * v = (v^2 + eta + inp)/tau + x - a - tau*(PI*r)^2"
+    - "d/dt * r = (delta + sqrt(D)/pi)/(pi * tau^2) + 2.*r*v/tau"
+    - "d/dt * v = (v^2 + eta + inp)/tau + x - a - tau*(pi*r)^2"
     - "d/dt * a = alpha*r - a/tau_a"
     - "d/dt * x = J*(r + r_in) - x/tau_s"
   variables:
@@ -137,6 +137,42 @@ Op_sfa_syns_noise:
       default: 0.5
     D:
       default: 0.2
+    inp:
+      default: input
+
+# operator for a qif population with spike-frequency adaptation (mono-exponential)
+Op_sfa_syns:
+  base: OperatorTemplate
+  equations:
+    - "d/dt * r = delta/(pi * tau^2) + 2.*r*v/tau"
+    - "d/dt * v = (v^2 + eta + inp)/tau + x - a - tau*(pi*r)^2"
+    - "d/dt * a = alpha*r - a/tau_a"
+    - "d/dt * x = J*(r + r_in) - x/tau_s"
+  variables:
+    r:
+      default: output(0.75)
+    v:
+      default: variable(-0.4)
+    a:
+      default: variable(0.36)
+    x:
+      default: variable(0.0)
+    r_in:
+      default: input
+    tau:
+      default: 1.0
+    delta:
+      default: 0.1
+    eta:
+      default: -1.0
+    J:
+      default: 10.0
+    alpha:
+      default: 0.2
+    tau_a:
+      default: 10.0
+    tau_s:
+      default: 0.5
     inp:
       default: input
 
@@ -195,11 +231,17 @@ Pop_sfa_exp:
   operators:
     - Op_sfa_exp
 
-# excitatory qif population with synaptic depression (mono-exponential kernel)
+# excitatory qif population with synaptic depression and noise (mono-exponential kernel)
 Pop_sfa_syns_noise:
   base: NodeTemplate
   operators:
     - Op_sfa_syns_noise
+
+# excitatory qif population with synaptic depression (mono-exponential kernel)
+Pop_sfa_syns:
+  base: NodeTemplate
+  operators:
+    - Op_sfa_syns
 
 Pop_lorenz:
   base: NodeTemplate
@@ -241,6 +283,13 @@ QIF_sfa_syns_noise:
   base: CircuitTemplate
   nodes:
     qif: Pop_sfa_syns_noise
+  edges:
+
+# excitatory qif population with spike-frequency adaptation (mono-exponential kernel) and synapses
+QIF_sfa_syns:
+  base: CircuitTemplate
+  nodes:
+    qif: Pop_sfa_syns
   edges:
 
 # excitatory qif population with synaptic depression and input from a lorenz attractor

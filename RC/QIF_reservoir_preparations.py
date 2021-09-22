@@ -6,14 +6,14 @@ import pickle
 path = "/home/rgast/PycharmProjects/BrainNetworks/RC/results"
 
 # simulation parameters
-T = 1250.0
+T = 250.0
 dt = 1e-3
-dts = 1e-2
-cutoff = 250.0
+dts = 1e-3
+cutoff = 50.0
 
 # network configuration parameters
-N = 200
-p = 0.1
+N = 800
+p = 0.2
 m = 2
 n_etas = 20
 n_alphas = 10

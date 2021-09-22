@@ -1,4 +1,4 @@
-from pyrates.utility import grid_search
+from pyrates.utility.grid_search import grid_search
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl

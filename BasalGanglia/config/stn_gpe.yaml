@@ -26,29 +26,27 @@ biexp_simple:
 biexp_rate:
   base: OperatorTemplate
   equations:
-    - "d/dt * r = (I + r_0 - r) / tau"
-    - "d/dt * r2 = (I_ext - r2) / tau2"
-    - "d/dt * I = x"
-    - "d/dt * x = (r_in - x*(tau_r+tau_d) - I)/(tau_r*tau_d)"
+    - "d/dt * I_post = (y  - I_post) / tau_post"
+    - "d/dt * r_pre = (I_ext - r_pre) / tau_pre"
+    - "d/dt * y = x"
+    - "d/dt * x = (r_in - x*(tau_r+tau_d) - y)/(tau_r*tau_d)"
   variables:
-    r:
+    I_post:
       default: variable
-    r2:
+    r_pre:
       default: output
-    I:
+    y:
       default: variable
     x:
       default: variable
-    r_0:
-      default: 0.0
-    tau:
+    tau_post:
       default: 1.0
-    tau2:
+    tau_pre:
       default: 0.1
     tau_r:
-      default: 0.5
+      default: 1.0
     tau_d:
-      default: 5.0
+      default: 8.0
     I_ext:
       default: input
     r_in:
@@ -1001,7 +999,7 @@ biexp_gamma:
   nodes:
     n1: biexp_rate_pop
   edges:
-    - [n1/biexp_rate/r2, n1/biexp_rate/r_in, null, {weight: 1.0, delay: 1.0}]
+    - [n1/biexp_rate/r_pre, n1/biexp_rate/r_in, null, {weight: 1.0, delay: 1.0}]
 
 rate:
   base: CircuitTemplate

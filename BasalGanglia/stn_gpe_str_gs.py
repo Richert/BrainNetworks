@@ -40,29 +40,55 @@ sns.set(style="whitegrid")
 # simulation parameters
 dt = 1e-3
 dts = 1e-1
-T = 5000.0
-
-# plt.plot(ctx)
-# plt.show()
+T = 2000.0
 
 # model parameters
-k_gp = 1.0
-k = 1.0
+k_pp = 5.0
+k_ap = 15.0
+k_ep = 10.0
+k_fp = 5.0
+
+k_d1a = 5.0
+k_d2a = 10.0
+
+k_pe = 130.0
+k_ae = 30.0
+
+k_pd2 = 200.0
+k_ad2 = 20.0
+k_ad1 = 80.0
+k_d1d1 = 5.0
+k_d1d2 = 10.0
+k_d2d2 = 8.0
+
+k_d1f = 60.0
+k_d2f = 40.0
+k_ff = 10.0
+
 param_grid = {
-        'k_pe': [60.0],
-        'k_ae': [6.0],
-        'k_pp': [10.0],
-        'k_ap': [20.0],
-        'k_ep': [10.0],
-        # 'k_aa': [0.1*k],
-        # 'k_pa': [0.1*k],
-        'k_as1': [0.0],
-        'k_ps2': [100.0],
-        'k_as2': [10.0],
-        'eta_p': [3.0],
-        'eta_a': [12.0],
-        'eta_e': [3.0],
-        'eta_s2': [0.0],
+        'k_pe': [k_pe],
+        'k_ae': [k_ae],
+        'k_pp': [k_pp],
+        'k_ap': [k_ap],
+        'k_ep': [k_ep],
+        'k_fp': [k_fp],
+        'k_d1a': [k_d1a],
+        'k_d2a': [k_d2a],
+        'k_ad1': [k_ad1],
+        'k_pd2': [k_pd2],
+        'k_ad2': [k_ad2],
+        'k_d1d1': [k_d1d1],
+        'k_d1d2': [k_d1d2],
+        'k_d2d2': [k_d2d2],
+        'k_d1f': [k_d1f],
+        'k_d2f': [k_d2f],
+        'k_ff': [k_ff],
+        'eta_p': [-3.0],
+        'eta_a': [7.0],
+        'eta_e': [0.5],
+        'eta_d1': [-6.0],
+        'eta_d2': [-6.0],
+        'eta_fsi': [1.0],
         #'omega': stim_periods,
         #'alpha': np.asarray(stim_amps)
     }
@@ -74,26 +100,33 @@ param_map = {
     'k_pp': {'vars': ['weight'], 'edges': [('gpe_p', 'gpe_p')]},
     'k_ap': {'vars': ['weight'], 'edges': [('gpe_p', 'gpe_a')]},
     'k_ep': {'vars': ['weight'], 'edges': [('gpe_p', 'stn')]},
-    'k_aa': {'vars': ['weight'], 'edges': [('gpe_a', 'gpe_a')]},
-    'k_pa': {'vars': ['weight'], 'edges': [('gpe_a', 'gpe_p')]},
-    'k_ps2': {'vars': ['weight'], 'edges': [('msn_d2', 'gpe_p')]},
-    'k_as2': {'vars': ['weight'], 'edges': [('msn_d2', 'gpe_a')]},
-    'k_as1': {'vars': ['weight'], 'edges': [('msn_d1', 'gpe_a')]},
-    'k_s1s2': {'vars': ['weight'], 'edges': [('msn_d2', 'msn_d1')]},
+    'k_fp': {'vars': ['weight'], 'edges': [('gpe_p', 'fsi')]},
+    'k_d1a': {'vars': ['weight'], 'edges': [('gpe_a', 'msn_d1')]},
+    'k_d2a': {'vars': ['weight'], 'edges': [('gpe_a', 'msn_d2')]},
+    'k_pd2': {'vars': ['weight'], 'edges': [('msn_d2', 'gpe_p')]},
+    'k_ad2': {'vars': ['weight'], 'edges': [('msn_d2', 'gpe_a')]},
+    'k_d2d2': {'vars': ['weight'], 'edges': [('msn_d2', 'msn_d2')]},
+    'k_ad1': {'vars': ['weight'], 'edges': [('msn_d1', 'gpe_a')]},
+    'k_d1d1': {'vars': ['weight'], 'edges': [('msn_d1', 'msn_d1')]},
+    'k_d1d2': {'vars': ['weight'], 'edges': [('msn_d2', 'msn_d1')]},
+    'k_d1f': {'vars': ['weight'], 'edges': [('fsi', 'msn_d1')]},
+    'k_d2f': {'vars': ['weight'], 'edges': [('fsi', 'msn_d2')]},
+    'k_ff': {'vars': ['weight'], 'edges': [('fsi', 'fsi')]},
     'eta_p': {'vars': ['stn_op/eta'], 'nodes': ['gpe_p']},
     'eta_a': {'vars': ['stn_op/eta'], 'nodes': ['gpe_a']},
     'eta_e': {'vars': ['stn_op/eta'], 'nodes': ['stn']},
-    'eta_s2': {'vars': ['msn_op/eta'], 'nodes': ['msn_d2']},
-    'eta_s1': {'vars': ['msn_op/eta'], 'nodes': ['msn_d1']},
+    'eta_d2': {'vars': ['msn_d1_op/eta'], 'nodes': ['msn_d2']},
+    'eta_d1': {'vars': ['msn_d1_op/eta'], 'nodes': ['msn_d1']},
+    'eta_fsi': {'vars': ['fsi_op/eta'], 'nodes': ['fsi']},
 }
 
-conditions = [{},  # healthy control -> GPe-p: 60 Hz, GPe-a: 10 Hz
-              {'eta_s2': 5.0},  # STR excitation -> GPe-p: 10 Hz, GPe-a: 40 Hz
-              {'eta_e': -4.0},  # STN inhibition -> GPe-p: 30 Hz, GPe_a: 20 Hz
-              {'k_pp': 0.1, 'k_pa': 0.1, 'k_aa': 0.1, 'k_ap': 0.1, 'k_ps2': 0.1,
-               'k_as2': 0.1},  # GABAA blockade in GPe -> GPe_p: 100 Hz
-              # {'k_pe': 0.1, 'k_pp': 0.1, 'k_pa': 0.1, 'k_ae': 0.1, 'k_aa': 0.1, 'k_ap': 0.1,
-              #  'k_ps': 0.1, 'k_as': 0.1},  # AMPA blockade and GABAA blockade in GPe -> GPe_p: 70 Hz
+conditions = [{},  # healthy control -> GPe-p: 30 Hz, GPe-a: 3 Hz, STN: 6 Hz
+              {'eta_d2': 30.0},  # STR excitation -> GPe-p: 3 Hz, GPe-a: 25 Hz, STN: 18 Hz
+              {'eta_e': -20.0},  # STN inhibition -> GPe-p: 10 Hz, GPe_a: 12 Hz, STN: 1 Hz
+              {'eta_p': 20.0},  # GPe-p excitation -> GPe-p: 100 Hz, GPe-a: 25 Hz
+              #{'k_pp': 0.1, 'k_ap': 0.1, 'k_ps': 0.1, 'k_as': 0.1},  # GABAA blockade in GPe -> GPe_p: 70 Hz
+              #{'k_pe': 0.1, 'k_pp': 0.1, 'k_ae': 0.1, 'k_ap': 0.1,
+              # 'k_ps': 0.1, 'k_as': 0.1},  # AMPA blockade and GABAA blockade in GPe -> GPe_p: 35 Hz
               ]
 
 # simulations
@@ -103,10 +136,9 @@ outputs = {
             'stn': 'stn/stn_op/R',
             'gpe-p': 'gpe_p/stn_op/R',
             'gpe-a': 'gpe_a/stn_op/R',
-            #'msn-d1': 'msn_d1/stn_op/R',
-            'msn-d2': 'msn_d2/msn_op/R',
-            #'fsi-d1': 'fsi_d1/fsi_op/R',
-            #'fsi-d2': 'fsi_d2/fsi_op/R'
+            'msn-d1': 'msn_d1/msn_d1_op/R',
+            'msn-d2': 'msn_d2/msn_d1_op/R',
+            'fsi': 'fsi/fsi_op/R',
         }
 for c_dict in deepcopy(conditions):
     for key in param_grid:
@@ -119,7 +151,7 @@ for c_dict in deepcopy(conditions):
             c_dict[key] = np.asarray(param_grid[key])
     param_grid_tmp = pd.DataFrame.from_dict(c_dict)
     results, result_map = grid_search(
-        circuit_template="config/stn_gpe_str/stn_gpe_str",
+        circuit_template="config/stn_gpe_str/stn_gpe_str_nodelay",
         param_grid=param_grid_tmp,
         param_map=param_map,
         simulation_time=T,

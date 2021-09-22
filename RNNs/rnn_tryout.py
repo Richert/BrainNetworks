@@ -35,10 +35,10 @@ cutoff = config['cutoff']
 targets = config['targets']
 
 # adaptation strength
-alpha = 0.3  # config['alphas'][idx_cond]
+alpha = 0.5  # config['alphas'][idx_cond]
 
 # eta
-eta = -0.3  # config['etas'][idx_cond]
+eta = -3.8  # config['etas'][idx_cond]
 
 # STEP 2: define remaining network parameters
 #############################################
@@ -50,24 +50,29 @@ n_folds = 5
 ridge_alpha = 1e-3
 
 # qif parameters
-Delta = 0.1
-J = 10.0
-D = 0.1
+Delta = 2.0
+J = 15.0*np.sqrt(Delta)
+D = 0.0
+tau_a = 10.0
+tau_s = 0.8
 
 # STEP 3: Evaluate classification performance of RNN
 ####################################################
 
 # setup QIF RNN
-qif_rnn = QIFExpAddNoiseSyns(C, eta, J, Delta=Delta, alpha=alpha, D=D, tau_s=0.5)
+qif_rnn = QIFExpAddNoiseSyns(C, eta, J, Delta=Delta, alpha=alpha, D=D, tau_s=tau_s, tau_a=tau_a)
 
 # perform simulation
+W_in[:, :] = 0.0
 X = qif_rnn.run(T, dt, dts, inp=inp, W_in=W_in, state_record_key='t1', cutoff=cutoff)
+r_qif = np.mean(X, axis=1)
 
 # prepare training data
 buffer_val = 0
 for i in range(X.shape[1]):
-    X[:, i] = gaussian_filter1d(X[:, i], 1.0 / dts, mode='constant', cval=buffer_val)
+    X[:, i] = gaussian_filter1d(X[:, i], 0.05 / dts, mode='constant', cval=buffer_val)
 y = targets
+r_qif2 = np.mean(X, axis=1)
 
 # split into test and training data
 split = int(np.round(X.shape[0]*0.75, decimals=0))
