@@ -1,19 +1,19 @@
-import pickle
-import sys
-from scipy.optimize import differential_evolution
+import numpy as np
+import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from numba import njit
-import numpy as np
-import time
+import pickle
 
-# preparations and function definitions
-#######################################
+# load results and config
+##############
 
-# parse worker indices from script arguments
-idx_cond = 0 # int(sys.argv[1])
+# load results
+idx = 0
+path = '/home/rgast/PycharmProjects/BrainNetworks/BasalGanglia/config'
+params = np.load(f"{path}/stn_gpe_str_params_{idx}.npy")
+loss = np.load(f"{path}/stn_gpe_str_loss_{idx}.npy")
 
 # load config
-path = '/home/rgast/PycharmProjects/BrainNetworks/BasalGanglia/config'
 config = pickle.load(open(f"{path}/stn_gpe_str_config.pkl", 'rb'))
 
 # extract constants from config
@@ -25,6 +25,7 @@ config = pickle.load(open(f"{path}/stn_gpe_str_config.pkl", 'rb'))
 
 # extract state-vector from config
 state_vec = config['u_init']
+
 
 # vector-field update function
 @njit
@@ -142,46 +143,6 @@ def rhs_func(t, state_vec, state_vec_update,
     return state_vec_update
 
 
-# envelope extraction
-def hl_envelopes_idx(s, dmin=1, dmax=1, split=False):
-    """
-    Input :
-    s: 1d-array, data signal from which to extract high and low envelopes
-    dmin, dmax: int, optional, size of chunks, use this if the size of the input signal is too big
-    split: bool, optional, if True, split the signal in half along its mean, might help to generate the envelope in some cases
-    Output :
-    lmin,lmax : high/low envelope idx of input signal s
-    """
-
-    # locals min
-    #lmin = (np.diff(np.sign(np.diff(s))) > 0).nonzero()[0] + 1
-    # locals max
-    lmax = (np.diff(np.sign(np.diff(s))) < 0).nonzero()[0] + 1
-
-    if split:
-        # s_mid is zero if s centered around x-axis or more generally mean of signal
-        s_mid = np.mean(s)
-        # pre-sorting of locals min based on relative position with respect to s_mid
-        #lmin = lmin[s[lmin] < s_mid]
-        # pre-sorting of local max based on relative position with respect to s_mid
-        lmax = lmax[s[lmax] > s_mid]
-
-    # global max of dmax-chunks of locals max
-    #lmin = lmin[[i + np.argmin(s[lmin[i:i + dmin]]) for i in range(0, len(lmin), dmin)]]
-    # global min of dmin-chunks of locals min
-    lmax = lmax[[i + np.argmax(s[lmax[i:i + dmax]]) for i in range(0, len(lmax), dmax)]]
-
-    return lmax
-
-
-# root-mean-squared error function
-@njit
-def rmse(y, target):
-    diff = (y - target) ** 2
-    target[np.abs(target) < 1.0] = 1.0
-    return np.sqrt(np.mean(diff / np.abs(target)))
-
-
 # function that performs simulation of system dynamics for all conditions
 def run_all_conditions(conditions, func, args, params, y, T, dt, dts, **kwargs):
     eval_times = np.linspace(0, T, num=int(np.round(T / dts)))
@@ -205,58 +166,109 @@ def run_all_conditions(conditions, func, args, params, y, T, dt, dts, **kwargs):
     return rates
 
 
-def loss(params, indices, func, args, conditions, targets, T, dt, dts, kwargs):
+# display fitted parameters
+###########################
 
-    # overwrite default values in args
-    for p, idx in zip(params, indices):
-        try:
-            args[idx[0]][idx[1]] = p
-        except IndexError:
-            args[idx[0]] = p
+# examine optimized solution
+############################
 
-    # simulate system dynamics for different conditions
-    results = run_all_conditions(conditions, func, args, params, state_vec, T, dt, dts,
-                                 **kwargs)
+# extract excitabilities
+eta_p, eta_a, eta_s, eta_d1, eta_d2, eta_f = params[:6]
+print(f'STN excitability: {eta_s}')
+print(f'GPe-p excitability: {eta_p}')
+print(f'GPe-a excitability: {eta_a}')
+print(f'MSN-D1 excitability: {eta_d1}')
+print(f'MSN-D2 excitability: {eta_d2}')
+print(f'FSI excitability: {eta_f}')
 
-    # calculate loss
-    loss = 0
-    rate_indices = [1, 26, 0, 28]
-    for i, rates in enumerate(results):
-        for j, target in enumerate(targets):
-            t = target[i]
-            if t is not None:
-                y = rates[:, rate_indices[j]]
-                # idx = hl_envelopes_idx(rates[:, rate_indices[j]])
-                # loss += rmse(y[idx], t[idx])
-                loss += rmse(y, t)
+# extract connectivity parameters
+k_pp, k_ap, k_sp, k_fp, k_d1a, k_d2a, k_ps, k_as, k_ad1, k_d1d1, k_pd2, k_d1d2, k_d2d2, k_d1f, k_d2f, k_ff = params[6:22]
+print(f'GPe-p -> GPe-p: {k_pp}')
+print(f'GPe-p -> GPe-a: {k_ap}')
+print(f'GPe-p -> STN: {k_sp}')
+print(f'GPe-a -> MSN-D1: {k_d1a}')
+print(f'GPe-a -> MSN-D2: {k_d2a}')
+print(f'STN -> GPe-p: {k_ps}')
+print(f'STN -> GPe-a: {k_as}')
+print(f'MSN-D1 -> GPe-a: {k_ad1}')
+print(f'MSN-D1 -> MSN-D1: {k_d1d1}')
+print(f'MSN-D2 -> GPe-p: {k_pd2}')
+print(f'MSN-D2 -> MSN-D1: {k_d1d2}')
+print(f'MSN-D2 -> MSN-D2: {k_d2d2}')
+print(f'FSI -> MSN-D1: {k_d1f}')
+print(f'FSI -> MSN-D2: {k_d2f}')
+print(f'FSI -> FSI: {k_ff}')
 
-    return loss
+# extract SFA parameters
+tau_a, alpha_a, tau_d1, alpha_d1, tau_d2, alpha_d2 = params[22:28]
+print(f'GPe-a adaptation time constant: {tau_a}')
+print(f'GPe-a adaptation rate: {alpha_a}')
+print(f'MSN-D1 adaptation time constant: {tau_d1}')
+print(f'MSN-D1 adaptation rate: {alpha_d1}')
+print(f'MSN-D2 adaptation time constant: {tau_d2}')
+print(f'MSN-D2 adaptation rate: {alpha_d2}')
 
+# extract other parameters
+g_f, exc_d2, inh_stn, exc_stn = params[28:]
+print(f'FSI gap junction strength: {g_f}')
+print(f'Extrinsic stimulation strength of MSN-D2 (excitatory): {exc_d2}')
+print(f'Extrinsic stimulation strength of STN (excitatory): {exc_stn}')
+print(f'Extrinsic stimulation strength of STN (inhibitory): {inh_stn}')
 
-# perform evolutionary optimization
-###################################
+# perform simulation
+####################
 
-# extract configuration constants
-bounds = config['bounds']
-indices = config['indices']
+# extract simulation parameters
 args = config['args']
+indices = config['indices']
 conditions = config['conditions']
-targets = config['targets']
 T = config['T']
 dt = config['dt']
 dts = config['dts']
+targets = config['targets']
 
-# start evolutionary optimization
-de_iter = 2
-de_size = 1
-t0 = time.perf_counter()
-results = differential_evolution(loss, bounds=bounds, disp=True, maxiter=de_iter, workers=1, popsize=de_size,
-                                 polish=False, args=(indices, rhs_func, args, conditions, targets, T,  dt, dts,
-                                                     {'method': 'LSODA', 'atol': 1e-6, 'rtol': 1e-5}))
-t1 = time.perf_counter()
-print(f'Time required for differential evolution optimization with {de_iter} iterations and a population size '
-      f'of {int(de_size*32)}: {t1-t0} s.')
+# overwrite default values in args
+for p, idx in zip(params, indices):
+    try:
+        args[idx[0]][idx[1]] = p
+    except IndexError:
+        args[idx[0]] = p
 
-# save results to file
-np.save(f"{path}/stn_gpe_str_params_{idx_cond}", results.x)
-np.save(f"{path}/stn_gpe_str_loss_{idx_cond}", results.fun)
+# simulate system dynamics for different conditions
+rates = run_all_conditions(conditions, rhs_func, args, params, state_vec, T, dt, dts,
+                           method='LSODA', atol=1e-6, rtol=1e-5)
+
+# plotting
+##########
+
+rate_indices = [1, 26, 0, 28]
+fig, axes = plt.subplots(ncols=4, nrows=3, figsize=(12, 8))
+
+for i in range(3):
+
+    # GPe-p
+    ax1 = axes[i, 0]
+    ax1.plot(rates[i][:, rate_indices[0]], color='red')
+    ax1.plot(targets[0][i], ls='--', color='black')
+    ax1.set_title('GPe-p')
+
+    # GPe-a
+    ax2 = axes[i, 1]
+    ax2.plot(rates[i][:, rate_indices[1]], color='red')
+    ax2.plot(targets[1][i], ls='--', color='black')
+    ax2.set_title('GPe-a')
+
+    # STN
+    ax3 = axes[i, 2]
+    ax3.plot(rates[i][:, rate_indices[2]], color='red')
+    ax3.plot(targets[2][i], ls='--', color='black')
+    ax3.set_title('STN')
+
+    # MSN-D2
+    ax4 = axes[i, 3]
+    ax4.plot(rates[i][:, rate_indices[3]], color='red')
+    if targets[3][i] is not None:
+        ax4.plot(targets[3][i], ls='--', color='black')
+    ax4.set_title('MSN-D2')
+
+plt.show()

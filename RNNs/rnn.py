@@ -43,17 +43,19 @@ class RNN:
             classifier.fit(X, y)
             scores = [classifier.score(X=X, y=y)]
             coefs = [classifier.coef_]
-        avg_score = np.mean(scores)
-        avg_coefs = np.mean(coefs, axis=0)
-        self.readouts[readout_key] = avg_coefs
+
+        # store readout weights
+        w_out = np.mean(coefs, axis=0)
+        self.readouts[readout_key] = w_out if len(w_out.shape) == 1 else w_out.T
 
         if verbose:
             print(f'Finished readout training. The readout weights are stored under the key: {readout_key}. '
                   f'Please use that key when calling `RNN.test()` or `RNN.predict()`.')
+            avg_score = np.mean(scores)
             if k > 1:
                 print(f'Average, cross-validated classification performance across {k} test folds: {avg_score}')
             else:
-                print(f'AClassification performance on training data: {avg_score}')
+                print(f'Classification performance on training data: {avg_score}')
 
         return readout_key, scores, coefs
 
@@ -66,7 +68,10 @@ class RNN:
         # perform ridge regression
         classifier = RidgeCV(**kwargs)
         classifier.fit(X, y)
-        self.readouts[readout_key] = classifier.coef_
+
+        # store readout weights
+        w_out = classifier.coef_
+        self.readouts[readout_key] = w_out if len(w_out.shape) == 1 else w_out.T
         if verbose:
             print(f'Finished readout training. The readout weights are stored under the key: {readout_key}. '
                   f'Please use that key when calling `RNN.test()` or `RNN.predict()`.')
