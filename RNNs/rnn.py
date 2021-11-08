@@ -91,7 +91,8 @@ class RNN:
         return X @ self.readouts[readout_key]
 
     def run(self, T: float, dt: float, dts: float, outputs: tuple = None, t_init: float = 0.0,
-            inp: tp.Optional[np.ndarray] = None, W_in: tp.Optional[np.ndarray] = None, cutoff: float = 0.0):
+            inp: tp.Optional[np.ndarray] = None, W_in: tp.Optional[np.ndarray] = None, cutoff: float = 0.0,
+            verbose: bool = False):
 
         if not outputs:
             outputs = (np.arange(0, len(self.u)),)
@@ -137,7 +138,8 @@ class RNN:
                 if store_results:
                     sample += 1
 
-        print('Finished simulation. The state recordings are available under `state_records`.')
+        if verbose:
+            print('Finished simulation. The state recordings are available under `state_records`.')
         return results
 
     def get_coefs(self, key: tp.Any):

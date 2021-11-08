@@ -8,7 +8,7 @@ import pickle
 
 T = 625.0
 dt = 1e-3
-dts = 1e-2
+dts = 1e-1
 cutoff = 125.0
 
 # network configuration parameters

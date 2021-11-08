@@ -28,9 +28,9 @@ sr = np.max(np.real(vals))
 C /= sr
 
 # QIF parameters
-eta = -0.2
+eta = 2.0
 Delta = 0.3
-J = 10.0
+J = 14.0
 alpha = 0.3
 tau_a = 10.0
 tau_s = 0.5
