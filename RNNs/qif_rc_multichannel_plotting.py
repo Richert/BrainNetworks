@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 import matplotlib.pyplot as plt
 
-data = pickle.load(open("qif_rc_multichannel_results.pkl", 'rb'))
+data = pickle.load(open("../RC/Results/qif_rc_multichannel_results.pkl", 'rb'))
 
 # Plotting
 ##########

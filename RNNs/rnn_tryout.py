@@ -1,4 +1,4 @@
-from RNNs import QIFExpAddNoiseSyns
+from RNNs import QIFExpAddSyns
 import numpy as np
 import pickle
 import matplotlib.pyplot as plt
@@ -13,8 +13,8 @@ idx_cond = 570
 # STEP 1: Load pre-generated RNN parameters
 ###########################################
 
-path = "/home/rgast/PycharmProjects/BrainNetworks/RC/results"
-config = pickle.load(open(f"{path}/qif_micro_config.pkl", 'rb'))
+path = "C:\\Users\\rgf3807\\PycharmProjects\\BrainNetworks\\RC\\Results"
+config = pickle.load(open(f"{path}\\qif_input_config.pkl", 'rb'))
 
 # connectivity matrix
 C = config['C']
@@ -45,14 +45,13 @@ eta = -3.8  # config['etas'][idx_cond]
 
 # general parameters
 N = C.shape[0]
-m = W_in.shape[0]
+m = W_in.shape[1]
 n_folds = 5
 ridge_alpha = 1e-3
 
 # qif parameters
 Delta = 2.0
 J = 15.0*np.sqrt(Delta)
-D = 0.0
 tau_a = 10.0
 tau_s = 0.8
 
@@ -60,11 +59,11 @@ tau_s = 0.8
 ####################################################
 
 # setup QIF RNN
-qif_rnn = QIFExpAddNoiseSyns(C, eta, J, Delta=Delta, alpha=alpha, D=D, tau_s=tau_s, tau_a=tau_a)
+qif_rnn = QIFExpAddSyns(C, eta, J, Delta=Delta, alpha=alpha, tau_s=tau_s, tau_a=tau_a)
 
 # perform simulation
 W_in[:, :] = 0.0
-X = qif_rnn.run(T, dt, dts, inp=inp, W_in=W_in, state_record_key='t1', cutoff=cutoff)
+X = qif_rnn.run(T, dt, dts, inp=inp, W_in=W_in, cutoff=cutoff)[0]
 r_qif = np.mean(X, axis=1)
 
 # prepare training data

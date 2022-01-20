@@ -16,7 +16,7 @@ cutoff = 125.0
 
 N = 800
 p = 0.2
-m = 6
+m = 5
 
 # setup connectivity matrix
 neurons = np.arange(0, N)
@@ -89,4 +89,4 @@ data['W_in'] = W_in
 data['inp'] = inp
 data['targets'] = targets.T
 data['number_input_channels'] = m
-pickle.dump(data, open('qif_input_config.pkl', 'wb'))
+pickle.dump(data, open('../RC/Results/qif_input_config.pkl', 'wb'))

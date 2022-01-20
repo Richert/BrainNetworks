@@ -444,19 +444,19 @@ class mQIFExpAddSynsRNN(RNN):
 
             # calculate network input
             s = C @ r
-            net_inp = J*s[0, :]*tau
+            net_inp = J*s*tau
             ext_inp = W_in @ inp
 
             # calculate state vector updates
-            r += dt * (Delta/(tau*np.pi) + 2*r*v)
-            v += dt * (v**2 + eta + ext_inp + x - a) / tau
-            a += dt * (alpha*s[0, :] - a/tau_a)
-            x += dt * (net_inp - x/tau_s)
+            r += dt * (Delta / (tau * np.pi) + 2 * r * v) / tau
+            v += dt * (v ** 2 + eta + x + ext_inp - a - (tau * np.pi * r) ** 2) / tau
+            a += dt * (alpha * s - a / tau_a)
+            x += dt * (net_inp - x / tau_s)
 
             u[:N] = v
-            u[N:2*N] = r
-            u[2*N:3*N] = a
-            u[3*N:] = x
+            u[N:2 * N] = r
+            u[2 * N:3 * N] = a
+            u[3 * N:] = x
             return u
 
         @njit

@@ -1,6 +1,7 @@
 import sys
-sys.path.append("/u/rgast/ptmp_link/BrainNetworks")
-from RNNs import QIFExpAddRNN
+path = "C:\\Users\\rgf3807\\PycharmProjects\\BrainNetworks"
+sys.path.append(path)
+from RNNs import QIFExpAddSyns
 import numpy as np
 import sys
 import pickle
@@ -14,8 +15,7 @@ idx_cond = int(sys.argv[1])
 # STEP 1: Load pre-generated RNN parameters
 ###########################################
 
-path = "/u/rgast/ptmp_link/BrainNetworks/RC/results"
-config = pickle.load(open(f"{path}/qif_micro_config.pkl", 'rb'))
+config = pickle.load(open(f"{path}\\RC\\results\\qif_micro_config.pkl", 'rb'))
 
 # connectivity matrix
 C = config['C']
@@ -58,7 +58,7 @@ J = 15.0*np.sqrt(Delta)
 ####################################################
 
 # setup QIF RNN
-qif_rnn = QIFExpAddRNN(C, eta, J)
+qif_rnn = QIFExpAddSyns(C, eta, J, Delta=Delta, )
 
 # perform simulation
 X = qif_rnn.run(T, dt, dts, inp=inp, W_in=W_in, state_record_key='t1', cutoff=cutoff)
@@ -67,4 +67,4 @@ y = targets
 # train RNN
 scores = qif_rnn.kfold_crossval(X=X, y=y, k=n_folds, alphas=alpha, cv=n_folds)
 avg_score = np.mean(scores, axis=0)
-np.save(f"{path}/cv_score_{idx_cond}", avg_score)
+np.save(f"{path}\\RC\\Results\\cv_score_{idx_cond}", avg_score)

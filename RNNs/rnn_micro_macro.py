@@ -8,10 +8,17 @@ from scipy.ndimage import gaussian_filter1d
 #######################
 
 # simulation parameters
-T = 100.0
+T = 110.0
 dt = 1e-3
 dts = 1e-1
-cutoff = 0.0
+cutoff = 10.0
+
+# impuls definition
+start = int(np.round(50.0/dt))
+stop = int(np.round(51.0/dt))
+steps = int(np.round(T/dt))
+inp = np.zeros((1, steps))
+inp[0, start:stop] = 1.0
 
 # network configuration parameters
 N = 800
@@ -26,6 +33,9 @@ for i in range(N):
 vals, vecs = eigs(C, k=int(N/10))
 sr = np.max(np.real(vals))
 C /= sr
+
+# setup input matrix
+W_in = np.ones(shape=(N, 1))
 
 # QIF parameters
 eta = 2.0
@@ -42,14 +52,15 @@ tau_s = 0.5
 qif_rnn = QIFExpAddSyns(C, eta, J, Delta=Delta, alpha=alpha, tau_s=tau_s, tau_a=tau_a, tau=1.0)
 
 # perform simulation
-results = qif_rnn.run(T, dt, dts, cutoff=cutoff, outputs=(np.arange(0, N), np.arange(3*N, 4*N)))
+results = qif_rnn.run(T, dt, dts, cutoff=cutoff, outputs=(np.arange(0, N), np.arange(3*N, 4*N)),
+                      inp=inp, W_in=W_in)
 v_qif = np.mean(results[0], axis=1)
 r_qif = np.mean(results[1], axis=1)
 
 # setup mean-field model
 C_m = np.ones(shape=(1,))
 qif_mf = mQIFExpAddSynsRNN(C_m, eta, J, Delta=Delta, tau=1.0, alpha=alpha, tau_a=tau_a, tau_s=tau_s)
-results = qif_mf.run(T, dt, dts, cutoff=cutoff, outputs=([0], [1]))
+results = qif_mf.run(T, dt, dts, cutoff=cutoff, outputs=([0], [1]), inp=inp, W_in=np.ones((1, 1)))
 v_mf = np.squeeze(results[0])
 r_mf = np.squeeze(results[1])
 

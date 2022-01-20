@@ -20,7 +20,7 @@ idx_cond = 1
 # STEP 1: Load pre-generated RNN parameters
 ###########################################
 
-config = pickle.load(open("qif_input_config.pkl", 'rb'))
+config = pickle.load(open("../RC/Results/qif_input_config.pkl", 'rb'))
 
 # connectivity matrix
 C = config['C']
@@ -62,7 +62,7 @@ alpha = 0.3
 
 # independent variable (IV)
 iv_name = "J"
-n_iv = 4
+n_iv = 5
 ivs = np.linspace(0, 20, num=n_iv)
 
 # mean-field parameters
@@ -147,4 +147,4 @@ for j in range(n_iv):
     data["Z_mf"][j, :] = Z_mf
 
 data["T"] = T
-pickle.dump(data, open('qif_rc_multichannel_results.pkl', 'wb'))
+pickle.dump(data, open('../RC/Results/qif_rc_multichannel_results.pkl', 'wb'))

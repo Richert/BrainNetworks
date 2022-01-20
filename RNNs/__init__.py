@@ -1,1 +1,1 @@
-from .rnn import RNN, QIFExpAddRNN, mQIFExpAddRNN, QIFExpAddSyns, QIFExpAddNoiseSTDP, QIFExpAddNoiseSyns
+from .rnn import RNN, QIFExpAddSyns, QIFExpAddNoiseSTDP, QIFExpAddNoiseSyns

@@ -3,7 +3,7 @@ from scipy.integrate import solve_ivp
 from scipy.sparse.linalg import eigs
 import pickle
 
-path = "/home/rgast/PycharmProjects/BrainNetworks/RC/results"
+path = "C:\\Users\\rgf3807\\PycharmProjects\\BrainNetworks}\\RC\\results"
 
 # simulation parameters
 T = 250.0
@@ -106,4 +106,4 @@ data['inp'] = inp
 data['targets'] = targets
 data['etas'] = etas_all
 data['alphas'] = alphas_all
-pickle.dump(data, open(f"{path}/qif_micro_config.pkl", 'wb'))
+pickle.dump(data, open(f"{path}\\qif_micro_config.pkl", 'wb'))
