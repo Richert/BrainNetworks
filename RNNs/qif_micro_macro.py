@@ -2,7 +2,7 @@ import numpy as np
 from rnn import QIFExpAddSyns, mQIFExpAddSynsRNN
 from scipy.sparse.linalg import eigs
 import matplotlib.pyplot as plt
-from scipy.ndimage import gaussian_filter1d
+import pickle
 
 # parameter definitions
 #######################
@@ -21,18 +21,11 @@ inp = np.zeros((1, steps))
 inp[0, start:stop] = 1.0
 
 # network configuration parameters
-N = 2000
-p = 0.2
+config = pickle.load(open("../RC/Results/qif_input_config.pkl", 'rb'))
 
 # setup connectivity matrix
-neurons = np.arange(0, N)
-C = np.random.uniform(low=1e-4, high=1, size=(N, N))
-n_incoming = int(N*(1-p))
-for i in range(N):
-    C[np.random.choice(neurons, size=n_incoming, replace=False), i] = 0
-vals, vecs = eigs(C, k=int(N/10))
-sr = np.max(np.real(vals))
-C /= sr
+C = config['C']
+N = C.shape[0]
 
 # setup input matrix
 W_in = np.ones(shape=(N, 1))
@@ -40,7 +33,7 @@ W_in = np.ones(shape=(N, 1))
 # QIF parameters
 eta = -0.6
 Delta = 0.3
-J = 8.3
+J = 7.6
 alpha = 0.3
 tau_a = 10.0
 tau_s = 1.0
