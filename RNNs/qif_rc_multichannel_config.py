@@ -89,4 +89,4 @@ data['W_in'] = W_in
 data['inp'] = inp
 data['targets'] = targets.T
 data['number_input_channels'] = m
-pickle.dump(data, open('../RC/Results/qif_input_config.pkl', 'wb'))
+pickle.dump(data, open('data/qif_input_config.pkl', 'wb'))

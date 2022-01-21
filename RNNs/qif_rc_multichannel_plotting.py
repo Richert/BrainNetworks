@@ -20,7 +20,7 @@ def get_peaks(x):
     return np.asarray(peak_data)
 
 
-data = pickle.load(open("../RC/Results/qif_rc_multichannel_results.pkl", 'rb'))
+data = pickle.load(open("data/qif_rc_multichannel_results.pkl", 'rb'))
 
 # Plotting
 ##########

@@ -21,7 +21,7 @@ inp = np.zeros((1, steps))
 inp[0, start:stop] = 1.0
 
 # network configuration parameters
-config = pickle.load(open("../RC/Results/qif_input_config.pkl", 'rb'))
+config = pickle.load(open("data/qif_input_config.pkl", 'rb'))
 
 # setup connectivity matrix
 C = config['C']
