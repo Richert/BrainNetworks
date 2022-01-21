@@ -8,10 +8,10 @@ from scipy.ndimage import gaussian_filter1d
 #######################
 
 # simulation parameters
-T = 110.0
+T = 200.0
 dt = 1e-3
 dts = 1e-1
-cutoff = 10.0
+cutoff = 0.0
 
 # impuls definition
 start = int(np.round(50.0/dt))
@@ -21,7 +21,7 @@ inp = np.zeros((1, steps))
 inp[0, start:stop] = 1.0
 
 # network configuration parameters
-N = 800
+N = 2000
 p = 0.2
 
 # setup connectivity matrix
@@ -38,12 +38,12 @@ C /= sr
 W_in = np.ones(shape=(N, 1))
 
 # QIF parameters
-eta = 2.0
+eta = -0.6
 Delta = 0.3
-J = 14.0
+J = 8.3
 alpha = 0.3
 tau_a = 10.0
-tau_s = 0.5
+tau_s = 1.0
 
 # simulations
 #############

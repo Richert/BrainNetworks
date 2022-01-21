@@ -25,7 +25,7 @@ config = pickle.load(open("../RC/Results/qif_input_config.pkl", 'rb'))
 # connectivity matrix
 C = config['C']
 
-# input
+# QIF input
 inp = config['inp']
 
 # input weights
@@ -42,6 +42,12 @@ M = config['number_input_channels']
 # target values
 y = config['targets']
 
+# mean-field input
+start = int(np.round(0.5*T/dt))
+stop = start + int(np.round(1/dt))
+inp_mf = np.zeros((1, int(np.round(T/dt))))
+inp_mf[0, start:stop] = 1.0
+
 # STEP 1: define remaining network parameters
 #############################################
 
@@ -53,17 +59,17 @@ ridge_alpha = 0.5*10e-3
 
 # qif parameters
 Delta = 0.3
-eta = -0.25
+eta = -0.6
 tau_a = 10.0
-tau_s = 0.5
+tau_s = 1.0
 
 # adaptation strength
 alpha = 0.3
 
 # independent variable (IV)
 iv_name = "J"
-n_iv = 5
-ivs = np.linspace(0, 20, num=n_iv)
+n_iv = 10
+ivs = np.linspace(7, 9, num=n_iv)
 
 # mean-field parameters
 C_m = np.ones(shape=(1,))
@@ -126,7 +132,7 @@ for j in range(n_iv):
 
     # simulate mean-field dynamics
     qif_mf = mQIFExpAddSynsRNN(C_m, eta, iv, Delta=Delta, tau=1.0, alpha=alpha, tau_a=tau_a, tau_s=tau_s)
-    results = qif_mf.run(T, dt, dts, cutoff=cutoff, outputs=([0], [1]))
+    results = qif_mf.run(T, dt, dts, cutoff=cutoff, outputs=([0], [1]), inp=inp_mf, W_in=np.ones((1, 1)))
     v_mf = np.squeeze(results[0])
     r_mf = np.squeeze(results[1])
 

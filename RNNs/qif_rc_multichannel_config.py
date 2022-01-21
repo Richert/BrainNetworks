@@ -6,7 +6,7 @@ import pickle
 # simulation parameters
 #######################
 
-T = 625.0
+T = 1125.0
 dt = 1e-3
 dts = 1e-1
 cutoff = 125.0
@@ -14,7 +14,7 @@ cutoff = 125.0
 # network configuration parameters
 ##################################
 
-N = 800
+N = 1200
 p = 0.2
 m = 5
 
