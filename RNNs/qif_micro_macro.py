@@ -8,7 +8,7 @@ import pickle
 #######################
 
 # simulation parameters
-T = 200.0
+T = 300.0
 dt = 1e-3
 dts = 1e-1
 cutoff = 0.0
@@ -28,12 +28,38 @@ C = config['C']
 N = C.shape[0]
 
 # setup input matrix
-W_in = np.ones(shape=(N, 1))
+W_in = config['W_in']
+
+# define network input
+######################
+
+m = 5
+n_epochs = 1
+input_rate = 30.0/100.0
+
+steps = int(np.round(T/dt))
+store_steps = int(np.round((T - cutoff)/dts))
+
+inp_start = int(np.round(cutoff/dt))
+epoch_steps = int(np.floor((steps-inp_start)/n_epochs))
+input_dur = int(np.floor(epoch_steps/m))
+
+store_start = 0
+store_epoch = int(np.floor((store_steps-store_start)/n_epochs))
+store_dur = int(np.floor(store_epoch/m))
+
+inp_qif = np.zeros((m, steps))
+
+for i in range(n_epochs):
+    for j in range(m):
+        spike_train = np.random.poisson(input_rate, (input_dur,))
+        idx = np.arange(inp_start+(i*m+j)*input_dur, inp_start+(i*m+j+1)*input_dur)
+        inp_qif[j, idx] = spike_train
 
 # QIF parameters
 eta = -0.6
 Delta = 0.3
-J = 7.6
+J = 8.0
 alpha = 0.3
 tau_a = 10.0
 tau_s = 1.0
@@ -46,7 +72,7 @@ qif_rnn = QIFExpAddSyns(C, eta, J, Delta=Delta, alpha=alpha, tau_s=tau_s, tau_a=
 
 # perform simulation
 results = qif_rnn.run(T, dt, dts, cutoff=cutoff, outputs=(np.arange(0, N), np.arange(3*N, 4*N)),
-                      inp=inp, W_in=W_in)
+                      inp=inp_qif, W_in=W_in)
 v_qif = np.mean(results[0], axis=1)
 r_qif = np.mean(results[1], axis=1)
 

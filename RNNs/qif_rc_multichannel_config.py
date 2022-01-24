@@ -14,7 +14,7 @@ cutoff = 125.0
 # network configuration parameters
 ##################################
 
-N = 2000
+N = 1500
 p = 0.2
 m = 5
 
@@ -30,12 +30,19 @@ C /= sr
 
 # setup input matrix
 p_in = 0.1
-W_in = np.random.randn(N, m)
+W_in = np.random.rand(N, m)
 W_sorted = np.sort(W_in.flatten())
-idx = np.abs(W_in) < W_sorted[int(N*m*p_in)]
+idx = W_in < W_sorted[int(N*m*p_in)]
 W_in[idx] = 0.0
-idx2 = np.abs(W_in) >= W_sorted[int(N*m*p_in)]
-W_in[idx2] = np.random.uniform(-1, 1, np.sum(idx2))
+idx2 = W_in >= W_sorted[int(N*m*p_in)]
+n_tmp = np.sum(idx2)
+W_in[idx2] = np.random.uniform(-1, 1, n_tmp)
+for i in range(m):
+    w_sum = np.sum(W_in[:, i])
+    while np.abs(w_sum) > 1e-6:
+        W_in[idx2] = np.random.normal(loc=-w_sum/N, scale=0.1*np.abs(w_sum)/N, size=n_tmp)
+        w_sum = np.sum(W_in[:, i])
+
 
 # define network input
 ######################
