@@ -15,7 +15,7 @@ cutoff = 125.0
 ##################################
 
 N = 2000
-p = 0.1
+p = 0.05
 m = 5
 
 # setup connectivity matrix

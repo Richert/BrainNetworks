@@ -59,7 +59,7 @@ for i in range(n_epochs):
 # QIF parameters
 eta = -0.6
 Delta = 0.3
-J = 8.4
+J = 7.75
 alpha = 0.3
 tau_a = 10.0
 tau_s = 1.0

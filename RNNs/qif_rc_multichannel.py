@@ -68,8 +68,8 @@ alpha = 0.3
 
 # independent variable (IV)
 iv_name = "J"
-n_iv = 5
-ivs = np.linspace(7.5, 8.0, num=n_iv)
+n_iv = 1
+ivs = np.asarray([7.75]) #np.linspace(7.5, 8.0, num=n_iv)
 
 # mean-field parameters
 C_m = np.ones(shape=(1,))
@@ -153,4 +153,4 @@ for j in range(n_iv):
     data["Z_mf"][j, :] = Z_mf
 
 data["T"] = T
-pickle.dump(data, open('../RC/Results/qif_rc_multichannel_results.pkl', 'wb'))
+pickle.dump(data, open('data/qif_rc_multichannel_results.pkl', 'wb'))
