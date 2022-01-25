@@ -68,8 +68,8 @@ alpha = 0.3
 
 # independent variable (IV)
 iv_name = "J"
-n_iv = 10
-ivs = np.linspace(7, 9, num=n_iv)
+n_iv = 5
+ivs = np.linspace(7.5, 8.0, num=n_iv)
 
 # mean-field parameters
 C_m = np.ones(shape=(1,))

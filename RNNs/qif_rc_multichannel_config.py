@@ -15,7 +15,7 @@ cutoff = 125.0
 ##################################
 
 N = 2000
-p = 0.2
+p = 0.1
 m = 5
 
 # setup connectivity matrix
@@ -32,17 +32,22 @@ C /= sr
 p_in = 0.1
 W_in = np.random.rand(N, m)
 W_sorted = np.sort(W_in.flatten())
-idx = W_in < W_sorted[int(N*m*p_in)]
+idx = W_in > W_sorted[int(N*m*p_in)]
+idx2 = W_in <= W_sorted[int(N*m*p_in)]
 W_in[idx] = 0.0
-idx2 = W_in >= W_sorted[int(N*m*p_in)]
-n_tmp = np.sum(idx2)
-W_in[idx2] = np.random.uniform(-1, 1, n_tmp)
 for i in range(m):
-    w_sum = np.sum(W_in[:, i])
-    while np.abs(w_sum) > 1e-6:
-        W_in[idx2] = np.random.normal(loc=-w_sum/N, scale=0.1*np.abs(w_sum)/N, size=n_tmp)
-        w_sum = np.sum(W_in[:, i])
-
+    indices = np.argwhere(idx2[:, i]).squeeze().tolist()
+    np.random.shuffle(indices)
+    n_half = int(len(indices)/2)
+    while len(indices) > 1:
+        w = np.random.uniform(-1, 1)
+        idx_tmp1 = indices.pop()
+        idx_tmp2 = indices.pop()
+        W_in[idx_tmp1, i] = w
+        W_in[idx_tmp2, i] = -w
+    if len(indices) == 1:
+        W_in[indices.pop(), i] = 0.0
+print(np.sum(W_in, axis=0))
 
 # define network input
 ######################
