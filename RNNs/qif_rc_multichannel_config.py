@@ -14,7 +14,7 @@ cutoff = 125.0
 # network configuration parameters
 ##################################
 
-N = 2000
+N = 1500
 p = 0.05
 m = 5
 
