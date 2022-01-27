@@ -3,10 +3,12 @@ from scipy.sparse.linalg import eigs
 import pickle
 
 
+fname = 'data/qif_micro_macro_config.pkl'
+
 # simulation parameters
 #######################
 
-T = 1125.0
+T = 325.0
 dt = 1e-3
 dts = 1e-1
 cutoff = 125.0
@@ -14,7 +16,7 @@ cutoff = 125.0
 # network configuration parameters
 ##################################
 
-N = 1500
+N = 2000
 p = 0.05
 m = 5
 
@@ -29,7 +31,7 @@ sr = np.max(np.real(vals))
 C /= sr
 
 # setup input matrix
-p_in = 0.1
+p_in = 0.2
 W_in = np.random.rand(N, m)
 W_sorted = np.sort(W_in.flatten())
 idx = W_in > W_sorted[int(N*m*p_in)]
@@ -101,4 +103,4 @@ data['W_in'] = W_in
 data['inp'] = inp
 data['targets'] = targets.T
 data['number_input_channels'] = m
-pickle.dump(data, open('data/qif_input_config.pkl', 'wb'))
+pickle.dump(data, open(fname, 'wb'))
