@@ -8,7 +8,7 @@ fname = 'data/qif_micro_macro_config.pkl'
 # simulation parameters
 #######################
 
-T = 325.0
+T = 425.0
 dt = 1e-3
 dts = 1e-1
 cutoff = 125.0
@@ -16,8 +16,8 @@ cutoff = 125.0
 # network configuration parameters
 ##################################
 
-N = 2000
-p = 0.01
+N = 4000
+p = 0.1
 m = 5
 
 # setup connectivity matrix
@@ -31,7 +31,7 @@ sr = np.max(np.real(vals))
 C /= sr
 
 # setup input matrix
-p_in = 0.2
+p_in = 0.1
 W_in = np.random.rand(N, m)
 W_sorted = np.sort(W_in.flatten())
 idx = W_in > W_sorted[int(N*m*p_in)]
