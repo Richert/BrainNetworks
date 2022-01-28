@@ -39,7 +39,7 @@ r_mf_all = data['r_mf']
 
 # comparison between qif and mean-field dynamics
 iv_indices = np.arange(0, 2, step=1)
-fig, axes = plt.subplots(nrows=len(iv_indices), ncols=2, figsize=(12, 10))
+fig, axes = plt.subplots(nrows=max(len(iv_indices), 2), ncols=2, figsize=(12, 10))
 for k in range(len(iv_indices)):
     idx = iv_indices[k]
 

@@ -19,7 +19,7 @@ idx_cond = 1
 # STEP 1: Load pre-generated RNN parameters
 ###########################################
 
-config = pickle.load(open("data/qif_micro_macro_config.pkl", 'rb'))
+config = pickle.load(open("data/qif_micro_macro_config2.pkl", 'rb'))
 
 # connectivity matrix
 C = config['C']
