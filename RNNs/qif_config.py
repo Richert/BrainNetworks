@@ -3,21 +3,22 @@ from scipy.sparse.linalg import eigs
 import pickle
 
 
-fname = 'data/qif_micro_macro_config2.pkl'
+fname = 'data/qif_fit_macro_config.pkl'
 
 # simulation parameters
 #######################
 
-T = 1125.0
+T = 500.0
 dt = 1e-3
-dts = 1e-1
-cutoff = 125.0
+dts = 1.0
+cutoff = 300.0
+start = 50.0
 
 # network configuration parameters
 ##################################
 
-N = 2000
-p = 0.01
+N = 1000
+p = 0.05
 m = 5
 
 # setup connectivity matrix
@@ -60,7 +61,7 @@ input_rate = 30.0/100.0
 steps = int(np.round(T/dt))
 store_steps = int(np.round((T - cutoff)/dts))
 
-inp_start = int(np.round(cutoff/dt))
+inp_start = int(np.round(start/dt))
 epoch_steps = int(np.floor((steps-inp_start)/n_epochs))
 input_dur = int(np.floor(epoch_steps/m))
 

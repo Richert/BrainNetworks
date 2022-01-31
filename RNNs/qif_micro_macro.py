@@ -2,6 +2,7 @@ from rnn import QIFExpAddSyns
 from rnn import mQIFExpAddSynsRNN
 import numpy as np
 import pickle
+from scipy.sparse.linalg import eigs
 
 
 def kuramoto_order_parameter(r, v):
@@ -19,7 +20,7 @@ idx_cond = 1
 # STEP 1: Load pre-generated RNN parameters
 ###########################################
 
-config = pickle.load(open("data/qif_micro_macro_config2.pkl", 'rb'))
+config = pickle.load(open("data/qif_fit_macro_config.pkl", 'rb'))
 
 # connectivity matrix
 C = config['C']
@@ -62,7 +63,7 @@ alpha = 0.3
 # independent variable (IV)
 iv_name = "J"
 n_iv = 2
-ivs = np.asarray([7.75, 8.325])  #np.linspace(8.1, 8.4, num=n_iv)
+ivs = np.asarray([7.75, 8.35])  #np.linspace(8.1, 8.4, num=n_iv)
 
 # mean-field parameters
 C_m = np.ones(shape=(1,))

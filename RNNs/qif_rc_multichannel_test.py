@@ -3,6 +3,7 @@ from rnn import mQIFExpAddSynsRNN
 import numpy as np
 import pickle
 from scipy.ndimage import gaussian_filter1d
+from scipy.sparse.linalg import eigs
 
 
 def kuramoto_order_parameter(r, v):
@@ -20,7 +21,7 @@ idx_cond = 1
 # STEP 1: Load pre-generated RNN parameters
 ###########################################
 
-config = pickle.load(open("data/qif_input_config.pkl", 'rb'))
+config = pickle.load(open("data/qif_rc_multichannel_config.pkl", 'rb'))
 
 # connectivity matrix
 C = config['C']
@@ -28,6 +29,7 @@ N = C.shape[0]
 
 # QIF input
 inp = config['inp']
+W_in = config['W_in']
 
 # simulation config
 T = config['T']
@@ -55,7 +57,7 @@ ridge_alpha = 0.5*10e-3
 
 # qif parameters
 Delta = 0.3
-J = 7.5
+J = 8.35
 eta = -0.6
 tau_a = 10.0
 tau_s = 1.0
@@ -64,8 +66,8 @@ tau_s = 1.0
 alpha = 0.3
 
 # independent variable (IV)
-iv_name = "p_in"
-ivs = [0.5, 0.6, 0.7]
+iv_name = "p"
+ivs = [0.05, 0.05, 0.05, 0.05, 0.05]
 n_iv = len(ivs)
 
 # mean-field parameters
@@ -92,26 +94,16 @@ for j in range(n_iv):
     iv = ivs[j]
     print(f'Performing simulations for {iv_name} = {iv} ...')
 
-    # setup input matrix
-    p_in = iv
-    W_in = np.random.rand(N, m)
-    W_sorted = np.sort(W_in.flatten())
-    idx = W_in > W_sorted[int(N * m * p_in)]
-    idx2 = W_in <= W_sorted[int(N * m * p_in)]
-    W_in[idx] = 0.0
-    for i in range(m):
-        indices = np.argwhere(idx2[:, i]).squeeze().tolist()
-        np.random.shuffle(indices)
-        n_half = int(len(indices) / 2)
-        while len(indices) > 1:
-            w = np.random.uniform(-1, 1)
-            idx_tmp1 = indices.pop()
-            idx_tmp2 = indices.pop()
-            W_in[idx_tmp1, i] = w
-            W_in[idx_tmp2, i] = -w
-        if len(indices) == 1:
-            W_in[indices.pop(), i] = 0.0
-    print(np.sum(W_in, axis=0))
+    # setup connectivity matrix
+    p = iv
+    neurons = np.arange(0, N)
+    C = np.random.uniform(low=1e-4, high=1, size=(N, N))
+    n_incoming = int(N * (1 - p))
+    for i in range(N):
+        C[np.random.choice(neurons, size=n_incoming, replace=False), i] = 0
+    vals, vecs = eigs(C, k=int(N / 10))
+    sr = np.max(np.real(vals))
+    C /= sr
 
     # setup QIF RNN
     qif_rnn = QIFExpAddSyns(C, eta, J=J, Delta=Delta, alpha=alpha, tau_s=tau_s, tau_a=tau_a, tau=1.0)
