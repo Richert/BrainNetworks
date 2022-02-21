@@ -1,15 +1,9 @@
 from rnn import QIFExpAddSyns
 from rnn import mQIFExpAddSynsRNN
+from rnn import create_input_matrix, kuramoto_order_parameter
 import numpy as np
 import pickle
 from scipy.ndimage import gaussian_filter1d
-from scipy.sparse.linalg import eigs
-
-
-def kuramoto_order_parameter(r, v):
-    W = np.asarray([complex(np.pi * r_tmp, v_tmp) for r_tmp, v_tmp in zip(r, v)])
-    W_c = W.conjugate()
-    return np.abs((1 - W_c) / (1 + W_c))
 
 
 # STEP 0: Define simulation condition
@@ -24,12 +18,11 @@ idx_cond = 1
 config = pickle.load(open("data/qif_rc_multichannel_config.pkl", 'rb'))
 
 # connectivity matrix
-C = config['C']
+C = pickle.load(open("data/qif_fit_macro_config.pkl", 'rb'))['C']
 N = C.shape[0]
 
 # QIF input
 inp = config['inp']
-W_in = config['W_in']
 
 # simulation config
 T = config['T']
@@ -57,7 +50,7 @@ ridge_alpha = 0.5*10e-3
 
 # qif parameters
 Delta = 0.3
-J = 8.35
+J = 7.5
 eta = -0.6
 tau_a = 10.0
 tau_s = 1.0
@@ -66,8 +59,8 @@ tau_s = 1.0
 alpha = 0.3
 
 # independent variable (IV)
-iv_name = "p"
-ivs = [0.05, 0.05, 0.05, 0.05, 0.05]
+iv_name = "p_in"
+ivs = [0.05, 0.1, 0.2, 0.5]
 n_iv = len(ivs)
 
 # mean-field parameters
@@ -94,16 +87,9 @@ for j in range(n_iv):
     iv = ivs[j]
     print(f'Performing simulations for {iv_name} = {iv} ...')
 
-    # setup connectivity matrix
-    p = iv
-    neurons = np.arange(0, N)
-    C = np.random.uniform(low=1e-4, high=1, size=(N, N))
-    n_incoming = int(N * (1 - p))
-    for i in range(N):
-        C[np.random.choice(neurons, size=n_incoming, replace=False), i] = 0
-    vals, vecs = eigs(C, k=int(N / 10))
-    sr = np.max(np.real(vals))
-    C /= sr
+    # setup input matrix
+    p_in = iv
+    W_in = create_input_matrix(N, m, p_in)
 
     # setup QIF RNN
     qif_rnn = QIFExpAddSyns(C, eta, J=J, Delta=Delta, alpha=alpha, tau_s=tau_s, tau_a=tau_a, tau=1.0)

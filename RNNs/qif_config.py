@@ -1,55 +1,31 @@
 import numpy as np
-from scipy.sparse.linalg import eigs
 import pickle
+from RNNs import create_connectivity_matrix, create_input_matrix
 
-
-fname = 'data/qif_fit_macro_config.pkl'
+fname = 'data/qif_rc_inh_config.pkl'
 
 # simulation parameters
 #######################
 
-T = 500.0
+T = 1125.0
 dt = 1e-3
-dts = 1.0
-cutoff = 300.0
-start = 50.0
+dts = 1e-1
+cutoff = 125.0
+start = 125.0
 
 # network configuration parameters
 ##################################
 
 N = 1000
-p = 0.05
+p = 0.2
 m = 5
 
 # setup connectivity matrix
-neurons = np.arange(0, N)
-C = np.random.uniform(low=1e-4, high=1, size=(N, N))
-n_incoming = int(N*(1-p))
-for i in range(N):
-    C[np.random.choice(neurons, size=n_incoming, replace=False), i] = 0
-vals, vecs = eigs(C, k=int(N/10))
-sr = np.max(np.real(vals))
-C /= sr
+C = create_connectivity_matrix(N, p)
 
 # setup input matrix
-p_in = 0.5
-W_in = np.random.rand(N, m)
-W_sorted = np.sort(W_in.flatten())
-idx = W_in > W_sorted[int(N*m*p_in)]
-idx2 = W_in <= W_sorted[int(N*m*p_in)]
-W_in[idx] = 0.0
-for i in range(m):
-    indices = np.argwhere(idx2[:, i]).squeeze().tolist()
-    np.random.shuffle(indices)
-    n_half = int(len(indices)/2)
-    while len(indices) > 1:
-        w = np.random.uniform(-1, 1)
-        idx_tmp1 = indices.pop()
-        idx_tmp2 = indices.pop()
-        W_in[idx_tmp1, i] = w
-        W_in[idx_tmp2, i] = -w
-    if len(indices) == 1:
-        W_in[indices.pop(), i] = 0.0
+p_in = 0.2
+W_in = create_input_matrix(N, m, p_in)
 print(np.sum(W_in, axis=0))
 
 # define network input

@@ -20,7 +20,7 @@ def get_peaks(x):
     return np.asarray(peak_data)
 
 
-data = pickle.load(open("data/qif_rc_multichannel_results.pkl", 'rb'))
+data = pickle.load(open("data/qif_rc_inh_results.pkl", 'rb'))
 
 # Plotting
 ##########
@@ -40,7 +40,7 @@ r_qif_all = data['r_qif']
 r_mf_all = data['r_mf']
 
 # comparison between qif and mean-field dynamics
-iv_indices = np.arange(0, 5, step=1)
+iv_indices = np.arange(0, 3, step=1)
 fig, axes = plt.subplots(nrows=len(iv_indices), ncols=2, figsize=(12, 10))
 for k in range(len(iv_indices)):
     idx = iv_indices[k]
@@ -63,6 +63,7 @@ for k in range(len(iv_indices)):
     plt.legend(['QIF', 'MF'])
 
 plt.tight_layout()
+plt.show()
 
 # comparison between RC performance and mean-field Z-related measures
 cutoff = 1000

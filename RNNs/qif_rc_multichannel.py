@@ -89,7 +89,7 @@ data["Z_mf"] = np.zeros_like(data["r_qif"])
 data["iv"] = ivs
 data["iv_name"] = iv_name
 
-# simulation loop for n_etas
+# simulation loop for n parametrizations
 for j in range(n_iv):
 
     iv = ivs[j]

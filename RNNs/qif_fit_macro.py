@@ -1,27 +1,15 @@
 from rnn import QIFExpAddSyns
+from rnn import kuramoto_order_parameter, create_connectivity_matrix
 import numpy as np
 import pickle
 from scipy.sparse.linalg import eigs
-
-
-def kuramoto_order_parameter(r, v):
-    W = np.asarray([complex(np.pi * r_tmp, v_tmp) for r_tmp, v_tmp in zip(r, v)])
-    W_c = W.conjugate()
-    return np.abs((1 - W_c) / (1 + W_c))
 
 
 def simulate(N: int, p: float, eta: float, J: float, Delta: float, alpha: float, tau_s: float, tau_a: float,
              T: float, dt: float, dts: float, inp: np.ndarray, W_in: np.ndarray, cutoff: float):
 
     # setup connectivity matrix
-    neurons = np.arange(0, N)
-    C = np.random.uniform(low=1e-4, high=1, size=(N, N))
-    n_incoming = int(N * (1 - p))
-    for i in range(N):
-        C[np.random.choice(neurons, size=n_incoming, replace=False), i] = 0
-    vals, vecs = eigs(C, k=int(N / 10))
-    sr = np.max(np.real(vals))
-    C /= sr
+    C = create_connectivity_matrix(N, p)
 
     # setup QIF RNN
     qif_rnn = QIFExpAddSyns(C, eta, J=J, Delta=Delta, alpha=alpha, tau_s=tau_s, tau_a=tau_a, tau=1.0)
@@ -91,7 +79,7 @@ p = 0.05
 
 max_rate = 0.6
 attempt = 0
-while max_rate > 0.45 and attempt < 20:
+while max_rate > 0.45 and attempt < 100:
     max_rate, C = simulate(N, p, eta, J, Delta, alpha, tau_s, tau_a, T, dt, dts, inp, W_in, cutoff)
     attempt += 1
     print(f'attempt #{attempt}: max_rate = {max_rate}')

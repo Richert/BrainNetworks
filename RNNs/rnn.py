@@ -1,6 +1,7 @@
 import numpy as np
 from numba import njit
 import typing as tp
+from scipy.sparse.linalg import eigs
 from sklearn.linear_model import Ridge, RidgeCV
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import r2_score
@@ -491,3 +492,62 @@ class mQIFExpAddSynsRNN(RNN):
         kwargs['evolution_func_autonomous'] = mqif_update2
         super().__init__(C=C, evolution_func=mqif_update, *args, **kwargs)
         self.func_args = (C.shape[0], C, eta, Delta, J, tau, alpha, tau_a, tau_s)
+
+
+# convenience functions for creating reservoir matrices
+#######################################################
+
+def create_connectivity_matrix(N: int, p: float) -> np.ndarray:
+
+    # preparations
+    neurons = np.arange(0, N)
+    C = np.zeros((N, N))
+    n_incoming = int(N*p)
+
+    # sample incoming non-zero connections
+    for i in range(N):
+        C[np.random.choice(neurons, size=n_incoming, replace=False), i] = 1 / n_incoming
+
+    # rescale connections to ensure a spectral radius of 1
+    # vals, vecs = eigs(C, k=int(N / 10))
+    # sr = np.max(np.real(vals))
+    # C /= sr
+
+    return C
+
+
+def create_input_matrix(N: int, m: int, p: float) -> np.ndarray:
+
+    # preparations
+    W_in = np.random.rand(N, m)
+    n_incoming = int(N * m *p)
+
+    # make input matrix sparse
+    W_sorted = np.sort(W_in.flatten())
+    idx = W_in > W_sorted[n_incoming]
+    idx2 = W_in <= W_sorted[n_incoming]
+    W_in[idx] = 0.0
+
+    # ensure that the net input to the reservoir sums up to zero
+    for i in range(m):
+        indices = np.argwhere(idx2[:, i]).squeeze().tolist()
+        np.random.shuffle(indices)
+        while len(indices) > 1:
+            w = np.random.uniform(-1, 1)
+            idx_tmp1 = indices.pop()
+            idx_tmp2 = indices.pop()
+            W_in[idx_tmp1, i] = w
+            W_in[idx_tmp2, i] = -w
+        if len(indices) == 1:
+            W_in[indices.pop(), i] = 0.0
+
+    return W_in
+
+
+# functions for post-processing of simulated output
+###################################################
+
+def kuramoto_order_parameter(r, v):
+    W = np.asarray([complex(np.pi * r_tmp, v_tmp) for r_tmp, v_tmp in zip(r, v)])
+    W_c = W.conjugate()
+    return np.abs((1 - W_c) / (1 + W_c))
