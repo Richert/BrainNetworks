@@ -16,7 +16,7 @@ start = 125.0
 # network configuration parameters
 ##################################
 
-N = 1000
+N = 2000
 p = 0.2
 m = 5
 
@@ -24,7 +24,7 @@ m = 5
 C = create_connectivity_matrix(N, p)
 
 # setup input matrix
-p_in = 0.2
+p_in = 0.05
 W_in = create_input_matrix(N, m, p_in)
 print(np.sum(W_in, axis=0))
 

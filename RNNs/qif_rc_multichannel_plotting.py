@@ -40,22 +40,23 @@ r_qif_all = data['r_qif']
 r_mf_all = data['r_mf']
 
 # comparison between qif and mean-field dynamics
-iv_indices = np.arange(0, 3, step=1)
+iv_indices = np.arange(0, 10, step=2)
 fig, axes = plt.subplots(nrows=len(iv_indices), ncols=2, figsize=(12, 10))
+plot_range = [5000, 6000]
 for k in range(len(iv_indices)):
     idx = iv_indices[k]
 
     ax1 = axes[k, 0]
-    ax1.plot(times, r_qif_all[idx, :], 'orange')
-    ax1.plot(times, r_mf_all[idx, :], 'blue')
+    ax1.plot(times[plot_range[0]:plot_range[1]], r_qif_all[idx, plot_range[0]:plot_range[1]], 'orange')
+    ax1.plot(times[plot_range[0]:plot_range[1]], r_mf_all[idx, plot_range[0]:plot_range[1]], 'blue')
     ax1.set_xlabel('time')
     ax1.set_ylabel('firing rate')
     ax1.set_title(fr'${iv_name} = {ivs[idx]}$')
     plt.legend(['QIF', 'MF'])
 
     ax2 = axes[k, 1]
-    ax2.plot(times, Z_qif_all[idx, :], 'orange')
-    ax2.plot(times, Z_mf_all[idx, :], 'blue')
+    ax2.plot(times[plot_range[0]:plot_range[1]], Z_qif_all[idx, plot_range[0]:plot_range[1]], 'orange')
+    ax2.plot(times[plot_range[0]:plot_range[1]], Z_mf_all[idx, plot_range[0]:plot_range[1]], 'blue')
     ax2.set_xlabel('time')
     ax2.set_ylabel('Z')
     ax2.set_title(fr'${iv_name} = {ivs[idx]}$')
